@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const SWIPE_DISTANCE = 110;
-const SWIPE_VELOCITY = 700;
+const THROW_DISTANCE = 110;
+const THROW_VELOCITY = 700;
 const HOLD_MS = 320;
 const LABEL_VISIBLE_MS = 2200;
-const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v4';
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v4';
+const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v5';
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v5';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -438,6 +438,10 @@ function formatSeconds(value) {
   return `${Number(value || 0).toFixed(1)}s`;
 }
 
+function mediaIconForArena(arena) {
+  return arena.mediaType === 'video' ? '🎥' : '🖼️';
+}
+
 function saveUploadsToStorage(items) {
   try {
     const uploadedOnly = items.filter((item) => item.uploaded);
@@ -496,21 +500,15 @@ function pickTwo(pool, avoidIds = []) {
   return { first: fallbackFirst, second: fallbackSecond };
 }
 
-function normalizeThrow(offsetX, offsetY, isPortrait) {
+function normalizeThrow(side, isPortrait) {
   if (isPortrait) {
-    const directionY = offsetY >= 0 ? 1 : -1;
-    return { x: offsetX * 0.4, y: directionY * 560 };
+    return side === 'first' ? { x: 0, y: -560 } : { x: 0, y: 560 };
   }
-  const directionX = offsetX >= 0 ? 1 : -1;
-  return { x: directionX * 660, y: offsetY * 0.3 };
+  return side === 'first' ? { x: -660, y: 0 } : { x: 660, y: 0 };
 }
 
 function getClipName(item) {
   return item?.title || 'Untitled';
-}
-
-function mediaIconForArena(arena) {
-  return arena.mediaType === 'video' ? '🎥' : '🖼️';
 }
 
 function AppShell({ children }) {
@@ -542,43 +540,30 @@ function ArenaLabel({ arena, visible }) {
   );
 }
 
-function DiamondVS({ accent }) {
+function DiamondVS() {
   return (
     <div style={styles.vsCenterLayer}>
-      <motion.div
-        style={styles.vsMotionWrap}
-        animate={{
-          scale: [1, 1.02, 1],
-          filter: [
-            'drop-shadow(0 0 4px rgba(255,255,255,0.03))',
-            `drop-shadow(0 0 10px ${accent}55)`,
-            'drop-shadow(0 0 4px rgba(255,255,255,0.03))',
-          ],
-        }}
-        transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-      >
-        <div style={{ ...styles.vsDiamond, borderColor: `${accent}bb` }}>
-          <div style={styles.vsDiamondInner}>
-            <span style={styles.vsText}>VS</span>
-          </div>
+      <div style={styles.vsDiamond}>
+        <div style={styles.vsDiamondInner}>
+          <span style={styles.vsText}>VS</span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
 
-function PauseSeamChip({ paused }) {
+function PauseChip({ paused, isPortrait }) {
   return (
     <AnimatePresence>
       {paused && (
         <motion.div
-          style={styles.pauseSeamLayer}
+          style={isPortrait ? styles.pausePortraitLayer : styles.pauseLandscapeLayer}
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.18 }}
         >
-          <div style={styles.pauseSeamChip}>
+          <div style={styles.pauseChip}>
             <div style={styles.pauseBars}>
               <span style={styles.pauseBar} />
               <span style={styles.pauseBar} />
@@ -667,7 +652,7 @@ function MediaSurface({
   accent,
   side,
   dragAxis,
-  onThrow,
+  onGestureComplete,
   onHoldStart,
   onHoldEnd,
   isActivePlayback,
@@ -731,7 +716,7 @@ function MediaSurface({
       dragSnapToOrigin
       onDragEnd={(_, info) => {
         if (isLocked) return;
-        onThrow(side, info.offset.x, info.offset.y, info.velocity.x, info.velocity.y);
+        onGestureComplete(side, info.offset.x, info.offset.y, info.velocity.x, info.velocity.y);
       }}
       onMouseDown={() => onHoldStart(item.id)}
       onMouseUp={onHoldEnd}
@@ -846,8 +831,8 @@ function OnboardingOverlay({ onClose }) {
       body: 'Press and hold any contender to reveal its identity, rank state, and arena.',
     },
     {
-      title: 'Throw away the loser',
-      body: 'Swipe outward to throw a loser away. Swipe the arena from the outside to change categories.',
+      title: 'Throw or switch',
+      body: 'Middle to outside throws away the loser. Outside to middle changes category.',
     },
   ];
 
@@ -1195,15 +1180,15 @@ function UploadSheet({ isOpen, onClose, onSave }) {
 
 function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const isPortrait = useIsPortrait();
-  const dragAxis = isPortrait ? 'both' : 'both';
+  const dragAxis = isPortrait ? 'y' : 'x';
 
   const arenaItems = useMemo(() => sortLeaderboard(getArenaItems(pool, arena.id)), [pool, arena.id]);
 
   const battleHistoryRef = useRef([]);
   const holdTimerRef = useRef(null);
   const holdTriggeredRef = useRef(false);
-  const touchStartRef = useRef({ x: 0, y: 0 });
   const labelTimerRef = useRef(null);
+  const bottomSwipeRef = useRef({ x: 0, y: 0, active: false });
 
   const [pair, setPair] = useState(() => pickTwo(arenaItems));
   const [winnerId, setWinnerId] = useState(null);
@@ -1240,9 +1225,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     let next = pickTwo(items, recentIds);
 
     if (!next.first || !next.second) return next;
-    if (next.first.id === next.second.id) {
-      next = pickTwo(items, []);
-    }
+    if (next.first.id === next.second.id) next = pickTwo(items, []);
 
     return next;
   }
@@ -1315,68 +1298,75 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     }
   }
 
-  function handleArenaGestureStart(e) {
-    const t = e.touches?.[0];
-    if (!t) return;
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
-  }
-
-  function handleArenaGestureEnd(e) {
-    const t = e.changedTouches?.[0];
-    if (!t) return;
-
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-
-    if (isPortrait) {
-      if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.15) {
-        onSwipeArena(dx > 0 ? -1 : 1);
-        return;
-      }
-    } else {
-      if (Math.abs(dy) > 90 && Math.abs(dy) > Math.abs(dx) * 1.15) {
-        onSwipeArena(dy > 0 ? -1 : 1);
-        return;
-      }
-    }
-
-    if (Math.abs(dy) > 90 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-      if (dy < 0) setSheetOpen(true);
-      if (dy > 0) setSheetOpen(false);
-    }
-  }
-
   function handleTogglePause() {
     if (detailsId || showChampion) return;
     setPaused((prev) => !prev);
   }
 
-  function outwardLossAccepted(side, offsetX, offsetY, velocityX, velocityY) {
+  function handleBottomSwipeStart(e) {
+    const t = e.touches?.[0];
+    if (!t) return;
+    bottomSwipeRef.current = { x: t.clientX, y: t.clientY, active: true };
+  }
+
+  function handleBottomSwipeEnd(e) {
+    if (!bottomSwipeRef.current.active) return;
+    const t = e.changedTouches?.[0];
+    if (!t) return;
+
+    const dx = t.clientX - bottomSwipeRef.current.x;
+    const dy = t.clientY - bottomSwipeRef.current.y;
+
+    if (dy < -70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(true);
+    if (dy > 70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(false);
+
+    bottomSwipeRef.current.active = false;
+  }
+
+  function resolveGesture(side, offsetX, offsetY, velocityX, velocityY) {
     if (isPortrait) {
       if (side === 'first') {
-        return offsetY < -SWIPE_DISTANCE || velocityY < -SWIPE_VELOCITY;
+        if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return 'throw';
+        if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return 'category-prev';
+      } else {
+        if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return 'throw';
+        if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return 'category-next';
       }
-      return offsetY > SWIPE_DISTANCE || velocityY > SWIPE_VELOCITY;
+      return 'none';
     }
 
     if (side === 'first') {
-      return offsetX < -SWIPE_DISTANCE || velocityX < -SWIPE_VELOCITY;
+      if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return 'throw';
+      if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return 'category-prev';
+    } else {
+      if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return 'throw';
+      if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return 'category-next';
     }
-    return offsetX > SWIPE_DISTANCE || velocityX > SWIPE_VELOCITY;
+    return 'none';
   }
 
-  function handleThrow(loserSide, offsetX, offsetY, velocityX, velocityY) {
+  function handleSurfaceGesture(side, offsetX, offsetY, velocityX, velocityY) {
     if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId) return;
 
-    const isOutward = outwardLossAccepted(loserSide, offsetX, offsetY, velocityX, velocityY);
-    if (!isOutward) return;
+    const outcome = resolveGesture(side, offsetX, offsetY, velocityX, velocityY);
+
+    if (outcome === 'category-prev') {
+      onSwipeArena(-1);
+      return;
+    }
+
+    if (outcome === 'category-next') {
+      onSwipeArena(1);
+      return;
+    }
+
+    if (outcome !== 'throw') return;
 
     setIsLocked(true);
-    const normalizedThrow = normalizeThrow(offsetX, offsetY, isPortrait);
-    setThrowState({ side: loserSide, vector: normalizedThrow });
+    setThrowState({ side, vector: normalizeThrow(side, isPortrait) });
 
-    const loser = loserSide === 'first' ? pair.first : pair.second;
-    const winner = loserSide === 'first' ? pair.second : pair.first;
+    const loser = side === 'first' ? pair.first : pair.second;
+    const winner = side === 'first' ? pair.second : pair.first;
 
     const now = Date.now();
     const msSinceUnlock = now - decisionUnlockedAt;
@@ -1474,12 +1464,12 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         updatedWinner;
 
       const nextPair =
-        loserSide === 'first'
+        side === 'first'
           ? { first: safeChallenger, second: updatedWinner }
           : { first: updatedWinner, second: safeChallenger };
 
       setPair(nextPair);
-      setActiveSide(loserSide === 'first' ? 'second' : 'first');
+      setActiveSide(side === 'first' ? 'second' : 'first');
       setThrowState(null);
       setIsLocked(false);
       setPaused(false);
@@ -1489,13 +1479,11 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function getThrownStyle(side) {
     if (!throwState || throwState.side !== side) return {};
-
     return {
       x: throwState.vector.x,
       y: throwState.vector.y,
       opacity: 0,
       scale: 0.94,
-      rotate: isPortrait ? throwState.vector.x * 0.02 : throwState.vector.y * 0.03,
       transition: { type: 'spring', stiffness: 180, damping: 22 },
     };
   }
@@ -1513,12 +1501,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   return (
-    <div
-      style={styles.battleRoot}
-      onClick={handleTogglePause}
-      onTouchStart={handleArenaGestureStart}
-      onTouchEnd={handleArenaGestureEnd}
-    >
+    <div style={styles.battleRoot} onClick={handleTogglePause}>
       <ArenaLabel arena={arena} visible={labelVisible} />
 
       <div style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}>
@@ -1531,7 +1514,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
             accent={arena.accent}
             side="first"
             dragAxis={dragAxis}
-            onThrow={handleThrow}
+            onGestureComplete={handleSurfaceGesture}
             onHoldStart={startHold}
             onHoldEnd={endHold}
             isActivePlayback={activeSide === 'first'}
@@ -1551,7 +1534,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
             accent={arena.accent}
             side="second"
             dragAxis={dragAxis}
-            onThrow={handleThrow}
+            onGestureComplete={handleSurfaceGesture}
             onHoldStart={startHold}
             onHoldEnd={endHold}
             isActivePlayback={activeSide === 'second'}
@@ -1563,8 +1546,15 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         </motion.div>
       </div>
 
-      <DiamondVS accent={arena.accent} />
-      <PauseSeamChip paused={paused} />
+      <div
+        style={styles.leaderboardSwipeZone}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleBottomSwipeStart}
+        onTouchEnd={handleBottomSwipeEnd}
+      />
+
+      <DiamondVS />
+      <PauseChip paused={paused} isPortrait={isPortrait} />
       <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
 
@@ -1773,15 +1763,23 @@ const styles = {
     background: 'rgba(0,0,0,0.22)',
     pointerEvents: 'none',
   },
-  pauseSeamLayer: {
+  pausePortraitLayer: {
     position: 'absolute',
-    top: 16,
+    top: 18,
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 15,
     pointerEvents: 'none',
   },
-  pauseSeamChip: {
+  pauseLandscapeLayer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 15,
+    pointerEvents: 'none',
+  },
+  pauseChip: {
     width: 34,
     height: 34,
     borderRadius: 999,
@@ -1809,24 +1807,19 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 5,
-  },
-  vsMotionWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    zIndex: 8,
   },
   vsDiamond: {
     width: 42,
     height: 42,
     transform: 'rotate(45deg)',
-    borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.18)',
-    background: 'rgba(6,8,12,0.5)',
-    backdropFilter: 'blur(12px)',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.9)',
+    background: '#000000',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 0 0 1px rgba(0,0,0,0.9)',
   },
   vsDiamondInner: {
     width: '100%',
@@ -1838,17 +1831,18 @@ const styles = {
   },
   vsText: {
     fontSize: 10,
-    fontWeight: 800,
+    fontWeight: 900,
     letterSpacing: '0.2em',
     marginLeft: 2,
-    opacity: 0.92,
+    color: '#ffffff',
+    opacity: 1,
   },
   arenaLabelWrap: {
     position: 'absolute',
     top: 18,
     left: '50%',
     transform: 'translateX(-50%)',
-    zIndex: 10,
+    zIndex: 12,
     textAlign: 'center',
     pointerEvents: 'none',
   },
@@ -1979,6 +1973,15 @@ const styles = {
     fontSize: 13,
     fontWeight: 700,
   },
+  leaderboardSwipeZone: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 96,
+    zIndex: 9,
+    background: 'transparent',
+  },
   bottomGhostBar: {
     position: 'absolute',
     bottom: 12,
@@ -1986,7 +1989,7 @@ const styles = {
     right: 0,
     display: 'flex',
     justifyContent: 'center',
-    zIndex: 7,
+    zIndex: 10,
     pointerEvents: 'none',
   },
   invisibleUploadButton: {
