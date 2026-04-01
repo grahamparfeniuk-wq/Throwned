@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const CATEGORIES = ['Epic Fails', 'Sports', 'Original Songs'];
 const MAX_TRIM_SECONDS = 7;
+const SWIPE_THRESHOLD = 90;
 
 const DEMO_CLIPS = {
   'Epic Fails': [
@@ -126,16 +127,29 @@ function formatSeconds(value) {
   return `${Number(value || 0).toFixed(1)}s`;
 }
 
+function magnitude(x, y) {
+  return Math.sqrt(x * x + y * y);
+}
+
+function normalizeVector(x, y, length = 260) {
+  const mag = magnitude(x, y);
+  if (!mag || mag < 1) return { x: length, y: 0 };
+  return {
+    x: (x / mag) * length,
+    y: (y / mag) * length,
+  };
+}
+
 function ArenaLabel({ category, accent, visible }) {
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
           style={styles.arenaLabelWrap}
-          initial={{ opacity: 0, y: -6 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.35 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.28 }}
         >
           <div style={styles.arenaLabel}>
             <div style={styles.arenaLabelSmall}>Arena</div>
@@ -156,14 +170,14 @@ function DiamondVS({ accent, canPulse }) {
             ? {
                 scale: [1, 1.035, 1],
                 filter: [
-                  'drop-shadow(0 0 8px rgba(255,255,255,0.06))',
+                  'drop-shadow(0 0 8px rgba(255,255,255,0.05))',
                   `drop-shadow(0 0 14px ${accent})`,
-                  'drop-shadow(0 0 8px rgba(255,255,255,0.06))',
+                  'drop-shadow(0 0 8px rgba(255,255,255,0.05))',
                 ],
               }
             : { scale: 1 }
         }
-        transition={canPulse ? { repeat: Infinity, duration: 1.35 } : { duration: 0.2 }}
+        transition={canPulse ? { repeat: Infinity, duration: 1.3 } : { duration: 0.2 }}
         style={styles.vsMotionWrap}
       >
         <div style={{ ...styles.vsDiamond, borderColor: `${accent}cc` }}>
@@ -181,19 +195,19 @@ function OnboardingOverlay({ onClose }) {
 
   const steps = [
     {
-      title: 'Tap to choose',
-      body: 'After both clips cycle, tap the better one.',
-      icon: '👆',
+      title: 'Watch both clips',
+      body: 'Only one clip plays at a time, so each contender gets a clean shot.',
+      helper: 'Listen. Compare. Decide.',
     },
     {
       title: 'Hold for details',
-      body: 'Press and hold any clip to reveal the creator and clip details.',
-      icon: '✋',
+      body: 'Press and hold any clip to reveal creator and clip info.',
+      helper: 'No clutter unless you ask for it.',
     },
     {
-      title: 'Upload or capture',
-      body: 'Use Upload to choose a video or Capture to record one, then trim it to the best 7 seconds.',
-      icon: '🎥',
+      title: 'Throw away the loser',
+      body: 'Swipe the losing clip away. It leaves in that direction. The challenger enters from there too.',
+      helper: 'That swipe is the product.',
     },
   ];
 
@@ -215,17 +229,17 @@ function OnboardingOverlay({ onClose }) {
       exit={{ opacity: 0 }}
     >
       <motion.div
-        style={styles.onboardingCard}
         key={step}
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        style={styles.onboardingCard}
+        initial={{ opacity: 0, y: 16, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.98 }}
-        transition={{ duration: 0.28 }}
+        exit={{ opacity: 0, y: -8, scale: 0.985 }}
+        transition={{ duration: 0.24 }}
       >
-        <div style={styles.onboardingIcon}>{current.icon}</div>
-        <div style={styles.onboardingEyebrow}>Welcome to the arena</div>
+        <div style={styles.onboardingStep}>0{step + 1}</div>
         <div style={styles.onboardingTitle}>{current.title}</div>
         <div style={styles.onboardingBody}>{current.body}</div>
+        <div style={styles.onboardingHelper}>{current.helper}</div>
 
         <div style={styles.onboardingDots}>
           {steps.map((_, index) => (
@@ -233,8 +247,8 @@ function OnboardingOverlay({ onClose }) {
               key={index}
               style={{
                 ...styles.onboardingDot,
-                opacity: step === index ? 1 : 0.28,
-                transform: step === index ? 'scale(1.1)' : 'scale(1)',
+                opacity: step === index ? 1 : 0.24,
+                transform: step === index ? 'scale(1.05)' : 'scale(1)',
               }}
             />
           ))}
@@ -245,7 +259,7 @@ function OnboardingOverlay({ onClose }) {
             Skip
           </button>
           <button style={styles.onboardingPrimaryButton} onClick={next}>
-            {step === steps.length - 1 ? 'Enter arena' : 'Next'}
+            {step === steps.length - 1 ? 'Enter Arena' : 'Next'}
           </button>
         </div>
       </motion.div>
@@ -299,18 +313,11 @@ function UploadSheet({ isOpen, onClose, onSave }) {
   const captureInputRef = useRef(null);
 
   useEffect(() => {
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [objectUrl]);
-
-  useEffect(() => {
     if (!isOpen) {
       setSelectedCategory(CATEGORIES[0]);
       setTitle('');
       setCreator('@me');
       setFile(null);
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
       setObjectUrl('');
       setDuration(0);
       setTrimStart(0);
@@ -320,8 +327,6 @@ function UploadSheet({ isOpen, onClose, onSave }) {
 
   function loadSelectedFile(selected) {
     if (!selected) return;
-
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
     const nextUrl = URL.createObjectURL(selected);
 
     setFile(selected);
@@ -390,7 +395,6 @@ function UploadSheet({ isOpen, onClose, onSave }) {
   useEffect(() => {
     const video = previewRef.current;
     if (!video || !objectUrl) return;
-
     video.currentTime = trimStart;
     video.muted = false;
   }, [trimStart, trimEnd, objectUrl]);
@@ -398,11 +402,16 @@ function UploadSheet({ isOpen, onClose, onSave }) {
   function handleSave() {
     if (!objectUrl || !file) return;
 
+    const savedUrl = objectUrl;
+
+    setObjectUrl('');
+    setFile(null);
+
     onSave({
       title: title.trim() || file.name.replace(/\.[^/.]+$/, ''),
       creator: creator.trim() || '@me',
       category: selectedCategory,
-      src: objectUrl,
+      src: savedUrl,
       trimStart,
       trimEnd,
       uploaded: true,
@@ -427,7 +436,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
             <div style={styles.uploadHeader}>
               <div>
                 <div style={styles.uploadEyebrow}>Add contender</div>
-                <div style={styles.uploadTitle}>Upload or Capture</div>
+                <div style={styles.uploadTitle}>Upload</div>
               </div>
               <button style={styles.uploadClose} onClick={onClose}>
                 ✕
@@ -439,13 +448,13 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                 style={styles.uploadActionButton}
                 onClick={() => uploadInputRef.current?.click()}
               >
-                Upload video
+                From library
               </button>
               <button
                 style={styles.uploadActionButton}
                 onClick={() => captureInputRef.current?.click()}
               >
-                Capture video
+                Record now
               </button>
 
               <input
@@ -506,7 +515,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
             <div style={styles.trimBox}>
               {!objectUrl ? (
                 <div style={styles.trimEmpty}>
-                  Upload a file or capture one with your camera, then trim the best moment.
+                  Choose a video or record one, then trim the exact moment that deserves to compete.
                 </div>
               ) : (
                 <>
@@ -528,9 +537,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                     <div style={styles.trimStatPill}>
                       Selected: {formatSeconds(Math.max(0, trimEnd - trimStart))}
                     </div>
-                    <div style={styles.trimStatPill}>
-                      Max: {MAX_TRIM_SECONDS.toFixed(0)}s
-                    </div>
+                    <div style={styles.trimStatPill}>Max: 7.0s</div>
                   </div>
 
                   <div style={styles.sliderGroup}>
@@ -639,7 +646,7 @@ function VideoSurface({
         ...styles.card,
         boxShadow: isWinner ? `0 0 42px ${accent}22 inset` : 'none',
       }}
-      whileTap={{ scale: 0.994 }}
+      whileTap={{ scale: 0.996 }}
       onMouseDown={onPressStart}
       onMouseUp={onPressEnd}
       onMouseLeave={onPressEnd}
@@ -756,7 +763,6 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
     );
 
     if (!choices.length) return null;
-
     return choices[Math.floor(Math.random() * choices.length)];
   };
 
@@ -784,7 +790,9 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
 
   const [pair, setPair] = useState(() => pickTwo(getCategoryVideos(videos)));
   const [throwSide, setThrowSide] = useState(null);
+  const [throwVector, setThrowVector] = useState({ x: 0, y: 0 });
   const [enterSide, setEnterSide] = useState(null);
+  const [enterVector, setEnterVector] = useState({ x: 0, y: 0 });
   const [isLocked, setIsLocked] = useState(false);
   const [winnerId, setWinnerId] = useState(null);
   const [streak, setStreak] = useState(0);
@@ -818,6 +826,8 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
     setPair(pickTwo(pool));
     setThrowSide(null);
     setEnterSide(null);
+    setThrowVector({ x: 0, y: 0 });
+    setEnterVector({ x: 0, y: 0 });
     setIsLocked(false);
     setWinnerId(null);
     setStreak(0);
@@ -836,7 +846,7 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
 
     const activeVideo = playbackSide === 'first' ? pair.first : pair.second;
     const clipLength = Math.max(
-      800,
+      900,
       ((activeVideo?.trimEnd || MAX_TRIM_SECONDS) - (activeVideo?.trimStart || 0)) * 1000
     );
 
@@ -877,7 +887,7 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
     }, 340);
   };
 
-  const endHold = (side) => {
+  const endHold = () => {
     clearTimeout(holdTimerRef.current);
 
     if (holdTriggeredRef.current) {
@@ -887,13 +897,9 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
 
     const pressDuration = Date.now() - pressStartRef.current;
     if (pressDuration > 280) return;
-
-    if (canPick) {
-      pickWinner(side);
-    }
   };
 
-  const pickWinner = (side) => {
+  const throwLoser = (side, vector) => {
     if (!canPick || detailsVideoId) return;
 
     setIsLocked(true);
@@ -918,9 +924,8 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
 
     const finalVoteWeight = voteTrust * nextUserTrust;
 
-    const winner = side === 'first' ? pair.first : pair.second;
-    const loser = side === 'first' ? pair.second : pair.first;
-    const loserSide = side === 'first' ? 'second' : 'first';
+    const loser = side === 'first' ? pair.first : pair.second;
+    const winner = side === 'first' ? pair.second : pair.first;
 
     const { winnerDelta, loserDelta } = computeConfidenceAdjustedDelta(
       winner,
@@ -947,7 +952,10 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
     const nextStreak = winnerId === winner.id ? streak + 1 : 1;
     setWinnerId(winner.id);
     setStreak(nextStreak);
-    setThrowSide(loserSide);
+
+    const normalized = normalizeVector(vector.x, vector.y, 360);
+    setThrowVector(normalized);
+    setThrowSide(side);
 
     setTimeout(() => {
       const updatedPool = categoryVideos.map((v) => {
@@ -982,6 +990,8 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
           setShowChampion(false);
           setDecisionUnlockedAt(Date.now());
           setEnterSide(null);
+          setEnterVector({ x: 0, y: 0 });
+          setThrowVector({ x: 0, y: 0 });
           setIsLocked(false);
           setPlaybackSide('second');
         }, 1450);
@@ -1011,45 +1021,64 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
         updatedWinner;
 
       if (side === 'first') {
-        setPair({ first: updatedWinner, second: safeChallenger });
-        setEnterSide('second');
-      } else {
         setPair({ first: safeChallenger, second: updatedWinner });
         setEnterSide('first');
+      } else {
+        setPair({ first: updatedWinner, second: safeChallenger });
+        setEnterSide('second');
       }
 
+      setEnterVector(normalized);
       setThrowSide(null);
       setDecisionUnlockedAt(Date.now());
-      setPlaybackSide(side === 'first' ? 'first' : 'second');
+      setPlaybackSide(side === 'first' ? 'second' : 'first');
 
       setTimeout(() => {
         setEnterSide(null);
+        setEnterVector({ x: 0, y: 0 });
+        setThrowVector({ x: 0, y: 0 });
         setIsLocked(false);
-      }, 260);
-    }, 560);
+      }, 280);
+    }, 430);
   };
 
-  const firstMotion =
-    throwSide === 'first'
-      ? isPortrait
-        ? { y: -240, opacity: 0, rotate: -4, scale: 0.98 }
-        : { x: -240, opacity: 0, rotate: -4, scale: 0.98 }
-      : enterSide === 'first'
-      ? isPortrait
-        ? { y: -90, opacity: 0.18, rotate: -3, scale: 0.985 }
-        : { x: -90, opacity: 0.18, rotate: -3, scale: 0.985 }
-      : { x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 };
+  function getThrowMotion(sideName) {
+    if (throwSide === sideName) {
+      return {
+        x: throwVector.x,
+        y: throwVector.y,
+        opacity: 0,
+        rotate: throwVector.x > 0 ? 7 : -7,
+        scale: 0.98,
+      };
+    }
 
-  const secondMotion =
-    throwSide === 'second'
-      ? isPortrait
-        ? { y: 240, opacity: 0, rotate: 4, scale: 0.98 }
-        : { x: 240, opacity: 0, rotate: 4, scale: 0.98 }
-      : enterSide === 'second'
-      ? isPortrait
-        ? { y: 90, opacity: 0.18, rotate: 3, scale: 0.985 }
-        : { x: 90, opacity: 0.18, rotate: 3, scale: 0.985 }
-      : { x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 };
+    if (enterSide === sideName) {
+      return {
+        x: enterVector.x * -0.32,
+        y: enterVector.y * -0.32,
+        opacity: 0.14,
+        rotate: enterVector.x > 0 ? -4 : 4,
+        scale: 0.985,
+      };
+    }
+
+    return { x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 };
+  }
+
+  const firstMotion = getThrowMotion('first');
+  const secondMotion = getThrowMotion('second');
+
+  function buildSwipeHandler(side) {
+    return (_, info) => {
+      if (!canPick || detailsVideoId) return;
+
+      const { x, y } = info.offset;
+      if (magnitude(x, y) < SWIPE_THRESHOLD) return;
+
+      throwLoser(side, { x, y });
+    };
+  }
 
   return (
     <div style={styles.battleShell}>
@@ -1057,7 +1086,7 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
 
       <div style={styles.topButtons}>
         <button style={styles.uploadButton} onClick={onOpenUpload}>
-          Upload / Capture
+          Upload
         </button>
       </div>
 
@@ -1099,12 +1128,16 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
           <motion.div
             style={styles.halfWrap}
             animate={firstMotion}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+            drag={canPick && !detailsVideoId ? true : false}
+            dragElastic={0.08}
+            dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+            onDragEnd={buildSwipeHandler('first')}
           >
             <VideoSurface
               video={pair.first}
               onPressStart={() => startHold(pair.first.id)}
-              onPressEnd={() => endHold('first')}
+              onPressEnd={endHold}
               accent={accent}
               showCrown={showChampion && winnerId === pair.first.id}
               isWinner={winnerId === pair.first.id}
@@ -1115,12 +1148,16 @@ function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUploa
           <motion.div
             style={styles.halfWrap}
             animate={secondMotion}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+            drag={canPick && !detailsVideoId ? true : false}
+            dragElastic={0.08}
+            dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+            onDragEnd={buildSwipeHandler('second')}
           >
             <VideoSurface
               video={pair.second}
               onPressStart={() => startHold(pair.second.id)}
-              onPressEnd={() => endHold('second')}
+              onPressEnd={endHold}
               accent={accent}
               showCrown={showChampion && winnerId === pair.second.id}
               isWinner={winnerId === pair.second.id}
@@ -1283,6 +1320,7 @@ const styles = {
     width: '100%',
     overflow: 'hidden',
     background: '#000',
+    touchAction: 'none',
   },
   video: {
     position: 'absolute',
@@ -1388,7 +1426,7 @@ const styles = {
     width: 68,
     height: 68,
     transform: 'rotate(45deg)',
-    borderRadius: 6,
+    borderRadius: 5,
     border: '1.5px solid rgba(255,255,255,.18)',
     background: 'linear-gradient(180deg, rgba(7,11,24,.97) 0%, rgba(0,0,0,.98) 100%)',
     display: 'flex',
@@ -1588,46 +1626,49 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(1,5,16,.76)',
-    backdropFilter: 'blur(10px)',
-    padding: 24,
+    background: 'rgba(2,6,18,.78)',
+    backdropFilter: 'blur(14px)',
+    padding: 20,
   },
   onboardingCard: {
     width: '100%',
-    maxWidth: 340,
-    borderRadius: 28,
-    background: 'rgba(10,14,28,.96)',
+    maxWidth: 360,
+    borderRadius: 30,
+    background: 'linear-gradient(180deg, rgba(12,18,34,.98), rgba(8,12,24,.96))',
     border: '1px solid rgba(255,255,255,.08)',
-    boxShadow: '0 20px 60px rgba(0,0,0,.45)',
+    boxShadow: '0 28px 70px rgba(0,0,0,.45)',
     padding: '28px 22px 20px',
-    textAlign: 'center',
+    textAlign: 'left',
   },
-  onboardingIcon: {
-    fontSize: 34,
-    marginBottom: 10,
-  },
-  onboardingEyebrow: {
-    fontSize: 10,
+  onboardingStep: {
+    fontSize: 11,
+    letterSpacing: '0.24em',
     textTransform: 'uppercase',
-    letterSpacing: '0.22em',
-    opacity: 0.5,
+    opacity: 0.45,
     fontWeight: 800,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   onboardingTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 900,
     marginBottom: 10,
+    letterSpacing: '-0.02em',
   },
   onboardingBody: {
-    fontSize: 14,
-    lineHeight: 1.45,
-    opacity: 0.78,
-    minHeight: 60,
+    fontSize: 15,
+    lineHeight: 1.5,
+    opacity: 0.84,
+    marginBottom: 10,
+  },
+  onboardingHelper: {
+    fontSize: 13,
+    lineHeight: 1.4,
+    opacity: 0.52,
+    minHeight: 32,
   },
   onboardingDots: {
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     gap: 8,
     marginTop: 16,
     marginBottom: 20,
@@ -1843,14 +1884,14 @@ export default function App() {
   const currentCategory = CATEGORIES[categoryIndex];
 
   useEffect(() => {
-    const seen = localStorage.getItem('throned-gesture-walkthrough-seen');
+    const seen = localStorage.getItem('throwned-gesture-walkthrough-seen');
     if (!seen) {
       setShowOnboarding(true);
     }
   }, []);
 
   function closeOnboarding() {
-    localStorage.setItem('throned-gesture-walkthrough-seen', 'true');
+    localStorage.setItem('throwned-gesture-walkthrough-seen', 'true');
     setShowOnboarding(false);
   }
 
