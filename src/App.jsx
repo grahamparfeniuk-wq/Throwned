@@ -1,54 +1,373 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
-const CATEGORIES = ['Epic Fails', 'Sports', 'Original Songs'];
-const MAX_TRIM_SECONDS = 7;
-const SWIPE_THRESHOLD = 90;
+const SWIPE_DISTANCE = 110;
+const SWIPE_VELOCITY = 700;
+const HOLD_MS = 320;
+const LABEL_VISIBLE_MS = 2200;
+const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v3';
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v3';
 
-const DEMO_CLIPS = {
-  'Epic Fails': [
-    { title: 'Slip Jacket', creator: '@fail_1', src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { title: 'Cat Bed Fail', creator: '@fail_2', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
-    { title: 'Race Crash', creator: '@fail_3', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4' },
-    { title: 'Highway Miss', creator: '@fail_4', src: 'https://www.w3schools.com/html/movie.mp4' },
-    { title: 'Intersection Wreck', creator: '@fail_5', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm' },
-  ],
-  Sports: [
-    { title: 'Track Burst', creator: '@sport_1', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4' },
-    { title: 'Court Handle', creator: '@sport_2', src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { title: 'Rope Rhythm', creator: '@sport_3', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm' },
-    { title: 'Boxing Pace', creator: '@sport_4', src: 'https://www.w3schools.com/html/movie.mp4' },
-    { title: 'Kettlebell Drive', creator: '@sport_5', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
-  ],
-  'Original Songs': [
-    { title: 'Neon Vocal', creator: '@song_1', src: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { title: 'Mic Room Hook', creator: '@song_2', src: 'https://www.w3schools.com/html/movie.mp4' },
-    { title: 'Jazz Night Verse', creator: '@song_3', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' },
-    { title: 'Studio Chorus', creator: '@song_4', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4' },
-    { title: 'Street Guitar Song', creator: '@song_5', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm' },
-  ],
-};
+const ARENAS = [
+  { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
+  { id: 'epic-fails', label: 'Epic Fails', mediaType: 'video', accent: '#ef4444' },
+  { id: 'original-songs', label: 'Original Songs', mediaType: 'video', accent: '#f59e0b' },
+  { id: 'comedy', label: 'Comedy', mediaType: 'video', accent: '#22c55e' },
+  { id: 'sports', label: 'Sports', mediaType: 'video', accent: '#06b6d4' },
+  { id: 'best-sunset', label: 'Best Sunset', mediaType: 'image', accent: '#fb7185' },
+  { id: 'cutest-kitten', label: 'Cutest Kitten', mediaType: 'image', accent: '#a78bfa' },
+  { id: 'wildcard', label: 'Wildcard', mediaType: 'video', accent: '#8b5cf6' },
+];
 
-function buildCategoryVideos(category, startId) {
-  return DEMO_CLIPS[category].map((item, index) => ({
-    id: startId + index,
-    title: item.title,
-    creator: item.creator,
-    category,
-    rank: index + 1,
-    rating: 3200 - index * 35,
-    confidence: Math.max(0.55, +(0.92 - index * 0.03).toFixed(2)),
-    src: item.src,
+const DEMO_MEDIA = [
+  {
+    id: 1,
+    arenaId: 'epic-fails',
+    title: 'Slip Jacket',
+    creator: '@fail_1',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/mov_bbb.mp4',
     trimStart: 0,
     trimEnd: 7,
     uploaded: false,
-  }));
-}
-
-const initialSeed = [
-  ...buildCategoryVideos('Epic Fails', 1),
-  ...buildCategoryVideos('Sports', 101),
-  ...buildCategoryVideos('Original Songs', 201),
+    rating: 3200,
+    confidence: 0.78,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 2,
+    arenaId: 'epic-fails',
+    title: 'Box Miss',
+    creator: '@fail_2',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/movie.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3168,
+    confidence: 0.72,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 3,
+    arenaId: 'epic-fails',
+    title: 'Flower Chaos',
+    creator: '@fail_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3144,
+    confidence: 0.69,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 4,
+    arenaId: 'sports',
+    title: 'Track Burst',
+    creator: '@sport_1',
+    mediaType: 'video',
+    src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3215,
+    confidence: 0.8,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 5,
+    arenaId: 'sports',
+    title: 'Court Handle',
+    creator: '@sport_2',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3177,
+    confidence: 0.74,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 6,
+    arenaId: 'sports',
+    title: 'Rope Rhythm',
+    creator: '@sport_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3138,
+    confidence: 0.67,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 7,
+    arenaId: 'original-songs',
+    title: 'Neon Vocal',
+    creator: '@song_1',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/movie.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3194,
+    confidence: 0.78,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 8,
+    arenaId: 'original-songs',
+    title: 'Studio Chorus',
+    creator: '@song_2',
+    mediaType: 'video',
+    src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3155,
+    confidence: 0.72,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 9,
+    arenaId: 'original-songs',
+    title: 'Mic Room Hook',
+    creator: '@song_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3115,
+    confidence: 0.66,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 10,
+    arenaId: 'comedy',
+    title: 'Dry Delivery',
+    creator: '@comedy_1',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3188,
+    confidence: 0.77,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 11,
+    arenaId: 'comedy',
+    title: 'Timing Break',
+    creator: '@comedy_2',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/movie.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3160,
+    confidence: 0.72,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 12,
+    arenaId: 'comedy',
+    title: 'Silent Look',
+    creator: '@comedy_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3128,
+    confidence: 0.68,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 13,
+    arenaId: 'skateboard-tricks',
+    title: 'Rail Attempt',
+    creator: '@skate_1',
+    mediaType: 'video',
+    src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3208,
+    confidence: 0.79,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 14,
+    arenaId: 'skateboard-tricks',
+    title: 'Kickflip Gap',
+    creator: '@skate_2',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3170,
+    confidence: 0.73,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 15,
+    arenaId: 'skateboard-tricks',
+    title: 'Late Shuv',
+    creator: '@skate_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3130,
+    confidence: 0.68,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 16,
+    arenaId: 'wildcard',
+    title: 'Anything Goes',
+    creator: '@wild_1',
+    mediaType: 'video',
+    src: 'https://www.w3schools.com/html/movie.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3175,
+    confidence: 0.75,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 17,
+    arenaId: 'wildcard',
+    title: 'Odd Moment',
+    creator: '@wild_2',
+    mediaType: 'video',
+    src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3140,
+    confidence: 0.69,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 18,
+    arenaId: 'wildcard',
+    title: 'Short Burst',
+    creator: '@wild_3',
+    mediaType: 'video',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm',
+    trimStart: 0,
+    trimEnd: 7,
+    uploaded: false,
+    rating: 3110,
+    confidence: 0.65,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 101,
+    arenaId: 'best-sunset',
+    title: 'Burning Horizon',
+    creator: '@sunset_1',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3205,
+    confidence: 0.8,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 102,
+    arenaId: 'best-sunset',
+    title: 'Pink Fade',
+    creator: '@sunset_2',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3176,
+    confidence: 0.75,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 103,
+    arenaId: 'best-sunset',
+    title: 'Last Light',
+    creator: '@sunset_3',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3138,
+    confidence: 0.69,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 111,
+    arenaId: 'cutest-kitten',
+    title: 'Tiny Stare',
+    creator: '@kitten_1',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3210,
+    confidence: 0.81,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 112,
+    arenaId: 'cutest-kitten',
+    title: 'Paw Lean',
+    creator: '@kitten_2',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3174,
+    confidence: 0.75,
+    wins: 0,
+    losses: 0,
+  },
+  {
+    id: 113,
+    arenaId: 'cutest-kitten',
+    title: 'Window Face',
+    creator: '@kitten_3',
+    mediaType: 'image',
+    src: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1200&q=80',
+    uploaded: false,
+    rating: 3142,
+    confidence: 0.7,
+    wins: 0,
+    losses: 0,
+  },
 ];
 
 function clamp(value, min, max) {
@@ -60,14 +379,14 @@ function expectedScore(a, b) {
 }
 
 function getVoteTrust(msSinceUnlock) {
-  if (msSinceUnlock < 400) return 0.2;
-  if (msSinceUnlock < 900) return 0.45;
-  if (msSinceUnlock < 1600) return 0.7;
-  return 1.0;
+  if (msSinceUnlock < 350) return 0.2;
+  if (msSinceUnlock < 850) return 0.45;
+  if (msSinceUnlock < 1500) return 0.7;
+  return 1;
 }
 
 function updateConfidence(current, strongVote) {
-  return clamp(current + (strongVote ? 0.045 : 0.025), 0.35, 0.98);
+  return clamp(current + (strongVote ? 0.04 : 0.022), 0.35, 0.98);
 }
 
 function computeConfidenceAdjustedDelta(winner, loser, finalVoteWeight) {
@@ -89,23 +408,15 @@ function computeConfidenceAdjustedDelta(winner, loser, finalVoteWeight) {
 }
 
 function confidenceLabel(confidence) {
-  if (confidence >= 0.85) return 'Royalty';
-  if (confidence >= 0.7) return 'Elite';
-  if (confidence >= 0.55) return 'Rising';
+  if (confidence >= 0.86) return 'Royalty';
+  if (confidence >= 0.73) return 'Elite';
+  if (confidence >= 0.58) return 'Rising';
   return 'Wildcard';
 }
 
-function categoryAccent(category) {
-  switch (category) {
-    case 'Epic Fails':
-      return '#ef4444';
-    case 'Sports':
-      return '#06b6d4';
-    case 'Original Songs':
-      return '#f59e0b';
-    default:
-      return '#8b5cf6';
-  }
+function safeDuration(item) {
+  if (item.mediaType !== 'video') return 2600;
+  return Math.max(900, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
 }
 
 function useIsPortrait() {
@@ -127,60 +438,127 @@ function formatSeconds(value) {
   return `${Number(value || 0).toFixed(1)}s`;
 }
 
-function magnitude(x, y) {
-  return Math.sqrt(x * x + y * y);
+function saveUploadsToStorage(items) {
+  try {
+    const uploadedOnly = items.filter((item) => item.uploaded);
+    localStorage.setItem(STORAGE_KEY_UPLOADS, JSON.stringify(uploadedOnly));
+  } catch {
+    // no-op
+  }
 }
 
-function normalizeVector(x, y, length = 260) {
-  const mag = magnitude(x, y);
-  if (!mag || mag < 1) return { x: length, y: 0 };
-  return {
-    x: (x / mag) * length,
-    y: (y / mag) * length,
-  };
+function loadUploadsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_UPLOADS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
-function ArenaLabel({ category, accent, visible }) {
+function getArena(arenaId) {
+  return ARENAS.find((a) => a.id === arenaId) || ARENAS[0];
+}
+
+function getArenaAccent(arenaId) {
+  return getArena(arenaId).accent;
+}
+
+function getArenaItems(pool, arenaId) {
+  const arena = getArena(arenaId);
+  return pool.filter((item) => item.arenaId === arenaId && item.mediaType === arena.mediaType);
+}
+
+function sortLeaderboard(items) {
+  return items
+    .slice()
+    .sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return b.confidence - a.confidence;
+    })
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+}
+
+function pickRandom(pool, excludeIds = []) {
+  const choices = pool.filter((item) => !excludeIds.includes(item.id));
+  if (!choices.length) return null;
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
+function pickTwo(pool, avoidIds = []) {
+  const first = pickRandom(pool, avoidIds);
+  const second = pickRandom(pool, [...avoidIds, first?.id]);
+
+  if (first && second) return { first, second };
+
+  const fallbackFirst = pool[0] || null;
+  const fallbackSecond =
+    pool.find((item) => item.id !== fallbackFirst?.id) || pool[1] || fallbackFirst || null;
+
+  return { first: fallbackFirst, second: fallbackSecond };
+}
+
+function normalizeThrow(offsetX, offsetY, isPortrait) {
+  if (isPortrait) {
+    const directionY = offsetY >= 0 ? 1 : -1;
+    const directionX = offsetX * 0.45;
+    return { x: directionX, y: directionY * 520 };
+  }
+
+  const directionX = offsetX >= 0 ? 1 : -1;
+  const directionY = offsetY * 0.35;
+  return { x: directionX * 620, y: directionY };
+}
+
+function getClipName(item) {
+  return item?.title || 'Untitled';
+}
+
+function AppShell({ children }) {
+  return (
+    <div style={styles.app}>
+      <div style={styles.phone}>{children}</div>
+    </div>
+  );
+}
+
+function ArenaLabel({ arena, visible }) {
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          style={styles.arenaLabelWrap}
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.28 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.24 }}
+          style={styles.arenaLabelWrap}
         >
-          <div style={styles.arenaLabel}>
-            <div style={styles.arenaLabelSmall}>Arena</div>
-            <div style={{ ...styles.arenaLabelText, color: accent }}>{category}</div>
-          </div>
+          <div style={styles.arenaLabelSmall}>Arena</div>
+          <div style={{ ...styles.arenaLabelText, color: arena.accent }}>{arena.label}</div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-function DiamondVS({ accent, canPulse }) {
+function DiamondVS({ accent }) {
   return (
     <div style={styles.vsCenterLayer}>
       <motion.div
-        animate={
-          canPulse
-            ? {
-                scale: [1, 1.035, 1],
-                filter: [
-                  'drop-shadow(0 0 8px rgba(255,255,255,0.05))',
-                  `drop-shadow(0 0 14px ${accent})`,
-                  'drop-shadow(0 0 8px rgba(255,255,255,0.05))',
-                ],
-              }
-            : { scale: 1 }
-        }
-        transition={canPulse ? { repeat: Infinity, duration: 1.3 } : { duration: 0.2 }}
         style={styles.vsMotionWrap}
+        animate={{
+          scale: [1, 1.02, 1],
+          filter: [
+            'drop-shadow(0 0 4px rgba(255,255,255,0.03))',
+            `drop-shadow(0 0 10px ${accent}55)`,
+            'drop-shadow(0 0 4px rgba(255,255,255,0.03))',
+          ],
+        }}
+        transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
       >
-        <div style={{ ...styles.vsDiamond, borderColor: `${accent}cc` }}>
+        <div style={{ ...styles.vsDiamond, borderColor: `${accent}bb` }}>
           <div style={styles.vsDiamondInner}>
             <span style={styles.vsText}>VS</span>
           </div>
@@ -190,24 +568,274 @@ function DiamondVS({ accent, canPulse }) {
   );
 }
 
+function ChampionMoment({ item, accent }) {
+  if (!item) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        style={styles.championOverlay}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          style={{ ...styles.championCard, borderColor: `${accent}66` }}
+          initial={{ opacity: 0, scale: 0.96, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: 6 }}
+          transition={{ duration: 0.26 }}
+        >
+          <div style={styles.championGlow} />
+          <div style={styles.championMicro}>3X DEFENDER</div>
+          <div style={styles.championTitle}>{getClipName(item)}</div>
+          <div style={styles.championCreator}>{item.creator}</div>
+          <div style={styles.championRule} />
+          <div style={styles.championSub}>Crowned, then cleared for fresh contenders.</div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function DetailsOverlay({ item, accent }) {
+  if (!item) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        style={styles.detailsOverlay}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          style={{ ...styles.detailsCard, borderColor: `${accent}66` }}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div style={styles.detailsTitle}>{item.title}</div>
+          <div style={styles.detailsCreator}>{item.creator}</div>
+
+          <div style={styles.detailsMetaRow}>
+            <div style={styles.detailsPill}>Rating {item.rating}</div>
+            <div style={styles.detailsPill}>{confidenceLabel(item.confidence)}</div>
+            <div style={styles.detailsPill}>{item.mediaType === 'video' ? 'Video' : 'Photo'}</div>
+          </div>
+
+          {item.mediaType === 'video' && (
+            <div style={styles.detailsSubText}>
+              {formatSeconds(item.trimStart || 0)} – {formatSeconds(item.trimEnd || 0)}
+            </div>
+          )}
+
+          <div style={{ ...styles.detailsArena, color: accent }}>{getArena(item.arenaId).label}</div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function MediaSurface({
+  item,
+  accent,
+  isPortrait,
+  side,
+  dragAxis,
+  onThrow,
+  onHoldStart,
+  onHoldEnd,
+  isActivePlayback,
+  paused,
+  isLocked,
+  dimmed,
+  showWinnerGlow,
+  showPausedBadge,
+}) {
+  const mediaRef = useRef(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setLoadFailed(false);
+  }, [item?.src]);
+
+  useEffect(() => {
+    if (!item || item.mediaType !== 'video') return;
+
+    const el = mediaRef.current;
+    if (!el) return;
+
+    const startTime = item.trimStart || 0;
+    const endTime = item.trimEnd || 7;
+
+    const onTimeUpdate = () => {
+      if (el.currentTime >= endTime) {
+        el.pause();
+      }
+    };
+
+    el.addEventListener('timeupdate', onTimeUpdate);
+
+    if (paused || !isActivePlayback) {
+      el.pause();
+      el.muted = true;
+    } else {
+      try {
+        el.currentTime = startTime;
+      } catch {
+        // no-op
+      }
+      el.muted = false;
+      const p = el.play();
+      if (p?.catch) p.catch(() => {});
+    }
+
+    return () => {
+      el.removeEventListener('timeupdate', onTimeUpdate);
+    };
+  }, [item, isActivePlayback, paused]);
+
+  if (!item) return null;
+
+  const swipeSign = isPortrait ? (side === 'first' ? -1 : 1) : side === 'first' ? -1 : 1;
+
+  return (
+    <motion.div
+      drag={isLocked ? false : dragAxis}
+      dragMomentum
+      dragElastic={0.06}
+      dragSnapToOrigin
+      onDragEnd={(_, info) => {
+        if (isLocked) return;
+
+        const distance = isPortrait ? info.offset.y : info.offset.x;
+        const velocity = isPortrait ? info.velocity.y : info.velocity.x;
+        const movingOut = swipeSign * distance > SWIPE_DISTANCE || swipeSign * velocity > SWIPE_VELOCITY;
+
+        if (movingOut) {
+          onThrow(side, info.offset.x, info.offset.y);
+        }
+      }}
+      onMouseDown={() => onHoldStart(item.id)}
+      onMouseUp={onHoldEnd}
+      onMouseLeave={onHoldEnd}
+      onTouchStart={() => onHoldStart(item.id)}
+      onTouchEnd={onHoldEnd}
+      onTouchCancel={onHoldEnd}
+      whileTap={{ scale: 0.995 }}
+      style={{
+        ...styles.surface,
+        ...(isPortrait ? styles.surfacePortrait : styles.surfaceLandscape),
+        boxShadow: showWinnerGlow ? `0 0 40px ${accent}26 inset` : 'none',
+      }}
+    >
+      {!loadFailed ? (
+        item.mediaType === 'video' ? (
+          <video
+            ref={mediaRef}
+            src={item.src}
+            playsInline
+            preload="auto"
+            style={styles.media}
+            onError={() => setLoadFailed(true)}
+          />
+        ) : (
+          <img
+            ref={mediaRef}
+            src={item.src}
+            alt={item.title}
+            style={styles.media}
+            onError={() => setLoadFailed(true)}
+          />
+        )
+      ) : (
+        <div style={{ ...styles.fallback, background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,0.82))` }}>
+          <div style={styles.fallbackEyebrow}>{getArena(item.arenaId).label}</div>
+          <div style={styles.fallbackTitle}>{item.title}</div>
+          <div style={styles.fallbackCreator}>{item.creator}</div>
+        </div>
+      )}
+
+      <div style={styles.surfaceScrim} />
+      <div style={styles.surfaceEdgeVignette} />
+      {dimmed && <div style={styles.inactiveShade} />}
+
+      {showPausedBadge && (
+        <div style={styles.pauseChip}>
+          <div style={styles.pauseBars}>
+            <span style={styles.pauseBar} />
+            <span style={styles.pauseBar} />
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
+  const ranked = useMemo(() => sortLeaderboard(items), [items]);
+
+  return (
+    <motion.div
+      drag="y"
+      dragElastic={0.08}
+      dragConstraints={{ top: 0, bottom: 460 }}
+      onDragEnd={(_, info) => {
+        if (info.offset.y > 80) setIsOpen(false);
+        if (info.offset.y < -80) setIsOpen(true);
+      }}
+      animate={{ y: isOpen ? 0 : 386 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+      style={styles.sheet}
+    >
+      <div style={styles.sheetHandleTap} onClick={() => setIsOpen((prev) => !prev)}>
+        <div style={styles.sheetHandle} />
+      </div>
+
+      <div style={styles.sheetHeader}>
+        <div>
+          <div style={styles.sheetEyebrow}>Leaderboard</div>
+          <div style={{ ...styles.sheetTitle, color: arena.accent }}>{arena.label}</div>
+        </div>
+        <div style={styles.sheetCount}>{ranked.length} contenders</div>
+      </div>
+
+      <div style={styles.sheetList}>
+        {ranked.map((item, index) => (
+          <div key={item.id} style={styles.sheetRow}>
+            <div style={styles.sheetRank}>#{index + 1}</div>
+            <div style={styles.sheetTextWrap}>
+              <div style={styles.sheetItemTitle}>{item.title}</div>
+              <div style={styles.sheetItemCreator}>{item.creator}</div>
+            </div>
+            <div style={styles.sheetRight}>
+              <div style={styles.sheetRating}>{item.rating}</div>
+              <div style={styles.sheetConfidence}>{confidenceLabel(item.confidence)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function OnboardingOverlay({ onClose }) {
   const [step, setStep] = useState(0);
 
   const steps = [
     {
-      title: 'Watch both clips',
-      body: 'Only one clip plays at a time, so each contender gets a clean shot.',
-      helper: 'Listen. Compare. Decide.',
+      title: 'Watch the contest',
+      body: 'Only one contender plays at a time. The arena gives each one a clean shot.',
     },
     {
       title: 'Hold for details',
-      body: 'Press and hold any clip to reveal creator and clip info.',
-      helper: 'No clutter unless you ask for it.',
+      body: 'Press and hold any contender to reveal its identity, rank state, and arena.',
     },
     {
       title: 'Throw away the loser',
-      body: 'Swipe the losing clip away. It leaves in that direction. The challenger enters from there too.',
-      helper: 'That swipe is the product.',
+      body: 'Swipe the loser out. The challenger comes in from that same side.',
     },
   ];
 
@@ -231,34 +859,33 @@ function OnboardingOverlay({ onClose }) {
       <motion.div
         key={step}
         style={styles.onboardingCard}
-        initial={{ opacity: 0, y: 16, scale: 0.985 }}
+        initial={{ opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.985 }}
+        exit={{ opacity: 0, y: -10, scale: 0.985 }}
         transition={{ duration: 0.24 }}
       >
         <div style={styles.onboardingStep}>0{step + 1}</div>
         <div style={styles.onboardingTitle}>{current.title}</div>
         <div style={styles.onboardingBody}>{current.body}</div>
-        <div style={styles.onboardingHelper}>{current.helper}</div>
 
         <div style={styles.onboardingDots}>
-          {steps.map((_, index) => (
+          {steps.map((_, idx) => (
             <div
-              key={index}
+              key={idx}
               style={{
                 ...styles.onboardingDot,
-                opacity: step === index ? 1 : 0.24,
-                transform: step === index ? 'scale(1.05)' : 'scale(1)',
+                opacity: idx === step ? 1 : 0.22,
+                transform: idx === step ? 'scale(1.05)' : 'scale(1)',
               }}
             />
           ))}
         </div>
 
         <div style={styles.onboardingActions}>
-          <button style={styles.onboardingGhostButton} onClick={onClose}>
+          <button style={styles.onboardingGhost} onClick={onClose}>
             Skip
           </button>
-          <button style={styles.onboardingPrimaryButton} onClick={next}>
+          <button style={styles.onboardingPrimary} onClick={next}>
             {step === steps.length - 1 ? 'Enter Arena' : 'Next'}
           </button>
         </div>
@@ -267,154 +894,102 @@ function OnboardingOverlay({ onClose }) {
   );
 }
 
-function VideoDetailsOverlay({ video, accent }) {
-  return (
-    <motion.div
-      style={styles.detailsOverlay}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        style={{ ...styles.detailsCard, borderColor: `${accent}66` }}
-        initial={{ scale: 0.96, y: 12 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.97, y: 8 }}
-      >
-        <div style={styles.detailsTitle}>{video.title}</div>
-        <div style={styles.detailsCreator}>{video.creator}</div>
-
-        <div style={styles.detailsMetaRow}>
-          <div style={styles.detailsPill}>Rating {video.rating}</div>
-          <div style={styles.detailsPill}>{confidenceLabel(video.confidence)}</div>
-          <div style={styles.detailsPill}>
-            {formatSeconds(video.trimStart || 0)} – {formatSeconds(video.trimEnd || 0)}
-          </div>
-        </div>
-
-        <div style={styles.detailsCategory}>{video.category}</div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 function UploadSheet({ isOpen, onClose, onSave }) {
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [arenaId, setArenaId] = useState(ARENAS[0].id);
   const [title, setTitle] = useState('');
   const [creator, setCreator] = useState('@me');
+  const [mediaType, setMediaType] = useState(getArena(ARENAS[0].id).mediaType);
   const [file, setFile] = useState(null);
   const [objectUrl, setObjectUrl] = useState('');
   const [duration, setDuration] = useState(0);
   const [trimStart, setTrimStart] = useState(0);
-  const [trimEnd, setTrimEnd] = useState(MAX_TRIM_SECONDS);
+  const [trimEnd, setTrimEnd] = useState(7);
 
-  const previewRef = useRef(null);
-  const uploadInputRef = useRef(null);
-  const captureInputRef = useRef(null);
+  const inputLibraryRef = useRef(null);
+  const inputCaptureRef = useRef(null);
+  const previewVideoRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
-      setSelectedCategory(CATEGORIES[0]);
+      setArenaId(ARENAS[0].id);
+      setMediaType(getArena(ARENAS[0].id).mediaType);
       setTitle('');
       setCreator('@me');
       setFile(null);
       setObjectUrl('');
       setDuration(0);
       setTrimStart(0);
-      setTrimEnd(MAX_TRIM_SECONDS);
+      setTrimEnd(7);
     }
   }, [isOpen]);
 
-  function loadSelectedFile(selected) {
-    if (!selected) return;
-    const nextUrl = URL.createObjectURL(selected);
+  useEffect(() => {
+    setMediaType(getArena(arenaId).mediaType);
+  }, [arenaId]);
 
+  useEffect(() => {
+    return () => {
+      if (objectUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [objectUrl]);
+
+  function handleArenaChange(nextArenaId) {
+    setArenaId(nextArenaId);
+    const nextType = getArena(nextArenaId).mediaType;
+    setMediaType(nextType);
+    setFile(null);
+    setObjectUrl('');
+    setDuration(0);
+    setTrimStart(0);
+    setTrimEnd(7);
+  }
+
+  function acceptString(type) {
+    return type === 'image' ? 'image/*' : 'video/*';
+  }
+
+  function loadFile(selected) {
+    if (!selected) return;
+
+    const fileType = selected.type?.startsWith('image/') ? 'image' : selected.type?.startsWith('video/') ? 'video' : null;
+    if (!fileType || fileType !== mediaType) return;
+
+    const nextUrl = URL.createObjectURL(selected);
     setFile(selected);
     setObjectUrl(nextUrl);
-    setTitle(selected.name.replace(/\.[^/.]+$/, ''));
+
+    if (!title.trim()) {
+      setTitle(selected.name.replace(/\.[^/.]+$/, ''));
+    }
   }
 
   function handleFileChange(e) {
-    loadSelectedFile(e.target.files?.[0]);
+    loadFile(e.target.files?.[0]);
   }
 
   function handleLoadedMetadata() {
-    const video = previewRef.current;
-    if (!video) return;
-
-    const d = video.duration || 0;
-    const safeEnd = Math.min(d, MAX_TRIM_SECONDS);
+    const el = previewVideoRef.current;
+    if (!el) return;
+    const d = Number(el.duration || 0);
+    const safeEnd = Math.min(d, 7);
     setDuration(d);
     setTrimStart(0);
-    setTrimEnd(safeEnd);
+    setTrimEnd(safeEnd || 7);
   }
-
-  function handleStartChange(value) {
-    const nextStart = clamp(Number(value), 0, Math.max(0, duration - 0.1));
-    let nextEnd = trimEnd;
-
-    if (nextEnd - nextStart > MAX_TRIM_SECONDS) {
-      nextEnd = nextStart + MAX_TRIM_SECONDS;
-    }
-    if (nextEnd <= nextStart) {
-      nextEnd = Math.min(duration, nextStart + 0.1);
-    }
-
-    setTrimStart(nextStart);
-    setTrimEnd(nextEnd);
-  }
-
-  function handleEndChange(value) {
-    let nextEnd = clamp(Number(value), 0.1, duration || MAX_TRIM_SECONDS);
-
-    if (nextEnd <= trimStart) {
-      nextEnd = trimStart + 0.1;
-    }
-    if (nextEnd - trimStart > MAX_TRIM_SECONDS) {
-      nextEnd = trimStart + MAX_TRIM_SECONDS;
-    }
-
-    setTrimEnd(Math.min(duration || nextEnd, nextEnd));
-  }
-
-  useEffect(() => {
-    const video = previewRef.current;
-    if (!video || !objectUrl) return;
-
-    const onTimeUpdate = () => {
-      if (video.currentTime >= trimEnd) {
-        video.currentTime = trimStart;
-        video.play().catch(() => {});
-      }
-    };
-
-    video.addEventListener('timeupdate', onTimeUpdate);
-    return () => video.removeEventListener('timeupdate', onTimeUpdate);
-  }, [objectUrl, trimStart, trimEnd]);
-
-  useEffect(() => {
-    const video = previewRef.current;
-    if (!video || !objectUrl) return;
-    video.currentTime = trimStart;
-    video.muted = false;
-  }, [trimStart, trimEnd, objectUrl]);
 
   function handleSave() {
-    if (!objectUrl || !file) return;
-
-    const savedUrl = objectUrl;
-
-    setObjectUrl('');
-    setFile(null);
+    if (!file || !objectUrl) return;
 
     onSave({
       title: title.trim() || file.name.replace(/\.[^/.]+$/, ''),
       creator: creator.trim() || '@me',
-      category: selectedCategory,
-      src: savedUrl,
-      trimStart,
-      trimEnd,
-      uploaded: true,
+      arenaId,
+      mediaType,
+      src: objectUrl,
+      trimStart: mediaType === 'video' ? trimStart : 0,
+      trimEnd: mediaType === 'video' ? trimEnd : 0,
     });
   }
 
@@ -429,9 +1004,9 @@ function UploadSheet({ isOpen, onClose, onSave }) {
         >
           <motion.div
             style={styles.uploadCard}
-            initial={{ opacity: 0, y: 14, scale: 0.98 }}
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            exit={{ opacity: 0, y: 8, scale: 0.985 }}
           >
             <div style={styles.uploadHeader}>
               <div>
@@ -443,52 +1018,25 @@ function UploadSheet({ isOpen, onClose, onSave }) {
               </button>
             </div>
 
-            <div style={styles.captureButtons}>
-              <button
-                style={styles.uploadActionButton}
-                onClick={() => uploadInputRef.current?.click()}
-              >
-                From library
-              </button>
-              <button
-                style={styles.uploadActionButton}
-                onClick={() => captureInputRef.current?.click()}
-              >
-                Record now
-              </button>
-
-              <input
-                ref={uploadInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-
-              <input
-                ref={captureInputRef}
-                type="file"
-                accept="video/*"
-                capture="environment"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-            </div>
-
             <div style={styles.uploadGrid}>
               <label style={styles.uploadField}>
-                <span style={styles.uploadLabel}>Category</span>
+                <span style={styles.uploadLabel}>Arena</span>
                 <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  value={arenaId}
+                  onChange={(e) => handleArenaChange(e.target.value)}
                   style={styles.uploadInput}
                 >
-                  {CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {ARENAS.map((arena) => (
+                    <option key={arena.id} value={arena.id}>
+                      {arena.label}
                     </option>
                   ))}
                 </select>
+              </label>
+
+              <label style={styles.uploadField}>
+                <span style={styles.uploadLabel}>Type</span>
+                <input value={mediaType === 'video' ? 'Video' : 'Photo'} readOnly style={styles.uploadInput} />
               </label>
 
               <label style={styles.uploadField}>
@@ -496,7 +1044,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Clip title"
+                  placeholder="Contender title"
                   style={styles.uploadInput}
                 />
               </label>
@@ -512,31 +1060,51 @@ function UploadSheet({ isOpen, onClose, onSave }) {
               </label>
             </div>
 
-            <div style={styles.trimBox}>
+            <div style={styles.captureButtons}>
+              <button style={styles.uploadActionButton} onClick={() => inputLibraryRef.current?.click()}>
+                From library
+              </button>
+              <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>
+                {mediaType === 'video' ? 'Record now' : 'Take photo'}
+              </button>
+
+              <input
+                ref={inputLibraryRef}
+                type="file"
+                accept={acceptString(mediaType)}
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+
+              <input
+                ref={inputCaptureRef}
+                type="file"
+                accept={acceptString(mediaType)}
+                capture="environment"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <div style={styles.previewBox}>
               {!objectUrl ? (
-                <div style={styles.trimEmpty}>
-                  Choose a video or record one, then trim the exact moment that deserves to compete.
+                <div style={styles.previewEmpty}>
+                  Choose a {mediaType === 'video' ? 'video' : 'photo'} that belongs in this arena.
                 </div>
-              ) : (
+              ) : mediaType === 'video' ? (
                 <>
-                  <div style={styles.trimPreviewWrap}>
-                    <video
-                      ref={previewRef}
-                      src={objectUrl}
-                      controls
-                      playsInline
-                      onLoadedMetadata={handleLoadedMetadata}
-                      style={styles.trimPreview}
-                    />
-                  </div>
+                  <video
+                    ref={previewVideoRef}
+                    src={objectUrl}
+                    controls
+                    playsInline
+                    style={styles.previewMedia}
+                    onLoadedMetadata={handleLoadedMetadata}
+                  />
 
                   <div style={styles.trimStats}>
-                    <div style={styles.trimStatPill}>
-                      Full length: {duration ? formatSeconds(duration) : '...'}
-                    </div>
-                    <div style={styles.trimStatPill}>
-                      Selected: {formatSeconds(Math.max(0, trimEnd - trimStart))}
-                    </div>
+                    <div style={styles.trimStatPill}>Full: {duration ? formatSeconds(duration) : '...'}</div>
+                    <div style={styles.trimStatPill}>Selected: {formatSeconds(Math.max(0, trimEnd - trimStart))}</div>
                     <div style={styles.trimStatPill}>Max: 7.0s</div>
                   </div>
 
@@ -548,7 +1116,12 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                       max={Math.max(0, duration - 0.1)}
                       step={0.1}
                       value={trimStart}
-                      onChange={(e) => handleStartChange(e.target.value)}
+                      onChange={(e) => {
+                        const nextStart = Number(e.target.value);
+                        setTrimStart(nextStart);
+                        if (trimEnd - nextStart > 7) setTrimEnd(nextStart + 7);
+                        if (trimEnd <= nextStart) setTrimEnd(nextStart + 0.2);
+                      }}
                       style={styles.slider}
                     />
                   </div>
@@ -558,14 +1131,21 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                     <input
                       type="range"
                       min={0.1}
-                      max={duration || MAX_TRIM_SECONDS}
+                      max={duration || 7}
                       step={0.1}
                       value={trimEnd}
-                      onChange={(e) => handleEndChange(e.target.value)}
+                      onChange={(e) => {
+                        let nextEnd = Number(e.target.value);
+                        if (nextEnd <= trimStart) nextEnd = trimStart + 0.2;
+                        if (nextEnd - trimStart > 7) nextEnd = trimStart + 7;
+                        setTrimEnd(nextEnd);
+                      }}
                       style={styles.slider}
                     />
                   </div>
                 </>
+              ) : (
+                <img src={objectUrl} alt="Preview" style={styles.previewMedia} />
               )}
             </div>
 
@@ -592,621 +1172,452 @@ function UploadSheet({ isOpen, onClose, onSave }) {
   );
 }
 
-function VideoSurface({
-  video,
-  onPressStart,
-  onPressEnd,
-  accent,
-  showCrown,
-  isWinner,
-  isActivePlayback,
-}) {
-  const videoRef = useRef(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-
-  useEffect(() => {
-    setLoadFailed(false);
-  }, [video.src]);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-
-    const startTime = video.trimStart || 0;
-    const endTime = video.trimEnd || MAX_TRIM_SECONDS;
-
-    const handleTimeUpdate = () => {
-      if (el.currentTime >= endTime) {
-        el.pause();
-      }
-    };
-
-    el.addEventListener('timeupdate', handleTimeUpdate);
-
-    if (isActivePlayback) {
-      el.currentTime = startTime;
-      el.muted = false;
-      const promise = el.play();
-      if (promise?.catch) promise.catch(() => {});
-    } else {
-      el.pause();
-      el.muted = true;
-    }
-
-    return () => {
-      el.removeEventListener('timeupdate', handleTimeUpdate);
-    };
-  }, [isActivePlayback, video.src, video.trimStart, video.trimEnd]);
-
-  const accentBg = `${accent}22`;
-
-  return (
-    <motion.div
-      style={{
-        ...styles.card,
-        boxShadow: isWinner ? `0 0 42px ${accent}22 inset` : 'none',
-      }}
-      whileTap={{ scale: 0.996 }}
-      onMouseDown={onPressStart}
-      onMouseUp={onPressEnd}
-      onMouseLeave={onPressEnd}
-      onTouchStart={onPressStart}
-      onTouchEnd={onPressEnd}
-      onTouchCancel={onPressEnd}
-    >
-      {!loadFailed ? (
-        <video
-          ref={videoRef}
-          src={video.src}
-          playsInline
-          preload="auto"
-          style={styles.video}
-          onError={() => setLoadFailed(true)}
-        />
-      ) : (
-        <div style={{ ...styles.videoFallback, background: accentBg }}>
-          <div style={styles.videoFallbackInner}>
-            <div style={styles.videoFallbackEyebrow}>{video.category}</div>
-            <div style={styles.videoFallbackTitle}>{video.title}</div>
-            <div style={styles.videoFallbackCreator}>{video.creator}</div>
-          </div>
-        </div>
-      )}
-
-      <div style={styles.scrim} />
-      <div style={styles.edgeVignette} />
-      {!isActivePlayback && <div style={styles.inactivePlaybackShade} />}
-
-      {isWinner && (
-        <motion.div
-          style={styles.winnerFlash}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        />
-      )}
-
-      <div style={styles.overlayTopMinimal}>
-        {showCrown && <div style={styles.badgeCrown}>👑</div>}
-      </div>
-    </motion.div>
-  );
-}
-
-function LeaderboardSheet({ videos, category, isOpen, setIsOpen }) {
-  const accent = categoryAccent(category);
-
-  const ranked = useMemo(
-    () =>
-      videos
-        .filter((v) => v.category === category)
-        .slice()
-        .sort((a, b) => a.rank - b.rank),
-    [videos, category]
-  );
-
-  return (
-    <motion.div
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 420 }}
-      dragElastic={0.1}
-      onDragEnd={(_, info) => {
-        if (info.offset.y > 70) setIsOpen(false);
-        if (info.offset.y < -70) setIsOpen(true);
-      }}
-      animate={{ y: isOpen ? 0 : 336 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-      style={styles.sheet}
-    >
-      <div style={styles.sheetHandleTap} onClick={() => setIsOpen((v) => !v)}>
-        <div style={styles.sheetHandle} />
-      </div>
-
-      <div style={styles.sheetHeader}>
-        <div>
-          <div style={styles.sheetLabel}>Leaderboard</div>
-          <div style={{ ...styles.sheetTitle, color: accent }}>{category}</div>
-        </div>
-        <div style={styles.sheetSub}>{ranked.length} contenders</div>
-      </div>
-
-      <div style={styles.sheetList}>
-        {ranked.map((video) => (
-          <div key={video.id} style={styles.sheetRow}>
-            <div style={styles.sheetRank}>#{video.rank}</div>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={styles.sheetVideoTitle}>{video.title}</div>
-              <div style={styles.sheetCreator}>{video.creator}</div>
-            </div>
-
-            <div style={styles.sheetRight}>
-              <div style={styles.sheetRating}>{video.rating}</div>
-              <div style={styles.sheetConfidence}>{confidenceLabel(video.confidence)}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function BattleArena({ videos, setVideos, category, onSwipeCategory, onOpenUpload }) {
+function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const isPortrait = useIsPortrait();
-  const accent = categoryAccent(category);
+  const dragAxis = isPortrait ? 'y' : 'x';
 
-  const getCategoryVideos = (arr) => arr.filter((v) => v.category === category);
+  const arenaItems = useMemo(() => sortLeaderboard(getArenaItems(pool, arena.id)), [pool, arena.id]);
 
-  const pickRandom = (pool, excludeIds = [], excludeSrcs = []) => {
-    const choices = pool.filter(
-      (v) => !excludeIds.includes(v.id) && !excludeSrcs.includes(v.src)
-    );
+  const battleHistoryRef = useRef([]);
+  const holdTimerRef = useRef(null);
+  const holdTriggeredRef = useRef(false);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
-    if (!choices.length) return null;
-    return choices[Math.floor(Math.random() * choices.length)];
-  };
-
-  const pickTwo = (pool) => {
-    const first = pickRandom(pool);
-    const second = pickRandom(pool, [first?.id], [first?.src]);
-
-    if (!first || !second) {
-      const fallbackFirst = pool[0];
-      const fallbackSecond =
-        pool.find((v) => v.id !== fallbackFirst?.id && v.src !== fallbackFirst?.src) ||
-        pool[1] ||
-        pool[0];
-
-      return {
-        first: fallbackFirst,
-        second: fallbackSecond,
-      };
-    }
-
-    return { first, second };
-  };
-
-  const categoryVideos = useMemo(() => getCategoryVideos(videos), [videos, category]);
-
-  const [pair, setPair] = useState(() => pickTwo(getCategoryVideos(videos)));
-  const [throwSide, setThrowSide] = useState(null);
-  const [throwVector, setThrowVector] = useState({ x: 0, y: 0 });
-  const [enterSide, setEnterSide] = useState(null);
-  const [enterVector, setEnterVector] = useState({ x: 0, y: 0 });
-  const [isLocked, setIsLocked] = useState(false);
+  const [pair, setPair] = useState(() => pickTwo(arenaItems));
   const [winnerId, setWinnerId] = useState(null);
   const [streak, setStreak] = useState(0);
   const [showChampion, setShowChampion] = useState(false);
+  const [championItem, setChampionItem] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [labelVisible, setLabelVisible] = useState(true);
+  const [isLocked, setIsLocked] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [activeSide, setActiveSide] = useState('second');
   const [decisionUnlockedAt, setDecisionUnlockedAt] = useState(Date.now());
-  const [userTrust, setUserTrust] = useState(1.0);
+  const [userTrust, setUserTrust] = useState(1);
   const [rushedVotes, setRushedVotes] = useState(0);
   const [totalVotes, setTotalVotes] = useState(0);
-  const [detailsVideoId, setDetailsVideoId] = useState(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [playbackSide, setPlaybackSide] = useState('second');
-  const [showArenaLabel, setShowArenaLabel] = useState(true);
+  const [throwState, setThrowState] = useState(null);
 
-  const holdTimerRef = useRef(null);
-  const holdTriggeredRef = useRef(false);
-  const pressStartRef = useRef(0);
-  const arenaTimerRef = useRef(null);
+  const labelTimerRef = useRef(null);
 
-  function startArenaTimer(duration = 20000) {
-    setShowArenaLabel(true);
-    if (arenaTimerRef.current) clearTimeout(arenaTimerRef.current);
-    arenaTimerRef.current = setTimeout(() => {
-      setShowArenaLabel(false);
-    }, duration);
+  const detailsItem = useMemo(
+    () => arenaItems.find((item) => item.id === detailsId) || null,
+    [arenaItems, detailsId]
+  );
+
+  function resetArenaLabel() {
+    setLabelVisible(true);
+    if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
+    labelTimerRef.current = setTimeout(() => setLabelVisible(false), LABEL_VISIBLE_MS);
   }
 
   useEffect(() => {
-    const pool = getCategoryVideos(videos);
-    if (pool.length < 2) return;
-
-    setPair(pickTwo(pool));
-    setThrowSide(null);
-    setEnterSide(null);
-    setThrowVector({ x: 0, y: 0 });
-    setEnterVector({ x: 0, y: 0 });
-    setIsLocked(false);
+    resetArenaLabel();
+    setSheetOpen(false);
+    setDetailsId(null);
+    setPaused(false);
     setWinnerId(null);
     setStreak(0);
     setShowChampion(false);
+    setChampionItem(null);
+    setIsLocked(false);
+    setThrowState(null);
     setDecisionUnlockedAt(Date.now());
-    setDetailsVideoId(null);
-    setSheetOpen(false);
-    setPlaybackSide('second');
-    holdTriggeredRef.current = false;
 
-    startArenaTimer(20000);
-  }, [category, videos.length]);
-
-  useEffect(() => {
-    if (isLocked || showChampion || detailsVideoId) return;
-
-    const activeVideo = playbackSide === 'first' ? pair.first : pair.second;
-    const clipLength = Math.max(
-      900,
-      ((activeVideo?.trimEnd || MAX_TRIM_SECONDS) - (activeVideo?.trimStart || 0)) * 1000
-    );
-
-    const timer = setTimeout(() => {
-      setPlaybackSide((prev) => (prev === 'first' ? 'second' : 'first'));
-    }, clipLength);
-
-    return () => clearTimeout(timer);
-  }, [isLocked, showChampion, detailsVideoId, pair.first, pair.second, playbackSide]);
+    const nextPair = pickNextPair(arenaItems, battleHistoryRef.current);
+    setPair(nextPair);
+    setActiveSide(nextPair?.second ? 'second' : 'first');
+  }, [arena.id, arenaItems.length]);
 
   useEffect(() => {
     return () => {
-      if (arenaTimerRef.current) clearTimeout(arenaTimerRef.current);
+      if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
     };
   }, []);
 
-  const canPick = !isLocked && !showChampion;
+  useEffect(() => {
+    if (!pair?.first || !pair?.second || paused || showChampion || detailsId || isLocked) return;
+    const activeItem = activeSide === 'first' ? pair.first : pair.second;
+    const timer = setTimeout(() => {
+      setActiveSide((prev) => (prev === 'first' ? 'second' : 'first'));
+    }, safeDuration(activeItem));
 
-  const applyVideoUpdate = (updatedWinner, updatedLoser) => {
-    setVideos((prev) =>
-      prev.map((v) => {
-        if (v.id === updatedWinner.id) return updatedWinner;
-        if (v.id === updatedLoser.id) return updatedLoser;
-        return v;
-      })
+    return () => clearTimeout(timer);
+  }, [pair, activeSide, paused, showChampion, detailsId, isLocked]);
+
+  function pickNextPair(items, history) {
+    if (items.length < 2) return pickTwo(items);
+
+    const recentIds = history.slice(-4);
+    let next = pickTwo(items, recentIds);
+
+    if (!next.first || !next.second) return next;
+
+    if (next.first.id === next.second.id) {
+      next = pickTwo(items, []);
+    }
+
+    return next;
+  }
+
+  function updatePoolWithResults(updatedWinner, updatedLoser) {
+    setPool((prev) =>
+      sortLeaderboard(
+        prev.map((item) => {
+          if (item.id === updatedWinner.id) return updatedWinner;
+          if (item.id === updatedLoser.id) return updatedLoser;
+          return item;
+        })
+      )
     );
-  };
+  }
 
-  const startHold = (videoId) => {
-    pressStartRef.current = Date.now();
+  function startHold(id) {
     holdTriggeredRef.current = false;
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
 
-    clearTimeout(holdTimerRef.current);
     holdTimerRef.current = setTimeout(() => {
       holdTriggeredRef.current = true;
-      setDetailsVideoId(videoId);
-    }, 340);
-  };
+      setDetailsId(id);
+      setPaused(true);
+    }, HOLD_MS);
+  }
 
-  const endHold = () => {
-    clearTimeout(holdTimerRef.current);
+  function endHold() {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
 
     if (holdTriggeredRef.current) {
-      setDetailsVideoId(null);
+      holdTriggeredRef.current = false;
+      setDetailsId(null);
+      setPaused(false);
+    }
+  }
+
+  function handleArenaGestureStart(e) {
+    const t = e.touches?.[0];
+    if (!t) return;
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function handleArenaGestureEnd(e) {
+    const t = e.changedTouches?.[0];
+    if (!t) return;
+
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+
+    if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      onSwipeArena(dx > 0 ? -1 : 1);
       return;
     }
 
-    const pressDuration = Date.now() - pressStartRef.current;
-    if (pressDuration > 280) return;
-  };
+    if (Math.abs(dy) > 90 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+      if (dy < 0) setSheetOpen(true);
+      if (dy > 0) setSheetOpen(false);
+    }
+  }
 
-  const throwLoser = (side, vector) => {
-    if (!canPick || detailsVideoId) return;
+  function handleTogglePause() {
+    if (detailsId || showChampion) return;
+    setPaused((prev) => !prev);
+  }
+
+  function handleThrow(loserSide, offsetX, offsetY) {
+    if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId) return;
 
     setIsLocked(true);
+    const normalizedThrow = normalizeThrow(offsetX, offsetY, isPortrait);
+    setThrowState({ side: loserSide, vector: normalizedThrow });
+
+    const loser = loserSide === 'first' ? pair.first : pair.second;
+    const winner = loserSide === 'first' ? pair.second : pair.first;
 
     const now = Date.now();
-    const msSinceUnlock = decisionUnlockedAt ? now - decisionUnlockedAt : 0;
+    const msSinceUnlock = now - decisionUnlockedAt;
     const voteTrust = getVoteTrust(msSinceUnlock);
-    const rushed = msSinceUnlock < 900;
+    const rushed = msSinceUnlock < 850;
 
     const nextTotalVotes = totalVotes + 1;
     const nextRushedVotes = rushed ? rushedVotes + 1 : rushedVotes;
     const rushedRate = nextRushedVotes / nextTotalVotes;
 
     let nextUserTrust = userTrust;
-    if (rushed) nextUserTrust = clamp(userTrust - 0.08, 0.35, 1.0);
-    else nextUserTrust = clamp(userTrust + 0.02, 0.35, 1.0);
-    if (rushedRate > 0.5) nextUserTrust = clamp(nextUserTrust - 0.05, 0.35, 1.0);
+    if (rushed) nextUserTrust = clamp(userTrust - 0.08, 0.35, 1);
+    else nextUserTrust = clamp(userTrust + 0.02, 0.35, 1);
+    if (rushedRate > 0.5) nextUserTrust = clamp(nextUserTrust - 0.05, 0.35, 1);
 
     setUserTrust(nextUserTrust);
     setTotalVotes(nextTotalVotes);
     setRushedVotes(nextRushedVotes);
 
     const finalVoteWeight = voteTrust * nextUserTrust;
-
-    const loser = side === 'first' ? pair.first : pair.second;
-    const winner = side === 'first' ? pair.second : pair.first;
-
-    const { winnerDelta, loserDelta } = computeConfidenceAdjustedDelta(
-      winner,
-      loser,
-      finalVoteWeight
-    );
+    const { winnerDelta, loserDelta } = computeConfidenceAdjustedDelta(winner, loser, finalVoteWeight);
 
     const updatedWinner = {
       ...winner,
       rating: winner.rating + winnerDelta,
-      rank: Math.max(1, winner.rank - Math.max(1, Math.round(winnerDelta / 2))),
       confidence: updateConfidence(winner.confidence, finalVoteWeight > 0.7),
+      wins: (winner.wins || 0) + 1,
     };
 
     const updatedLoser = {
       ...loser,
       rating: Math.max(1000, loser.rating - loserDelta),
-      rank: loser.rank + Math.max(1, Math.round(loserDelta / 2)),
       confidence: updateConfidence(loser.confidence, finalVoteWeight > 0.7),
+      losses: (loser.losses || 0) + 1,
     };
 
-    applyVideoUpdate(updatedWinner, updatedLoser);
+    updatePoolWithResults(updatedWinner, updatedLoser);
 
-    const nextStreak = winnerId === winner.id ? streak + 1 : 1;
-    setWinnerId(winner.id);
-    setStreak(nextStreak);
+    const nextWinnerStreak = winnerId === updatedWinner.id ? streak + 1 : 1;
+    setWinnerId(updatedWinner.id);
+    setStreak(nextWinnerStreak);
 
-    const normalized = normalizeVector(vector.x, vector.y, 360);
-    setThrowVector(normalized);
-    setThrowSide(side);
+    battleHistoryRef.current.push(updatedWinner.id, updatedLoser.id);
 
-    setTimeout(() => {
-      const updatedPool = categoryVideos.map((v) => {
-        if (v.id === updatedWinner.id) return updatedWinner;
-        if (v.id === updatedLoser.id) return updatedLoser;
-        return v;
-      });
+    window.setTimeout(() => {
+      const freshPool = sortLeaderboard(
+        getArenaItems(
+          pool.map((item) => {
+            if (item.id === updatedWinner.id) return updatedWinner;
+            if (item.id === updatedLoser.id) return updatedLoser;
+            return item;
+          }),
+          arena.id
+        )
+      );
 
-      if (nextStreak >= 3) {
-        setThrowSide(null);
+      if (nextWinnerStreak >= 3) {
+        setChampionItem(updatedWinner);
         setShowChampion(true);
 
-        setTimeout(() => {
-          const freshPool =
-            updatedPool.filter(
-              (v) =>
-                ![updatedWinner.id, updatedLoser.id].includes(v.id) &&
-                v.src !== updatedWinner.src &&
-                v.src !== updatedLoser.src
-            ).length >= 2
-              ? updatedPool.filter(
-                  (v) =>
-                    ![updatedWinner.id, updatedLoser.id].includes(v.id) &&
-                    v.src !== updatedWinner.src &&
-                    v.src !== updatedLoser.src
-                )
-              : updatedPool;
+        window.setTimeout(() => {
+          const withoutChampionPair = freshPool.filter(
+            (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
+          );
+          const nextPair = pickNextPair(withoutChampionPair.length >= 2 ? withoutChampionPair : freshPool, battleHistoryRef.current);
 
-          setPair(pickTwo(freshPool));
+          setPair(nextPair);
+          setActiveSide(nextPair?.second ? 'second' : 'first');
           setWinnerId(null);
           setStreak(0);
           setShowChampion(false);
-          setDecisionUnlockedAt(Date.now());
-          setEnterSide(null);
-          setEnterVector({ x: 0, y: 0 });
-          setThrowVector({ x: 0, y: 0 });
+          setChampionItem(null);
+          setThrowState(null);
           setIsLocked(false);
-          setPlaybackSide('second');
-        }, 1450);
+          setPaused(false);
+          setDecisionUnlockedAt(Date.now());
+        }, 1350);
 
         return;
       }
 
-      const challengerPool = updatedPool.filter(
-        (v) =>
-          ![updatedWinner.id, updatedLoser.id].includes(v.id) &&
-          v.src !== updatedWinner.src &&
-          v.src !== updatedLoser.src
+      const challengerPool = freshPool.filter(
+        (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
       );
 
-      const challenger =
-        challengerPool.length
-          ? pickRandom(challengerPool, [], [updatedWinner.src, updatedLoser.src])
-          : pickRandom(updatedPool, [updatedWinner.id], [updatedWinner.src, updatedLoser.src]);
+      const recentIds = battleHistoryRef.current.slice(-4);
+      const challenger = pickRandom(challengerPool, recentIds) || pickRandom(freshPool, [updatedWinner.id]);
 
       const safeChallenger =
         challenger ||
-        updatedPool.find(
-          (v) => v.id !== updatedWinner.id && v.id !== updatedLoser.id && v.src !== updatedWinner.src
-        ) ||
-        updatedPool.find((v) => v.id !== updatedWinner.id && v.src !== updatedWinner.src) ||
-        updatedPool.find((v) => v.id !== updatedWinner.id) ||
+        freshPool.find((item) => item.id !== updatedWinner.id) ||
         updatedWinner;
 
-      if (side === 'first') {
-        setPair({ first: safeChallenger, second: updatedWinner });
-        setEnterSide('first');
-      } else {
-        setPair({ first: updatedWinner, second: safeChallenger });
-        setEnterSide('second');
-      }
+      const nextPair =
+        loserSide === 'first'
+          ? { first: safeChallenger, second: updatedWinner }
+          : { first: updatedWinner, second: safeChallenger };
 
-      setEnterVector(normalized);
-      setThrowSide(null);
+      setPair(nextPair);
+      setActiveSide(loserSide === 'first' ? 'second' : 'first');
+      setThrowState(null);
+      setIsLocked(false);
+      setPaused(false);
       setDecisionUnlockedAt(Date.now());
-      setPlaybackSide(side === 'first' ? 'second' : 'first');
-
-      setTimeout(() => {
-        setEnterSide(null);
-        setEnterVector({ x: 0, y: 0 });
-        setThrowVector({ x: 0, y: 0 });
-        setIsLocked(false);
-      }, 280);
-    }, 430);
-  };
-
-  function getThrowMotion(sideName) {
-    if (throwSide === sideName) {
-      return {
-        x: throwVector.x,
-        y: throwVector.y,
-        opacity: 0,
-        rotate: throwVector.x > 0 ? 7 : -7,
-        scale: 0.98,
-      };
-    }
-
-    if (enterSide === sideName) {
-      return {
-        x: enterVector.x * -0.32,
-        y: enterVector.y * -0.32,
-        opacity: 0.14,
-        rotate: enterVector.x > 0 ? -4 : 4,
-        scale: 0.985,
-      };
-    }
-
-    return { x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 };
+    }, 420);
   }
 
-  const firstMotion = getThrowMotion('first');
-  const secondMotion = getThrowMotion('second');
+  function getThrownStyle(side) {
+    if (!throwState || throwState.side !== side) return {};
 
-  function buildSwipeHandler(side) {
-    return (_, info) => {
-      if (!canPick || detailsVideoId) return;
-
-      const { x, y } = info.offset;
-      if (magnitude(x, y) < SWIPE_THRESHOLD) return;
-
-      throwLoser(side, { x, y });
+    return {
+      x: throwState.vector.x,
+      y: throwState.vector.y,
+      opacity: 0,
+      scale: 0.94,
+      rotate: isPortrait ? throwState.vector.x * 0.02 : throwState.vector.y * 0.03,
+      transition: { type: 'spring', stiffness: 180, damping: 22 },
     };
   }
 
-  return (
-    <div style={styles.battleShell}>
-      <ArenaLabel category={category} accent={accent} visible={showArenaLabel} />
+  if (!pair?.first || !pair?.second) {
+    return (
+      <div style={styles.emptyArena}>
+        <div style={styles.emptyArenaTitle}>Not enough contenders yet</div>
+        <div style={styles.emptyArenaBody}>Upload a few more so this arena can run a real contest.</div>
+        <button style={styles.emptyArenaButton} onClick={onOpenUpload}>
+          Add contender
+        </button>
+      </div>
+    );
+  }
 
-      <div style={styles.topButtons}>
-        <button style={styles.uploadButton} onClick={onOpenUpload}>
-          Upload
+  return (
+    <div
+      style={styles.battleRoot}
+      onClick={handleTogglePause}
+      onTouchStart={handleArenaGestureStart}
+      onTouchEnd={handleArenaGestureEnd}
+    >
+      <ArenaLabel arena={arena} visible={labelVisible} />
+
+      <div style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}>
+        <motion.div
+          animate={getThrownStyle('first')}
+          style={{ ...styles.slot, ...(isPortrait ? styles.slotPortrait : styles.slotLandscape) }}
+        >
+          <MediaSurface
+            item={pair.first}
+            accent={arena.accent}
+            isPortrait={isPortrait}
+            side="first"
+            dragAxis={dragAxis}
+            onThrow={handleThrow}
+            onHoldStart={startHold}
+            onHoldEnd={endHold}
+            isActivePlayback={activeSide === 'first'}
+            paused={paused}
+            isLocked={isLocked}
+            dimmed={activeSide !== 'first' || paused}
+            showWinnerGlow={winnerId === pair.first.id}
+            showPausedBadge={paused}
+          />
+        </motion.div>
+
+        <motion.div
+          animate={getThrownStyle('second')}
+          style={{ ...styles.slot, ...(isPortrait ? styles.slotPortrait : styles.slotLandscape) }}
+        >
+          <MediaSurface
+            item={pair.second}
+            accent={arena.accent}
+            isPortrait={isPortrait}
+            side="second"
+            dragAxis={dragAxis}
+            onThrow={handleThrow}
+            onHoldStart={startHold}
+            onHoldEnd={endHold}
+            isActivePlayback={activeSide === 'second'}
+            paused={paused}
+            isLocked={isLocked}
+            dimmed={activeSide !== 'second' || paused}
+            showWinnerGlow={winnerId === pair.second.id}
+            showPausedBadge={paused}
+          />
+        </motion.div>
+      </div>
+
+      <DiamondVS accent={arena.accent} />
+      <DetailsOverlay item={detailsItem} accent={arena.accent} />
+      <ChampionMoment item={championItem} accent={arena.accent} />
+
+      <div style={styles.bottomGhostBar}>
+        <button
+          style={styles.invisibleUploadButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenUpload();
+          }}
+        >
+          +
         </button>
       </div>
 
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.05}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -70) onSwipeCategory(1);
-          if (info.offset.x > 70) onSwipeCategory(-1);
-        }}
-        style={styles.arena}
-      >
-        <div
-          style={
-            isPortrait
-              ? {
-                  ...styles.seamGlow,
-                  left: 0,
-                  right: 0,
-                  top: '50%',
-                  height: 2,
-                  transform: 'translateY(-50%)',
-                  background: `linear-gradient(90deg, transparent, ${accent}aa, transparent)`,
-                }
-              : {
-                  ...styles.seamGlow,
-                  top: 0,
-                  bottom: 0,
-                  left: '50%',
-                  width: 2,
-                  transform: 'translateX(-50%)',
-                  background: `linear-gradient(180deg, transparent, ${accent}aa, transparent)`,
-                }
-          }
-        />
-
-        <div style={isPortrait ? styles.splitPortrait : styles.splitLandscape}>
-          <motion.div
-            style={styles.halfWrap}
-            animate={firstMotion}
-            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            drag={canPick && !detailsVideoId ? true : false}
-            dragElastic={0.08}
-            dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            onDragEnd={buildSwipeHandler('first')}
-          >
-            <VideoSurface
-              video={pair.first}
-              onPressStart={() => startHold(pair.first.id)}
-              onPressEnd={endHold}
-              accent={accent}
-              showCrown={showChampion && winnerId === pair.first.id}
-              isWinner={winnerId === pair.first.id}
-              isActivePlayback={playbackSide === 'first'}
-            />
-          </motion.div>
-
-          <motion.div
-            style={styles.halfWrap}
-            animate={secondMotion}
-            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            drag={canPick && !detailsVideoId ? true : false}
-            dragElastic={0.08}
-            dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            onDragEnd={buildSwipeHandler('second')}
-          >
-            <VideoSurface
-              video={pair.second}
-              onPressStart={() => startHold(pair.second.id)}
-              onPressEnd={endHold}
-              accent={accent}
-              showCrown={showChampion && winnerId === pair.second.id}
-              isWinner={winnerId === pair.second.id}
-              isActivePlayback={playbackSide === 'second'}
-            />
-          </motion.div>
-        </div>
-
-        <DiamondVS accent={accent} canPulse={canPick} />
-
-        <AnimatePresence>
-          {detailsVideoId && (
-            <VideoDetailsOverlay
-              video={detailsVideoId === pair.first.id ? pair.first : pair.second}
-              accent={accent}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showChampion && (
-            <motion.div
-              style={styles.championOverlay}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                style={styles.championCard}
-                initial={{ scale: 0.88, y: 10 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.92, y: 8 }}
-              >
-                <div style={{ fontSize: 48, marginBottom: 8 }}>👑</div>
-                <div style={styles.championTitle}>3X DEFENDING WINNER</div>
-                <div style={styles.championText}>Fresh contenders entering the arena.</div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      <LeaderboardSheet
-        videos={videos}
-        category={category}
-        isOpen={sheetOpen}
-        setIsOpen={setSheetOpen}
-      />
+      <LeaderboardSheet items={arenaItems} arena={arena} isOpen={sheetOpen} setIsOpen={setSheetOpen} />
     </div>
+  );
+}
+
+export default function App() {
+  const [pool, setPool] = useState(() => sortLeaderboard([...DEMO_MEDIA, ...loadUploadsFromStorage()]));
+  const [arenaIndex, setArenaIndex] = useState(0);
+  const [showUpload, setShowUpload] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const nextIdRef = useRef(100000);
+
+  const arena = ARENAS[arenaIndex];
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(STORAGE_KEY_ONBOARDING);
+      if (!seen) setShowOnboarding(true);
+    } catch {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    saveUploadsToStorage(pool);
+  }, [pool]);
+
+  function closeOnboarding() {
+    try {
+      localStorage.setItem(STORAGE_KEY_ONBOARDING, 'true');
+    } catch {
+      // no-op
+    }
+    setShowOnboarding(false);
+  }
+
+  function changeArena(direction) {
+    setArenaIndex((prev) => {
+      if (direction > 0) return prev === ARENAS.length - 1 ? 0 : prev + 1;
+      return prev === 0 ? ARENAS.length - 1 : prev - 1;
+    });
+  }
+
+  function handleSaveUpload(data) {
+    const newItem = {
+      id: nextIdRef.current++,
+      arenaId: data.arenaId,
+      title: data.title,
+      creator: data.creator,
+      mediaType: data.mediaType,
+      src: data.src,
+      trimStart: data.mediaType === 'video' ? data.trimStart : 0,
+      trimEnd: data.mediaType === 'video' ? data.trimEnd : 0,
+      uploaded: true,
+      rating: 3000,
+      confidence: 0.55,
+      wins: 0,
+      losses: 0,
+    };
+
+    setPool((prev) => sortLeaderboard([...prev, newItem]));
+    setArenaIndex(ARENAS.findIndex((a) => a.id === data.arenaId));
+    setShowUpload(false);
+  }
+
+  return (
+    <AppShell>
+      <BattleArena
+        pool={pool}
+        setPool={setPool}
+        arena={arena}
+        onSwipeArena={changeArena}
+        onOpenUpload={() => setShowUpload(true)}
+      />
+
+      <AnimatePresence>
+        {showOnboarding && <OnboardingOverlay onClose={closeOnboarding} />}
+      </AnimatePresence>
+
+      <UploadSheet isOpen={showUpload} onClose={() => setShowUpload(false)} onSave={handleSaveUpload} />
+    </AppShell>
   );
 }
 
@@ -1214,208 +1625,155 @@ const styles = {
   app: {
     minHeight: '100vh',
     background:
-      'radial-gradient(circle at top, rgba(124,58,237,.18), transparent 24%), radial-gradient(circle at bottom, rgba(236,72,153,.08), transparent 28%), #070b16',
+      'radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)',
     color: 'white',
-    fontFamily: 'Arial, sans-serif',
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
-    boxSizing: 'border-box',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   phone: {
+    position: 'relative',
+    width: '100vw',
+    height: '100vh',
+    overflow: 'hidden',
+    background: '#050608',
+  },
+  battleRoot: {
+    position: 'relative',
     width: '100%',
-    maxWidth: 430,
-    height: 'min(94vh, 920px)',
-    background: 'linear-gradient(180deg, #020617 0%, #030712 100%)',
-    borderRadius: 34,
-    padding: 10,
-    boxSizing: 'border-box',
-    boxShadow: '0 28px 80px rgba(0,0,0,.55)',
-    border: '1px solid rgba(255,255,255,.05)',
+    height: '100%',
     overflow: 'hidden',
-    position: 'relative',
+    background:
+      'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), #050608',
   },
-  battleShell: {
-    position: 'relative',
-    height: '100%',
-  },
-  topButtons: {
-    position: 'absolute',
-    top: 14,
-    right: 12,
-    zIndex: 16,
-    display: 'flex',
-    gap: 8,
-  },
-  uploadButton: {
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.06)',
-    color: 'white',
-    borderRadius: 999,
-    padding: '9px 14px',
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: '0.04em',
-    cursor: 'pointer',
-    backdropFilter: 'blur(8px)',
-  },
-  arenaLabelWrap: {
-    position: 'absolute',
-    top: 16,
-    left: 0,
-    right: 0,
-    zIndex: 15,
-    display: 'flex',
-    justifyContent: 'center',
-    pointerEvents: 'none',
-  },
-  arenaLabel: {
-    textAlign: 'center',
-    padding: '2px 10px',
-    background: 'transparent',
-  },
-  arenaLabelSmall: {
-    fontSize: 9,
-    textTransform: 'uppercase',
-    letterSpacing: '0.24em',
-    opacity: 0.46,
-    fontWeight: 800,
-    marginBottom: 2,
-  },
-  arenaLabelText: {
-    fontSize: 15,
-    fontWeight: 900,
-    letterSpacing: '-0.01em',
-    textShadow: '0 1px 12px rgba(0,0,0,.35)',
-  },
-  arena: {
-    position: 'relative',
-    height: '100%',
-    borderRadius: 28,
-    overflow: 'hidden',
-    background: '#000',
-  },
-  splitPortrait: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gridTemplateRows: '1fr 1fr',
-    height: '100%',
-  },
-  splitLandscape: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gridTemplateRows: '1fr',
-    height: '100%',
-  },
-  halfWrap: {
-    position: 'relative',
-    minHeight: 0,
-    minWidth: 0,
-    overflow: 'hidden',
-  },
-  card: {
-    position: 'relative',
-    height: '100%',
-    width: '100%',
-    overflow: 'hidden',
-    background: '#000',
-    touchAction: 'none',
-  },
-  video: {
+  battleLayout: {
     position: 'absolute',
     inset: 0,
+    display: 'flex',
+    gap: 0,
+  },
+  stackPortrait: {
+    flexDirection: 'column',
+  },
+  stackLandscape: {
+    flexDirection: 'row',
+  },
+  slot: {
+    position: 'relative',
+    overflow: 'hidden',
+    background: '#040506',
+  },
+  slotPortrait: {
+    flex: 1,
+    minHeight: 0,
+  },
+  slotLandscape: {
+    flex: 1,
+    minWidth: 0,
+  },
+  surface: {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    cursor: 'grab',
+    touchAction: 'none',
+    background: '#07080b',
+  },
+  surfacePortrait: {
+    borderTop: '1px solid rgba(255,255,255,0.03)',
+    borderBottom: '1px solid rgba(255,255,255,0.03)',
+  },
+  surfaceLandscape: {
+    borderLeft: '1px solid rgba(255,255,255,0.03)',
+    borderRight: '1px solid rgba(255,255,255,0.03)',
+  },
+  media: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    background: '#000',
+    transform: 'scale(1.04)',
+    background: '#0b0b0d',
   },
-  videoFallback: {
+  fallback: {
     position: 'absolute',
     inset: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
+    padding: 22,
+  },
+  fallbackEyebrow: {
+    fontSize: 11,
+    letterSpacing: '0.18em',
+    opacity: 0.7,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  fallbackTitle: {
+    fontSize: 30,
+    fontWeight: 800,
+    lineHeight: 1,
+    marginBottom: 6,
+  },
+  fallbackCreator: {
+    fontSize: 15,
+    opacity: 0.72,
+  },
+  surfaceScrim: {
+    position: 'absolute',
+    inset: 0,
+    background:
+      'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.1) 35%, rgba(0,0,0,0.24) 100%)',
+    pointerEvents: 'none',
+  },
+  surfaceEdgeVignette: {
+    position: 'absolute',
+    inset: 0,
+    boxShadow: 'inset 0 0 80px rgba(0,0,0,0.28)',
+    pointerEvents: 'none',
+  },
+  inactiveShade: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.22)',
+    pointerEvents: 'none',
+  },
+  pauseChip: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    background: 'rgba(6,8,12,0.42)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(255,255,255,.04)',
   },
-  videoFallbackInner: {
-    padding: 24,
-    textAlign: 'center',
-  },
-  videoFallbackEyebrow: {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: '0.2em',
-    opacity: 0.5,
-    marginBottom: 10,
-    fontWeight: 800,
-  },
-  videoFallbackTitle: {
-    fontSize: 24,
-    fontWeight: 900,
-    marginBottom: 8,
-  },
-  videoFallbackCreator: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  scrim: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(to top, rgba(0,0,0,.34), rgba(0,0,0,.04) 45%, rgba(0,0,0,.12))',
-    zIndex: 1,
-  },
-  edgeVignette: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 1,
-    background: 'radial-gradient(circle at center, transparent 42%, rgba(0,0,0,.26) 100%)',
-  },
-  inactivePlaybackShade: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 2,
-    background: 'rgba(0,0,0,.28)',
-    pointerEvents: 'none',
-  },
-  winnerFlash: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 3,
-    background: 'radial-gradient(circle, rgba(255,255,255,.08), transparent 60%)',
-    pointerEvents: 'none',
-  },
-  overlayTopMinimal: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    zIndex: 4,
+  pauseBars: {
     display: 'flex',
-    gap: 8,
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    gap: 4,
   },
-  badgeCrown: {
-    background: 'rgba(250,204,21,.94)',
-    color: '#111',
-    padding: '5px 9px',
+  pauseBar: {
+    width: 4,
+    height: 12,
     borderRadius: 999,
-    fontSize: 10,
-    fontWeight: 900,
-  },
-  seamGlow: {
-    position: 'absolute',
-    zIndex: 6,
-    pointerEvents: 'none',
+    background: 'white',
+    opacity: 0.86,
   },
   vsCenterLayer: {
     position: 'absolute',
     inset: 0,
-    zIndex: 8,
     pointerEvents: 'none',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 5,
   },
   vsMotionWrap: {
     display: 'flex',
@@ -1423,190 +1781,278 @@ const styles = {
     justifyContent: 'center',
   },
   vsDiamond: {
-    width: 68,
-    height: 68,
+    width: 42,
+    height: 42,
     transform: 'rotate(45deg)',
-    borderRadius: 5,
-    border: '1.5px solid rgba(255,255,255,.18)',
-    background: 'linear-gradient(180deg, rgba(7,11,24,.97) 0%, rgba(0,0,0,.98) 100%)',
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'rgba(6,8,12,0.5)',
+    backdropFilter: 'blur(12px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 0 14px rgba(255,255,255,.06)',
   },
   vsDiamondInner: {
-    transform: 'rotate(-45deg)',
+    width: '100%',
+    height: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    transform: 'rotate(-45deg)',
   },
   vsText: {
-    fontWeight: 900,
-    fontSize: 14,
-    letterSpacing: '0.18em',
-    color: 'white',
-    transform: 'translateX(2px)',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.2em',
+    marginLeft: 2,
+    opacity: 0.92,
   },
-  detailsOverlay: {
+  arenaLabelWrap: {
     position: 'absolute',
-    inset: 0,
-    zIndex: 20,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(0,0,0,.28)',
-    backdropFilter: 'blur(4px)',
+    top: 18,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 10,
+    textAlign: 'center',
     pointerEvents: 'none',
   },
-  detailsCard: {
-    minWidth: 230,
-    maxWidth: '82%',
-    background: 'rgba(8,11,22,.92)',
-    border: '1px solid rgba(255,255,255,.12)',
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: '0 20px 50px rgba(0,0,0,.35)',
-    textAlign: 'center',
-  },
-  detailsTitle: {
-    fontSize: 20,
-    fontWeight: 900,
-    marginBottom: 6,
-  },
-  detailsCreator: {
-    opacity: 0.8,
-    marginBottom: 10,
-  },
-  detailsMetaRow: {
-    display: 'flex',
-    gap: 8,
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    marginBottom: 10,
-  },
-  detailsPill: {
-    background: 'rgba(255,255,255,.08)',
-    padding: '6px 10px',
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  detailsCategory: {
-    fontSize: 12,
-    opacity: 0.7,
+  arenaLabelSmall: {
+    fontSize: 10,
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
+    letterSpacing: '0.22em',
+    opacity: 0.45,
+    marginBottom: 4,
+  },
+  arenaLabelText: {
+    fontSize: 15,
+    fontWeight: 700,
+    letterSpacing: '0.01em',
   },
   championOverlay: {
     position: 'absolute',
     inset: 0,
-    zIndex: 20,
+    zIndex: 25,
+    background: 'rgba(4,6,10,0.36)',
+    backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(0,0,0,.46)',
-    backdropFilter: 'blur(5px)',
-    pointerEvents: 'none',
+    padding: 24,
   },
   championCard: {
-    background: 'rgba(12,18,34,.96)',
-    border: '2px solid rgba(250,204,21,.82)',
-    borderRadius: 26,
-    padding: '22px 26px',
+    position: 'relative',
+    width: 'min(420px, 92vw)',
+    borderRadius: 28,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'linear-gradient(180deg, rgba(14,18,25,0.96), rgba(8,10,14,0.96))',
+    overflow: 'hidden',
+    padding: '28px 24px 24px',
     textAlign: 'center',
-    boxShadow: '0 0 36px rgba(250,204,21,.24)',
+    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+  },
+  championGlow: {
+    position: 'absolute',
+    top: -90,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 220,
+    height: 220,
+    borderRadius: 999,
+    background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 62%)',
+    pointerEvents: 'none',
+  },
+  championMicro: {
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '0.26em',
+    opacity: 0.52,
+    marginBottom: 14,
   },
   championTitle: {
-    fontSize: 20,
-    fontWeight: 900,
-    marginBottom: 6,
-    letterSpacing: '0.02em',
+    fontSize: 28,
+    fontWeight: 800,
+    lineHeight: 1.02,
+    marginBottom: 8,
   },
-  championText: {
-    opacity: 0.82,
+  championCreator: {
+    fontSize: 15,
+    opacity: 0.72,
+    marginBottom: 18,
+  },
+  championRule: {
+    width: 72,
+    height: 1,
+    background: 'rgba(255,255,255,0.16)',
+    margin: '0 auto 16px',
+  },
+  championSub: {
     fontSize: 14,
+    lineHeight: 1.4,
+    opacity: 0.7,
+  },
+  detailsOverlay: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 18,
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    padding: 22,
+    pointerEvents: 'none',
+  },
+  detailsCard: {
+    width: 'min(520px, 92vw)',
+    borderRadius: 24,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(8,10,14,0.74)',
+    backdropFilter: 'blur(18px)',
+    padding: 18,
+    boxShadow: '0 18px 60px rgba(0,0,0,0.35)',
+  },
+  detailsTitle: {
+    fontSize: 22,
+    fontWeight: 800,
+    lineHeight: 1.04,
+    marginBottom: 6,
+  },
+  detailsCreator: {
+    fontSize: 14,
+    opacity: 0.72,
+    marginBottom: 12,
+  },
+  detailsMetaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10,
+  },
+  detailsPill: {
+    padding: '7px 10px',
+    borderRadius: 999,
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  detailsSubText: {
+    fontSize: 13,
+    opacity: 0.58,
+    marginBottom: 8,
+  },
+  detailsArena: {
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  bottomGhostBar: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    zIndex: 7,
+    pointerEvents: 'none',
+  },
+  invisibleUploadButton: {
+    pointerEvents: 'auto',
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(8,10,14,0.34)',
+    backdropFilter: 'blur(12px)',
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 22,
+    lineHeight: 1,
+    cursor: 'pointer',
   },
   sheet: {
     position: 'absolute',
-    left: 8,
-    right: 8,
-    bottom: 8,
-    height: 390,
-    background: 'rgba(8,12,24,.96)',
-    border: '1px solid rgba(255,255,255,.08)',
-    borderRadius: 26,
-    boxShadow: '0 -10px 30px rgba(0,0,0,.35)',
-    zIndex: 12,
+    left: 10,
+    right: 10,
+    bottom: -2,
+    height: 470,
+    zIndex: 16,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    background: 'rgba(8,10,14,0.92)',
+    backdropFilter: 'blur(18px)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    boxShadow: '0 -24px 60px rgba(0,0,0,0.36)',
     overflow: 'hidden',
   },
   sheetHandleTap: {
+    paddingTop: 10,
+    paddingBottom: 10,
     display: 'flex',
     justifyContent: 'center',
-    paddingTop: 8,
-    paddingBottom: 8,
     cursor: 'pointer',
   },
   sheetHandle: {
-    width: 48,
-    height: 5,
+    width: 42,
+    height: 4,
     borderRadius: 999,
-    background: 'rgba(255,255,255,.22)',
+    background: 'rgba(255,255,255,0.18)',
   },
   sheetHeader: {
     display: 'flex',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    alignItems: 'end',
-    padding: '0 14px 10px',
-    borderBottom: '1px solid rgba(255,255,255,.06)',
+    padding: '0 18px 14px',
   },
-  sheetLabel: {
+  sheetEyebrow: {
     fontSize: 10,
-    opacity: 0.58,
     textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    marginBottom: 2,
-    fontWeight: 800,
+    letterSpacing: '0.22em',
+    opacity: 0.46,
+    marginBottom: 6,
   },
   sheetTitle: {
-    fontSize: 18,
-    fontWeight: 900,
+    fontSize: 21,
+    fontWeight: 800,
+    lineHeight: 1.02,
   },
-  sheetSub: {
-    fontSize: 11,
-    opacity: 0.65,
+  sheetCount: {
+    fontSize: 12,
+    opacity: 0.55,
+    fontWeight: 700,
   },
   sheetList: {
-    padding: 10,
-    display: 'grid',
-    gap: 8,
-    maxHeight: 322,
+    padding: '0 10px 18px',
     overflowY: 'auto',
+    height: 390,
   },
   sheetRow: {
-    display: 'grid',
-    gridTemplateColumns: '56px 1fr auto',
-    gap: 10,
+    display: 'flex',
     alignItems: 'center',
-    background: 'rgba(255,255,255,.04)',
-    border: '1px solid rgba(255,255,255,.06)',
+    gap: 12,
+    padding: '12px 10px',
     borderRadius: 16,
-    padding: 10,
+    border: '1px solid rgba(255,255,255,0.04)',
+    background: 'rgba(255,255,255,0.02)',
+    marginBottom: 8,
   },
   sheetRank: {
+    width: 40,
     fontSize: 13,
-    fontWeight: 900,
-    opacity: 0.85,
+    fontWeight: 800,
+    opacity: 0.82,
   },
-  sheetVideoTitle: {
+  sheetTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sheetItemTitle: {
     fontSize: 14,
     fontWeight: 800,
-    lineHeight: 1.15,
-    marginBottom: 2,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
-  sheetCreator: {
-    fontSize: 11,
-    opacity: 0.72,
+  sheetItemCreator: {
+    fontSize: 12,
+    opacity: 0.58,
+    marginTop: 2,
   },
   sheetRight: {
     textAlign: 'right',
@@ -1617,90 +2063,78 @@ const styles = {
   },
   sheetConfidence: {
     fontSize: 11,
-    opacity: 0.68,
+    opacity: 0.58,
+    marginTop: 2,
   },
   onboardingOverlay: {
     position: 'absolute',
     inset: 0,
     zIndex: 40,
+    background: 'rgba(4,6,10,0.52)',
+    backdropFilter: 'blur(14px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(2,6,18,.78)',
-    backdropFilter: 'blur(14px)',
-    padding: 20,
+    padding: 18,
   },
   onboardingCard: {
-    width: '100%',
-    maxWidth: 360,
-    borderRadius: 30,
-    background: 'linear-gradient(180deg, rgba(12,18,34,.98), rgba(8,12,24,.96))',
-    border: '1px solid rgba(255,255,255,.08)',
-    boxShadow: '0 28px 70px rgba(0,0,0,.45)',
-    padding: '28px 22px 20px',
-    textAlign: 'left',
+    width: 'min(420px, 92vw)',
+    borderRadius: 28,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))',
+    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+    padding: 22,
   },
   onboardingStep: {
     fontSize: 11,
-    letterSpacing: '0.24em',
-    textTransform: 'uppercase',
-    opacity: 0.45,
     fontWeight: 800,
-    marginBottom: 10,
+    letterSpacing: '0.22em',
+    opacity: 0.48,
+    marginBottom: 12,
   },
   onboardingTitle: {
-    fontSize: 26,
-    fontWeight: 900,
+    fontSize: 27,
+    fontWeight: 800,
+    lineHeight: 1.02,
     marginBottom: 10,
-    letterSpacing: '-0.02em',
   },
   onboardingBody: {
     fontSize: 15,
     lineHeight: 1.5,
-    opacity: 0.84,
-    marginBottom: 10,
-  },
-  onboardingHelper: {
-    fontSize: 13,
-    lineHeight: 1.4,
-    opacity: 0.52,
-    minHeight: 32,
+    opacity: 0.78,
+    marginBottom: 18,
   },
   onboardingDots: {
     display: 'flex',
-    justifyContent: 'flex-start',
     gap: 8,
-    marginTop: 16,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   onboardingDot: {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     borderRadius: 999,
     background: 'white',
-    transition: 'all 0.2s ease',
   },
   onboardingActions: {
     display: 'flex',
     gap: 10,
-    justifyContent: 'space-between',
   },
-  onboardingGhostButton: {
+  onboardingGhost: {
     flex: 1,
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.04)',
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.03)',
     color: 'white',
-    borderRadius: 14,
     padding: '12px 14px',
-    fontWeight: 700,
+    fontWeight: 800,
     cursor: 'pointer',
   },
-  onboardingPrimaryButton: {
+  onboardingPrimary: {
     flex: 1,
+    borderRadius: 16,
     border: 'none',
-    background: 'linear-gradient(180deg, #7c3aed 0%, #5b21b6 100%)',
+    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
     color: 'white',
-    borderRadius: 14,
     padding: '12px 14px',
     fontWeight: 800,
     cursor: 'pointer',
@@ -1708,71 +2142,55 @@ const styles = {
   uploadOverlay: {
     position: 'absolute',
     inset: 0,
-    zIndex: 35,
+    zIndex: 32,
+    background: 'rgba(4,6,10,0.52)',
+    backdropFilter: 'blur(16px)',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'center',
-    background: 'rgba(1,5,16,.78)',
-    backdropFilter: 'blur(10px)',
-    padding: 16,
+    padding: 12,
   },
   uploadCard: {
-    width: '100%',
-    maxWidth: 380,
-    maxHeight: '90%',
+    width: 'min(720px, 100%)',
+    maxHeight: '88vh',
     overflowY: 'auto',
     borderRadius: 28,
-    background: 'rgba(10,14,28,.98)',
-    border: '1px solid rgba(255,255,255,.08)',
-    boxShadow: '0 20px 60px rgba(0,0,0,.45)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))',
+    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
     padding: 18,
   },
   uploadHeader: {
     display: 'flex',
-    alignItems: 'start',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 14,
   },
   uploadEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     textTransform: 'uppercase',
-    letterSpacing: '0.22em',
-    opacity: 0.5,
-    fontWeight: 800,
-    marginBottom: 6,
+    letterSpacing: '0.2em',
+    opacity: 0.46,
+    marginBottom: 5,
   },
   uploadTitle: {
-    fontSize: 22,
-    fontWeight: 900,
+    fontSize: 26,
+    fontWeight: 800,
+    lineHeight: 1,
   },
   uploadClose: {
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.04)',
-    color: 'white',
-    borderRadius: 999,
     width: 34,
     height: 34,
-    cursor: 'pointer',
-    fontSize: 14,
-  },
-  captureButtons: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-    marginBottom: 14,
-  },
-  uploadActionButton: {
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.06)',
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
     color: 'white',
-    borderRadius: 14,
-    padding: '12px 14px',
-    fontWeight: 800,
     cursor: 'pointer',
   },
   uploadGrid: {
     display: 'grid',
-    gap: 10,
+    gap: 12,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     marginBottom: 14,
   },
   uploadField: {
@@ -1782,57 +2200,73 @@ const styles = {
   uploadLabel: {
     fontSize: 12,
     fontWeight: 700,
-    opacity: 0.78,
+    opacity: 0.72,
   },
   uploadInput: {
     width: '100%',
-    boxSizing: 'border-box',
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
+    color: 'white',
+    padding: '12px 12px',
+    outline: 'none',
+  },
+  captureButtons: {
+    display: 'flex',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 14,
+  },
+  uploadActionButton: {
+    flex: 1,
+    minWidth: 140,
+    borderRadius: 14,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
     color: 'white',
     padding: '12px 14px',
-    fontSize: 14,
+    fontWeight: 800,
+    cursor: 'pointer',
   },
-  trimBox: {
-    borderRadius: 18,
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.03)',
+  previewBox: {
+    borderRadius: 20,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.03)',
     padding: 12,
+    marginBottom: 14,
   },
-  trimEmpty: {
-    minHeight: 140,
+  previewEmpty: {
+    minHeight: 150,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center',
-    opacity: 0.7,
     fontSize: 14,
+    lineHeight: 1.5,
+    opacity: 0.62,
+    padding: 20,
   },
-  trimPreviewWrap: {
-    borderRadius: 18,
-    overflow: 'hidden',
-    background: '#000',
-    marginBottom: 12,
-  },
-  trimPreview: {
+  previewMedia: {
     width: '100%',
-    display: 'block',
-    maxHeight: 280,
-    background: '#000',
+    maxHeight: 320,
+    objectFit: 'cover',
+    borderRadius: 16,
+    background: '#08090c',
   },
   trimStats: {
     display: 'flex',
     gap: 8,
     flexWrap: 'wrap',
+    marginTop: 10,
     marginBottom: 12,
   },
   trimStatPill: {
     borderRadius: 999,
-    background: 'rgba(255,255,255,.06)',
     padding: '7px 10px',
     fontSize: 12,
     fontWeight: 700,
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.06)',
   },
   sliderGroup: {
     display: 'grid',
@@ -1842,7 +2276,7 @@ const styles = {
   sliderLabel: {
     fontSize: 12,
     fontWeight: 700,
-    opacity: 0.82,
+    opacity: 0.72,
   },
   slider: {
     width: '100%',
@@ -1850,102 +2284,56 @@ const styles = {
   uploadActions: {
     display: 'flex',
     gap: 10,
-    justifyContent: 'space-between',
-    marginTop: 14,
   },
   uploadSecondary: {
     flex: 1,
-    border: '1px solid rgba(255,255,255,.08)',
-    background: 'rgba(255,255,255,.04)',
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
     color: 'white',
-    borderRadius: 14,
     padding: '12px 14px',
-    fontWeight: 700,
+    fontWeight: 800,
     cursor: 'pointer',
   },
   uploadPrimary: {
     flex: 1,
+    borderRadius: 16,
     border: 'none',
-    background: 'linear-gradient(180deg, #7c3aed 0%, #5b21b6 100%)',
+    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
     color: 'white',
-    borderRadius: 14,
     padding: '12px 14px',
     fontWeight: 800,
   },
+  emptyArena: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: 24,
+    background: '#050608',
+  },
+  emptyArenaTitle: {
+    fontSize: 26,
+    fontWeight: 800,
+    marginBottom: 8,
+  },
+  emptyArenaBody: {
+    fontSize: 15,
+    lineHeight: 1.5,
+    opacity: 0.68,
+    maxWidth: 360,
+    marginBottom: 18,
+  },
+  emptyArenaButton: {
+    borderRadius: 16,
+    border: 'none',
+    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
+    color: 'white',
+    padding: '12px 16px',
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
 };
-
-export default function App() {
-  const [videos, setVideos] = useState(initialSeed);
-  const [categoryIndex, setCategoryIndex] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
-  const nextIdRef = useRef(10000);
-
-  const currentCategory = CATEGORIES[categoryIndex];
-
-  useEffect(() => {
-    const seen = localStorage.getItem('throwned-gesture-walkthrough-seen');
-    if (!seen) {
-      setShowOnboarding(true);
-    }
-  }, []);
-
-  function closeOnboarding() {
-    localStorage.setItem('throwned-gesture-walkthrough-seen', 'true');
-    setShowOnboarding(false);
-  }
-
-  function saveUploadedClip(data) {
-    const categoryVideos = videos.filter((v) => v.category === data.category);
-    const nextRank = categoryVideos.length + 1;
-
-    const newVideo = {
-      id: nextIdRef.current++,
-      title: data.title,
-      creator: data.creator,
-      category: data.category,
-      rank: nextRank,
-      rating: 3000,
-      confidence: 0.55,
-      src: data.src,
-      trimStart: data.trimStart,
-      trimEnd: data.trimEnd,
-      uploaded: true,
-    };
-
-    setVideos((prev) => [...prev, newVideo]);
-    setCategoryIndex(CATEGORIES.indexOf(data.category));
-    setShowUpload(false);
-  }
-
-  const changeCategory = (direction) => {
-    setCategoryIndex((prev) => {
-      if (direction > 0) return prev === CATEGORIES.length - 1 ? 0 : prev + 1;
-      return prev === 0 ? CATEGORIES.length - 1 : prev - 1;
-    });
-  };
-
-  return (
-    <div style={styles.app}>
-      <div style={styles.phone}>
-        <BattleArena
-          videos={videos}
-          setVideos={setVideos}
-          category={currentCategory}
-          onSwipeCategory={changeCategory}
-          onOpenUpload={() => setShowUpload(true)}
-        />
-
-        <AnimatePresence>
-          {showOnboarding && <OnboardingOverlay onClose={closeOnboarding} />}
-        </AnimatePresence>
-
-        <UploadSheet
-          isOpen={showUpload}
-          onClose={() => setShowUpload(false)}
-          onSave={saveUploadedClip}
-        />
-      </div>
-    </div>
-  );
-}
