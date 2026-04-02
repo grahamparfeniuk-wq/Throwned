@@ -1727,6 +1727,20 @@ export default function App() {
 
   return (
     <AppShell>
+      <div
+  style={{
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    fontSize: 24,
+    fontWeight: 800,
+    color: 'red',
+    zIndex: 9999,
+    pointerEvents: 'none',
+  }}
+>
+  TEST BUILD
+</div>
       <BattleArena
         pool={pool}
         setPool={setPool}
