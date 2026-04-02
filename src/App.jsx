@@ -7,7 +7,7 @@ const CATEGORY_DISTANCE = 118;
 const CATEGORY_VELOCITY = 760;
 const HOLD_MS = 320;
 const LABEL_VISIBLE_MS = 1600;
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v12';
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v13';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -24,31 +24,24 @@ const DEMO_MEDIA = [
   { id: 1, arenaId: 'epic-fails', title: 'Slip Jacket', creator: '@fail_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3200, confidence: 0.78, wins: 0, losses: 0 },
   { id: 2, arenaId: 'epic-fails', title: 'Box Miss', creator: '@fail_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3168, confidence: 0.72, wins: 0, losses: 0 },
   { id: 3, arenaId: 'epic-fails', title: 'Flower Chaos', creator: '@fail_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3144, confidence: 0.69, wins: 0, losses: 0 },
-
   { id: 4, arenaId: 'sports', title: 'Track Burst', creator: '@sport_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3215, confidence: 0.8, wins: 0, losses: 0 },
   { id: 5, arenaId: 'sports', title: 'Court Handle', creator: '@sport_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3177, confidence: 0.74, wins: 0, losses: 0 },
   { id: 6, arenaId: 'sports', title: 'Rope Rhythm', creator: '@sport_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3138, confidence: 0.67, wins: 0, losses: 0 },
-
   { id: 7, arenaId: 'original-songs', title: 'Neon Vocal', creator: '@song_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3194, confidence: 0.78, wins: 0, losses: 0 },
   { id: 8, arenaId: 'original-songs', title: 'Studio Chorus', creator: '@song_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3155, confidence: 0.72, wins: 0, losses: 0 },
   { id: 9, arenaId: 'original-songs', title: 'Mic Room Hook', creator: '@song_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3115, confidence: 0.66, wins: 0, losses: 0 },
-
   { id: 10, arenaId: 'comedy', title: 'Dry Delivery', creator: '@comedy_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3188, confidence: 0.77, wins: 0, losses: 0 },
   { id: 11, arenaId: 'comedy', title: 'Timing Break', creator: '@comedy_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3160, confidence: 0.72, wins: 0, losses: 0 },
   { id: 12, arenaId: 'comedy', title: 'Silent Look', creator: '@comedy_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3128, confidence: 0.68, wins: 0, losses: 0 },
-
   { id: 13, arenaId: 'skateboard-tricks', title: 'Rail Attempt', creator: '@skate_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3208, confidence: 0.79, wins: 0, losses: 0 },
   { id: 14, arenaId: 'skateboard-tricks', title: 'Kickflip Gap', creator: '@skate_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3170, confidence: 0.73, wins: 0, losses: 0 },
   { id: 15, arenaId: 'skateboard-tricks', title: 'Late Shuv', creator: '@skate_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3130, confidence: 0.68, wins: 0, losses: 0 },
-
   { id: 16, arenaId: 'wildcard', title: 'Anything Goes', creator: '@wild_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3175, confidence: 0.75, wins: 0, losses: 0 },
   { id: 17, arenaId: 'wildcard', title: 'Odd Moment', creator: '@wild_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3140, confidence: 0.69, wins: 0, losses: 0 },
   { id: 18, arenaId: 'wildcard', title: 'Short Burst', creator: '@wild_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3110, confidence: 0.65, wins: 0, losses: 0 },
-
   { id: 101, arenaId: 'best-sunset', title: 'Burning Horizon', creator: '@sunset_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3205, confidence: 0.8, wins: 0, losses: 0 },
   { id: 102, arenaId: 'best-sunset', title: 'Pink Fade', creator: '@sunset_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3176, confidence: 0.75, wins: 0, losses: 0 },
   { id: 103, arenaId: 'best-sunset', title: 'Last Light', creator: '@sunset_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3138, confidence: 0.69, wins: 0, losses: 0 },
-
   { id: 111, arenaId: 'cute-kittens', title: 'Tiny Stare', creator: '@kitten_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3210, confidence: 0.81, wins: 0, losses: 0 },
   { id: 112, arenaId: 'cute-kittens', title: 'Paw Lean', creator: '@kitten_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3174, confidence: 0.75, wins: 0, losses: 0 },
   { id: 113, arenaId: 'cute-kittens', title: 'Window Face', creator: '@kitten_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3142, confidence: 0.7, wins: 0, losses: 0 },
@@ -222,17 +215,25 @@ function ArenaLabel({ arena, visible, isPortrait, direction }) {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: initialX * 0.3, y: initialY * 0.3, scale: 0.98 }}
             transition={{ duration: 0.35 }}
-            style={isPortrait ? styles.arenaHeroWrapPortrait : styles.arenaHeroWrapLandscape}
+            style={isPortrait ? styles.arenaHeroStagePortrait : styles.arenaHeroStageLandscape}
           >
-            <div style={styles.arenaHeroSmall}>Arena</div>
             <div
-              style={{
-                ...styles.arenaHeroText,
-                color: arena.accent,
-                textShadow: `0 0 24px ${arena.accent}55`,
-              }}
+              style={
+                isPortrait
+                  ? { ...styles.arenaHeroInner, top: '50%', transform: 'translate(-50%, -50%)' }
+                  : { ...styles.arenaHeroInner, top: 0, transform: 'translateX(-50%)' }
+              }
             >
-              {arena.label}
+              <div style={styles.arenaHeroSmall}>Arena</div>
+              <div
+                style={{
+                  ...styles.arenaHeroText,
+                  color: arena.accent,
+                  textShadow: `0 0 24px ${arena.accent}55`,
+                }}
+              >
+                {arena.label}
+              </div>
             </div>
           </motion.div>
         )}
@@ -399,9 +400,7 @@ function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, 
     const endTime = item.trimEnd || 7;
 
     const onTimeUpdate = () => {
-      if (el.currentTime >= endTime) {
-        el.pause();
-      }
+      if (el.currentTime >= endTime) el.pause();
     };
 
     el.addEventListener('timeupdate', onTimeUpdate);
@@ -549,16 +548,8 @@ function BattleSlot({
       key={`${side}-${item?.id}`}
       initial={initial}
       animate={throwAnimate || { x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-      transition={{
-        type: 'spring',
-        stiffness: 220,
-        damping: 24,
-        opacity: { duration: 0.18 },
-      }}
-      style={{
-        ...styles.slot,
-        ...(isPortrait ? styles.slotPortrait : styles.slotLandscape),
-      }}
+      transition={{ type: 'spring', stiffness: 220, damping: 24, opacity: { duration: 0.18 } }}
+      style={{ ...styles.slot, ...(isPortrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
       <MediaSurface
         item={item}
@@ -625,20 +616,10 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
 
 function OnboardingOverlay({ onClose }) {
   const [step, setStep] = useState(0);
-
   const steps = [
-    {
-      title: 'Watch the contest',
-      body: 'Only one contender plays at a time. The arena gives each one a clean shot.',
-    },
-    {
-      title: 'Hold for details',
-      body: 'Press and hold any contender to reveal its identity, rank state, and arena.',
-    },
-    {
-      title: 'Throw or switch',
-      body: 'Swipe outward to throw away a loser. Swipe inward to switch arenas.',
-    },
+    { title: 'Watch the contest', body: 'Only one contender plays at a time. The arena gives each one a clean shot.' },
+    { title: 'Hold for details', body: 'Press and hold any contender to reveal its identity, rank state, and arena.' },
+    { title: 'Throw or switch', body: 'Swipe outward to throw away a loser. Swipe inward to switch arenas.' },
   ];
 
   const current = steps[step];
@@ -652,12 +633,7 @@ function OnboardingOverlay({ onClose }) {
   }
 
   return (
-    <motion.div
-      style={styles.onboardingOverlay}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
+    <motion.div style={styles.onboardingOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div
         key={step}
         style={styles.onboardingCard}
@@ -684,9 +660,7 @@ function OnboardingOverlay({ onClose }) {
         </div>
 
         <div style={styles.onboardingActions}>
-          <button style={styles.onboardingGhost} onClick={onClose}>
-            Skip
-          </button>
+          <button style={styles.onboardingGhost} onClick={onClose}>Skip</button>
           <button style={styles.onboardingPrimary} onClick={next}>
             {step === steps.length - 1 ? 'Enter Arena' : 'Next'}
           </button>
@@ -766,9 +740,7 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
     setFile(selected);
     setObjectUrl(nextUrl);
 
-    if (!title.trim()) {
-      setTitle(selected.name.replace(/\.[^/.]+$/, ''));
-    }
+    if (!title.trim()) setTitle(selected.name.replace(/\.[^/.]+$/, ''));
   }
 
   function handleFileChange(e) {
@@ -802,40 +774,22 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          style={styles.uploadOverlay}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            style={styles.uploadCard}
-            initial={{ opacity: 0, y: 14, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.985 }}
-          >
+        <motion.div style={styles.uploadOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div style={styles.uploadCard} initial={{ opacity: 0, y: 14, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.985 }}>
             <div style={styles.uploadHeader}>
               <div>
                 <div style={styles.uploadEyebrow}>Add contender</div>
                 <div style={styles.uploadTitle}>Upload</div>
               </div>
-              <button style={styles.uploadClose} onClick={onClose}>
-                ✕
-              </button>
+              <button style={styles.uploadClose} onClick={onClose}>✕</button>
             </div>
 
             <div style={styles.uploadGrid}>
               <label style={styles.uploadField}>
                 <span style={styles.uploadLabel}>Arena</span>
-                <select
-                  value={arenaId}
-                  onChange={(e) => handleArenaChange(e.target.value)}
-                  style={styles.uploadInput}
-                >
+                <select value={arenaId} onChange={(e) => handleArenaChange(e.target.value)} style={styles.uploadInput}>
                   {ARENAS.map((arena) => (
-                    <option key={arena.id} value={arena.id}>
-                      {arena.label}
-                    </option>
+                    <option key={arena.id} value={arena.id}>{arena.label}</option>
                   ))}
                 </select>
               </label>
@@ -847,107 +801,51 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
               <label style={styles.uploadField}>
                 <span style={styles.uploadLabel}>Title</span>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Contender title"
-                  style={styles.uploadInput}
-                />
+                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contender title" style={styles.uploadInput} />
               </label>
 
               <label style={styles.uploadField}>
                 <span style={styles.uploadLabel}>Creator</span>
-                <input
-                  value={creator}
-                  onChange={(e) => setCreator(e.target.value)}
-                  placeholder="@creator"
-                  style={styles.uploadInput}
-                />
+                <input value={creator} onChange={(e) => setCreator(e.target.value)} placeholder="@creator" style={styles.uploadInput} />
               </label>
             </div>
 
             <div style={styles.captureButtons}>
-              <button style={styles.uploadActionButton} onClick={() => inputLibraryRef.current?.click()}>
-                From library
-              </button>
-              <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>
-                {mediaType === 'video' ? 'Record now' : 'Take photo'}
-              </button>
+              <button style={styles.uploadActionButton} onClick={() => inputLibraryRef.current?.click()}>From library</button>
+              <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>{mediaType === 'video' ? 'Record now' : 'Take photo'}</button>
 
-              <input
-                ref={inputLibraryRef}
-                type="file"
-                accept={acceptString(mediaType)}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-
-              <input
-                ref={inputCaptureRef}
-                type="file"
-                accept={acceptString(mediaType)}
-                capture="environment"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
+              <input ref={inputLibraryRef} type="file" accept={acceptString(mediaType)} onChange={handleFileChange} style={{ display: 'none' }} />
+              <input ref={inputCaptureRef} type="file" accept={acceptString(mediaType)} capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
 
             <div style={styles.previewBox}>
               {!objectUrl ? (
-                <div style={styles.previewEmpty}>
-                  Choose a {mediaType === 'video' ? 'video' : 'photo'} that belongs in this arena.
-                </div>
+                <div style={styles.previewEmpty}>Choose a {mediaType === 'video' ? 'video' : 'photo'} that belongs in this arena.</div>
               ) : mediaType === 'video' ? (
                 <>
-                  <video
-                    ref={previewVideoRef}
-                    src={objectUrl}
-                    controls
-                    playsInline
-                    style={styles.previewMedia}
-                    onLoadedMetadata={handleLoadedMetadata}
-                  />
-
+                  <video ref={previewVideoRef} src={objectUrl} controls playsInline style={styles.previewMedia} onLoadedMetadata={handleLoadedMetadata} />
                   <div style={styles.trimStats}>
                     <div style={styles.trimStatPill}>Full: {duration ? formatSeconds(duration) : '...'}</div>
                     <div style={styles.trimStatPill}>Selected: {formatSeconds(Math.max(0, trimEnd - trimStart))}</div>
                     <div style={styles.trimStatPill}>Max: 7.0s</div>
                   </div>
-
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>Start: {formatSeconds(trimStart)}</label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(0, duration - 0.1)}
-                      step={0.1}
-                      value={trimStart}
-                      onChange={(e) => {
-                        const nextStart = Number(e.target.value);
-                        setTrimStart(nextStart);
-                        if (trimEnd - nextStart > 7) setTrimEnd(nextStart + 7);
-                        if (trimEnd <= nextStart) setTrimEnd(nextStart + 0.2);
-                      }}
-                      style={styles.slider}
-                    />
+                    <input type="range" min={0} max={Math.max(0, duration - 0.1)} step={0.1} value={trimStart} onChange={(e) => {
+                      const nextStart = Number(e.target.value);
+                      setTrimStart(nextStart);
+                      if (trimEnd - nextStart > 7) setTrimEnd(nextStart + 7);
+                      if (trimEnd <= nextStart) setTrimEnd(nextStart + 0.2);
+                    }} style={styles.slider} />
                   </div>
-
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>End: {formatSeconds(trimEnd)}</label>
-                    <input
-                      type="range"
-                      min={0.1}
-                      max={duration || 7}
-                      step={0.1}
-                      value={trimEnd}
-                      onChange={(e) => {
-                        let nextEnd = Number(e.target.value);
-                        if (nextEnd <= trimStart) nextEnd = trimStart + 0.2;
-                        if (nextEnd - trimStart > 7) nextEnd = trimStart + 7;
-                        setTrimEnd(nextEnd);
-                      }}
-                      style={styles.slider}
-                    />
+                    <input type="range" min={0.1} max={duration || 7} step={0.1} value={trimEnd} onChange={(e) => {
+                      let nextEnd = Number(e.target.value);
+                      if (nextEnd <= trimStart) nextEnd = trimStart + 0.2;
+                      if (nextEnd - trimStart > 7) nextEnd = trimStart + 7;
+                      setTrimEnd(nextEnd);
+                    }} style={styles.slider} />
                   </div>
                 </>
               ) : (
@@ -956,20 +854,8 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
             </div>
 
             <div style={styles.uploadActions}>
-              <button style={styles.uploadSecondary} onClick={onClose}>
-                Cancel
-              </button>
-              <button
-                style={{
-                  ...styles.uploadPrimary,
-                  opacity: objectUrl ? 1 : 0.45,
-                  cursor: objectUrl ? 'pointer' : 'not-allowed',
-                }}
-                onClick={handleSave}
-                disabled={!objectUrl}
-              >
-                Save contender
-              </button>
+              <button style={styles.uploadSecondary} onClick={onClose}>Cancel</button>
+              <button style={{ ...styles.uploadPrimary, opacity: objectUrl ? 1 : 0.45, cursor: objectUrl ? 'pointer' : 'not-allowed' }} onClick={handleSave} disabled={!objectUrl}>Save contender</button>
             </div>
           </motion.div>
         </motion.div>
@@ -980,8 +866,8 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
 function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const isPortrait = useIsPortrait();
-
   const arenaItems = useMemo(() => sortLeaderboard(getArenaItems(pool, arena.id)), [pool, arena.id]);
+
   const poolRef = useRef(pool);
   const battleHistoryRef = useRef([]);
   const holdTimerRef = useRef(null);
@@ -1011,10 +897,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [transitioningArena, setTransitioningArena] = useState(false);
   const [voteFlashVisible, setVoteFlashVisible] = useState(false);
 
-  const detailsItem = useMemo(
-    () => arenaItems.find((item) => item.id === detailsId) || null,
-    [arenaItems, detailsId]
-  );
+  const detailsItem = useMemo(() => arenaItems.find((item) => item.id === detailsId) || null, [arenaItems, detailsId]);
 
   useEffect(() => {
     poolRef.current = pool;
@@ -1035,13 +918,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function pickNextPair(items, history) {
     if (items.length < 2) return pickTwo(items);
-
     const recentIds = history.slice(-4);
     let next = pickTwo(items, recentIds);
-
     if (!next.first || !next.second) return next;
     if (next.first.id === next.second.id) next = pickTwo(items, []);
-
     return next;
   }
 
@@ -1083,7 +963,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     const timer = setTimeout(() => {
       setActiveSide((prev) => (prev === 'first' ? 'second' : 'first'));
     }, safeDuration(activeItem));
-
     return () => clearTimeout(timer);
   }, [pair, activeSide, paused, showChampion, detailsId, isLocked, transitioningArena]);
 
@@ -1102,7 +981,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   function startHold(id) {
     holdTriggeredRef.current = false;
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-
     holdTimerRef.current = setTimeout(() => {
       holdTriggeredRef.current = true;
       setDetailsId(id);
@@ -1112,7 +990,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function endHold() {
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-
     if (holdTriggeredRef.current) {
       holdTriggeredRef.current = false;
       setDetailsId(null);
@@ -1136,13 +1013,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (!bottomSwipeRef.current.active) return;
     const t = e.changedTouches?.[0];
     if (!t) return;
-
     const dx = t.clientX - bottomSwipeRef.current.x;
     const dy = t.clientY - bottomSwipeRef.current.y;
-
     if (dy < -70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(true);
     if (dy > 70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(false);
-
     bottomSwipeRef.current.active = false;
   }
 
@@ -1258,13 +1132,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         setShowChampion(true);
 
         window.setTimeout(() => {
-          const withoutChampionPair = freshArenaItems.filter(
-            (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
-          );
-          const nextPair = pickNextPair(
-            withoutChampionPair.length >= 2 ? withoutChampionPair : freshArenaItems,
-            battleHistoryRef.current
-          );
+          const withoutChampionPair = freshArenaItems.filter((item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id);
+          const nextPair = pickNextPair(withoutChampionPair.length >= 2 ? withoutChampionPair : freshArenaItems, battleHistoryRef.current);
 
           setPair(nextPair);
           setActiveSide(nextPair?.second ? 'second' : 'first');
@@ -1282,29 +1151,15 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         return;
       }
 
-      const challengerPool = freshArenaItems.filter(
-        (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
-      );
-
+      const challengerPool = freshArenaItems.filter((item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id);
       const recentIds = battleHistoryRef.current.slice(-4);
       const challenger = pickRandom(challengerPool, recentIds) || pickRandom(freshArenaItems, [updatedWinner.id]);
-
-      const safeChallenger =
-        challenger ||
-        freshArenaItems.find((item) => item.id !== updatedWinner.id) ||
-        updatedWinner;
-
+      const safeChallenger = challenger || freshArenaItems.find((item) => item.id !== updatedWinner.id) || updatedWinner;
       const enteringSide = side;
-      const nextPair =
-        side === 'first'
-          ? { first: safeChallenger, second: updatedWinner }
-          : { first: updatedWinner, second: safeChallenger };
+      const nextPair = side === 'first' ? { first: safeChallenger, second: updatedWinner } : { first: updatedWinner, second: safeChallenger };
 
       setPair(nextPair);
-      setEnterState({
-        side: enteringSide,
-        itemId: safeChallenger.id,
-      });
+      setEnterState({ side: enteringSide, itemId: safeChallenger.id });
       setActiveSide(side === 'first' ? 'second' : 'first');
       setThrowState(null);
       setPaused(false);
@@ -1333,28 +1188,16 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       <div style={styles.emptyArena}>
         <div style={styles.emptyArenaTitle}>Not enough contenders yet</div>
         <div style={styles.emptyArenaBody}>Upload a few more so this arena can run a real contest.</div>
-        <button style={styles.emptyArenaButton} onClick={onOpenUpload}>
-          Add contender
-        </button>
+        <button style={styles.emptyArenaButton} onClick={onOpenUpload}>Add contender</button>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        ...styles.battleRoot,
-        background: `radial-gradient(circle at 50% 50%, ${arena.accent}12, transparent 32%), #050608`,
-      }}
-      onClick={handleTogglePause}
-    >
+    <div style={{ ...styles.battleRoot, background: `radial-gradient(circle at 50% 50%, ${arena.accent}12, transparent 32%), #050608` }} onClick={handleTogglePause}>
       <ArenaLabel arena={arena} visible={labelVisible} isPortrait={isPortrait} direction={labelDirection} />
 
-      <motion.div
-        animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }}
-        transition={{ duration: 0.18 }}
-        style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}
-      >
+      <motion.div animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }} transition={{ duration: 0.18 }} style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}>
         <BattleSlot
           side="first"
           item={pair.first}
@@ -1392,12 +1235,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
       <SeamLine isPortrait={isPortrait} accent={`${arena.accent}bb`} />
 
-      <div
-        style={styles.leaderboardSwipeZone}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleBottomSwipeStart}
-        onTouchEnd={handleBottomSwipeEnd}
-      />
+      <div style={styles.leaderboardSwipeZone} onClick={(e) => e.stopPropagation()} onTouchStart={handleBottomSwipeStart} onTouchEnd={handleBottomSwipeEnd} />
 
       <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
@@ -1406,15 +1244,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div style={styles.bottomGhostBar}>
-        <button
-          style={styles.invisibleUploadButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenUpload();
-          }}
-        >
-          +
-        </button>
+        <button style={styles.invisibleUploadButton} onClick={(e) => { e.stopPropagation(); onOpenUpload(); }}>+</button>
       </div>
 
       <LeaderboardSheet items={arenaItems} arena={arena} isOpen={sheetOpen} setIsOpen={setSheetOpen} />
@@ -1463,24 +1293,13 @@ export default function App() {
 
   return (
     <AppShell accent={arena.accent}>
-      <BattleArena
-        pool={pool}
-        setPool={setPool}
-        arena={arena}
-        onSwipeArena={changeArena}
-        onOpenUpload={() => setShowUpload(true)}
-      />
+      <BattleArena pool={pool} setPool={setPool} arena={arena} onSwipeArena={changeArena} onOpenUpload={() => setShowUpload(true)} />
 
       <AnimatePresence>
         {showOnboarding && <OnboardingOverlay onClose={closeOnboarding} />}
       </AnimatePresence>
 
-      <UploadSheet
-        isOpen={showUpload}
-        onClose={() => setShowUpload(false)}
-        onSave={handleSaveUpload}
-        initialArenaId={arena.id}
-      />
+      <UploadSheet isOpen={showUpload} onClose={() => setShowUpload(false)} onSave={handleSaveUpload} initialArenaId={arena.id} />
     </AppShell>
   );
 }
@@ -1488,15 +1307,13 @@ export default function App() {
 const styles = {
   app: {
     minHeight: '100vh',
-    background:
-      'radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)',
+    background: 'radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)',
     color: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    fontFamily:
-      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   phone: {
     position: 'relative',
@@ -1601,8 +1418,7 @@ const styles = {
   surfaceScrim: {
     position: 'absolute',
     inset: 0,
-    background:
-      'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.08) 35%, rgba(0,0,0,0.22) 100%)',
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.08) 35%, rgba(0,0,0,0.22) 100%)',
     pointerEvents: 'none',
   },
   surfaceEdgeVignette: {
@@ -1708,35 +1524,32 @@ const styles = {
     marginLeft: 2,
     color: '#ffffff',
   },
-  arenaHeroWrapPortrait: {
+  arenaHeroStagePortrait: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    inset: 0,
     zIndex: 30,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
     pointerEvents: 'none',
-    width: 'min(88vw, 760px)',
-    padding: '0 18px',
   },
-  arenaHeroWrapLandscape: {
+  arenaHeroStageLandscape: {
     position: 'absolute',
-    top: 38,
-    left: '50%',
-    transform: 'translateX(-50%)',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 30,
+    pointerEvents: 'none',
+    paddingTop: 26,
+  },
+  arenaHeroInner: {
+    position: 'absolute',
+    left: '50%',
+    width: 'min(88vw, 760px)',
+    padding: '0 18px',
+    boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center',
-    pointerEvents: 'none',
-    width: 'min(88vw, 760px)',
-    padding: '0 18px',
   },
   arenaHeroSmall: {
     fontSize: 11,
@@ -1750,6 +1563,9 @@ const styles = {
     fontWeight: 900,
     lineHeight: 0.96,
     letterSpacing: '-0.02em',
+    width: '100%',
+    textAlign: 'center',
+    margin: 0,
   },
   arenaWhisperPortrait: {
     position: 'absolute',
