@@ -6,8 +6,8 @@ const THROW_VELOCITY = 640;
 const CATEGORY_DISTANCE = 118;
 const CATEGORY_VELOCITY = 760;
 const HOLD_MS = 320;
-const LABEL_VISIBLE_MS = 1400;
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v10';
+const LABEL_VISIBLE_MS = 1600;
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v12';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -209,22 +209,39 @@ function AppShell({ children, accent }) {
   );
 }
 
-function ArenaLabel({ arena, visible, isPortrait }) {
+function ArenaLabel({ arena, visible, isPortrait, direction }) {
+  const initialX = !isPortrait ? direction * 34 : 0;
+  const initialY = isPortrait ? direction * 16 : 0;
+
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, y: -8, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.985 }}
-          transition={{ duration: 0.28 }}
-          style={isPortrait ? styles.arenaLabelPortrait : styles.arenaLabelLandscapeTop}
-        >
-          <div style={styles.arenaLabelSmall}>Arena</div>
-          <div style={{ ...styles.arenaLabelText, color: arena.accent }}>{arena.label}</div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <>
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            initial={{ opacity: 0, x: initialX, y: initialY, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            exit={{ opacity: 0, x: initialX * 0.3, y: initialY * 0.3, scale: 0.98 }}
+            transition={{ duration: 0.35 }}
+            style={styles.arenaHeroWrap}
+          >
+            <div style={styles.arenaHeroSmall}>Arena</div>
+            <div
+              style={{
+                ...styles.arenaHeroText,
+                color: arena.accent,
+                textShadow: `0 0 24px ${arena.accent}55`,
+              }}
+            >
+              {arena.label}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div style={isPortrait ? styles.arenaWhisperPortrait : styles.arenaWhisperLandscapeTop}>
+        <div style={{ ...styles.arenaWhisperText, color: arena.accent }}>{arena.label}</div>
+      </div>
+    </>
   );
 }
 
@@ -345,6 +362,45 @@ function DetailsOverlay({ item, accent }) {
   );
 }
 
+function VoteFlash({ accent, visible }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          style={{
+            ...styles.voteFlash,
+            background: `radial-gradient(circle at center, ${accent}22, transparent 58%)`,
+          }}
+        />
+      )}
+    </AnimatePresence>
+  );
+}
+
+function WinnerAuthority({ item, accent }) {
+  if (!item) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 6, scale: 0.99 }}
+        transition={{ duration: 0.22 }}
+        style={{ ...styles.winnerAuthorityWrap, borderColor: `${accent}4d` }}
+      >
+        <div style={{ ...styles.winnerAuthorityLine, background: accent }} />
+        <div style={styles.winnerAuthorityEyebrow}>Advancing</div>
+        <div style={styles.winnerAuthorityTitle}>{item.title}</div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, paused, dimmed, showWinnerGlow, isPortrait }) {
   const mediaRef = useRef(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -404,7 +460,7 @@ function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, 
     <div
       style={{
         ...styles.surface,
-        boxShadow: showWinnerGlow ? `0 0 40px ${accent}22 inset` : 'none',
+        boxShadow: showWinnerGlow ? `0 0 44px ${accent}2b inset` : 'none',
       }}
       onMouseDown={() => onHoldStart(item.id)}
       onMouseUp={onHoldEnd}
@@ -552,7 +608,7 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
         if (info.offset.y > 80) setIsOpen(false);
         if (info.offset.y < -80) setIsOpen(true);
       }}
-      animate={{ y: isOpen ? 0 : 414 }}
+      animate={{ y: isOpen ? 0 : 436 }}
       transition={{ type: 'spring', stiffness: 280, damping: 30 }}
       style={styles.sheet}
     >
@@ -954,13 +1010,14 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const isPortrait = useIsPortrait();
 
   const arenaItems = useMemo(() => sortLeaderboard(getArenaItems(pool, arena.id)), [pool, arena.id]);
-  const arenaItemsRef = useRef(arenaItems);
   const poolRef = useRef(pool);
   const battleHistoryRef = useRef([]);
   const holdTimerRef = useRef(null);
   const holdTriggeredRef = useRef(false);
   const labelTimerRef = useRef(null);
   const bottomSwipeRef = useRef({ x: 0, y: 0, active: false });
+  const authorityTimerRef = useRef(null);
+  const voteFlashTimerRef = useRef(null);
 
   const [pair, setPair] = useState(() => pickTwo(arenaItems));
   const [winnerId, setWinnerId] = useState(null);
@@ -970,6 +1027,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [detailsId, setDetailsId] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [labelVisible, setLabelVisible] = useState(true);
+  const [labelDirection, setLabelDirection] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [activeSide, setActiveSide] = useState('second');
@@ -980,10 +1038,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [throwState, setThrowState] = useState(null);
   const [enterState, setEnterState] = useState(null);
   const [transitioningArena, setTransitioningArena] = useState(false);
-
-  useEffect(() => {
-    arenaItemsRef.current = arenaItems;
-  }, [arenaItems]);
+  const [voteFlashVisible, setVoteFlashVisible] = useState(false);
+  const [winnerAuthorityItem, setWinnerAuthorityItem] = useState(null);
 
   useEffect(() => {
     poolRef.current = pool;
@@ -994,10 +1050,23 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     [arenaItems, detailsId]
   );
 
-  function showArenaLabel() {
+  function showArenaLabel(direction = 0) {
+    setLabelDirection(direction);
     setLabelVisible(true);
     if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
     labelTimerRef.current = setTimeout(() => setLabelVisible(false), LABEL_VISIBLE_MS);
+  }
+
+  function pulseVoteFlash() {
+    setVoteFlashVisible(true);
+    if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
+    voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 240);
+  }
+
+  function showWinnerAuthority(item) {
+    setWinnerAuthorityItem(item);
+    if (authorityTimerRef.current) clearTimeout(authorityTimerRef.current);
+    authorityTimerRef.current = setTimeout(() => setWinnerAuthorityItem(null), 980);
   }
 
   function pickNextPair(items, history) {
@@ -1013,7 +1082,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   useEffect(() => {
-    showArenaLabel();
+    showArenaLabel(0);
     setSheetOpen(false);
     setDetailsId(null);
     setPaused(false);
@@ -1024,6 +1093,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     setIsLocked(false);
     setThrowState(null);
     setEnterState(null);
+    setWinnerAuthorityItem(null);
+    setVoteFlashVisible(false);
     setDecisionUnlockedAt(Date.now());
 
     const nextPair = pickNextPair(arenaItems, battleHistoryRef.current);
@@ -1039,6 +1110,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     return () => {
       if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      if (authorityTimerRef.current) clearTimeout(authorityTimerRef.current);
+      if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
     };
   }, []);
 
@@ -1141,14 +1214,14 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
     if (outcome === 'category-prev') {
       setTransitioningArena(true);
-      showArenaLabel();
+      showArenaLabel(-1);
       setTimeout(() => onSwipeArena(-1), 35);
       return;
     }
 
     if (outcome === 'category-next') {
       setTransitioningArena(true);
-      showArenaLabel();
+      showArenaLabel(1);
       setTimeout(() => onSwipeArena(1), 35);
       return;
     }
@@ -1156,6 +1229,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (outcome !== 'throw') return;
 
     setIsLocked(true);
+    pulseVoteFlash();
     const throwVector = getThrowVector(side, isPortrait);
     setThrowState({ side, vector: throwVector });
 
@@ -1198,6 +1272,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     };
 
     updatePoolWithResults(updatedWinner, updatedLoser);
+    showWinnerAuthority(updatedWinner);
 
     const nextWinnerStreak = winnerId === updatedWinner.id ? streak + 1 : 1;
     setWinnerId(updatedWinner.id);
@@ -1312,7 +1387,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       }}
       onClick={handleTogglePause}
     >
-      <ArenaLabel arena={arena} visible={labelVisible} isPortrait={isPortrait} />
+      <ArenaLabel arena={arena} visible={labelVisible} isPortrait={isPortrait} direction={labelDirection} />
 
       <motion.div
         animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }}
@@ -1365,6 +1440,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
       <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
+      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />
+      <WinnerAuthority item={winnerAuthorityItem} accent={arena.accent} />
       <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
 
@@ -1671,36 +1748,11 @@ const styles = {
     marginLeft: 2,
     color: '#ffffff',
   },
-  arenaLabelPortrait: {
-    position: 'absolute',
-    top: 14,
-    left: 0,
-    right: 0,
-    zIndex: 30,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    pointerEvents: 'none',
-  },
-  arenaLabelLandscape: {
+  arenaHeroWrap: {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    zIndex: 12,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    pointerEvents: 'none',
-  },
-  arenaLabelLandscapeTop: {
-    position: 'absolute',
-    top: 14,
-    left: 0,
-    right: 0,
     zIndex: 30,
     display: 'flex',
     flexDirection: 'column',
@@ -1708,25 +1760,49 @@ const styles = {
     justifyContent: 'center',
     textAlign: 'center',
     pointerEvents: 'none',
+    width: 'min(88vw, 760px)',
+    padding: '0 18px',
   },
-  arenaLabelSmall: {
-    fontSize: 10,
+  arenaHeroSmall: {
+    fontSize: 11,
     textTransform: 'uppercase',
-    letterSpacing: '0.22em',
-    opacity: 0.42,
-    marginBottom: 4,
+    letterSpacing: '0.3em',
+    opacity: 0.38,
+    marginBottom: 10,
   },
-  arenaLabelText: {
-    fontSize: 15,
+  arenaHeroText: {
+    fontSize: 'clamp(32px, 6vw, 56px)',
+    fontWeight: 900,
+    lineHeight: 0.96,
+    letterSpacing: '-0.02em',
+  },
+  arenaWhisperPortrait: {
+    position: 'absolute',
+    top: 14,
+    left: 0,
+    right: 0,
+    zIndex: 11,
+    display: 'flex',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  arenaWhisperLandscapeTop: {
+    position: 'absolute',
+    top: 14,
+    left: 0,
+    right: 0,
+    zIndex: 11,
+    display: 'flex',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  arenaWhisperText: {
+    fontSize: 11,
+    opacity: 0.1,
     fontWeight: 700,
-    letterSpacing: '0.01em',
-    background: 'rgba(0,0,0,0.24)',
-    padding: '4px 10px',
-    borderRadius: 999,
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)',
+    letterSpacing: '0.08em',
     whiteSpace: 'nowrap',
-    margin: '0 auto',
+    textTransform: 'uppercase',
   },
   championOverlay: {
     position: 'absolute',
@@ -1843,6 +1919,50 @@ const styles = {
     fontSize: 13,
     fontWeight: 700,
   },
+  voteFlash: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 12,
+    pointerEvents: 'none',
+  },
+  winnerAuthorityWrap: {
+    position: 'absolute',
+    top: 54,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 17,
+    minWidth: 180,
+    maxWidth: '70vw',
+    borderRadius: 18,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(8,10,14,0.48)',
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
+    padding: '10px 14px 12px',
+    textAlign: 'center',
+    boxShadow: '0 12px 34px rgba(0,0,0,0.24)',
+  },
+  winnerAuthorityLine: {
+    width: 40,
+    height: 2,
+    borderRadius: 999,
+    margin: '0 auto 8px',
+  },
+  winnerAuthorityEyebrow: {
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.22em',
+    textTransform: 'uppercase',
+    opacity: 0.48,
+    marginBottom: 5,
+  },
+  winnerAuthorityTitle: {
+    fontSize: 14,
+    fontWeight: 800,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
   leaderboardSwipeZone: {
     position: 'absolute',
     left: 0,
@@ -1903,10 +2023,10 @@ const styles = {
     cursor: 'pointer',
   },
   sheetHandle: {
-    width: 42,
-    height: 4,
+    width: 34,
+    height: 3,
     borderRadius: 999,
-    background: 'rgba(255,255,255,0.18)',
+    background: 'rgba(255,255,255,0.14)',
   },
   sheetHeader: {
     display: 'flex',
