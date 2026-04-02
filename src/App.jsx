@@ -1087,6 +1087,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function handleTogglePause() {
     if (detailsId || showChampion || transitioningArena || sheetOpen) return;
+    if (arena.mediaType !== 'video') return;
     setPaused((prev) => !prev);
   }
 
@@ -1330,7 +1331,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           isActivePlayback={activeSide === 'first'}
           paused={paused}
           isLocked={isLocked || transitioningArena}
-          dimmed={activeSide !== 'first' || paused}
+          dimmed={arena.mediaType === 'video' ? activeSide !== 'first' || paused : false}
           showWinnerGlow={winnerId === pair.first.id}
           throwAnimate={getThrownStyle('first')}
         />
@@ -1347,7 +1348,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           isActivePlayback={activeSide === 'second'}
           paused={paused}
           isLocked={isLocked || transitioningArena}
-          dimmed={activeSide !== 'second' || paused}
+          dimmed={arena.mediaType === 'video' ? activeSide !== 'second' || paused : false}
           showWinnerGlow={winnerId === pair.second.id}
           throwAnimate={getThrownStyle('second')}
         />
@@ -1672,17 +1673,16 @@ const styles = {
   },
   arenaLabelPortrait: {
     position: 'absolute',
-    top: 16,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 20,
+    top: 14,
+    left: 0,
+    right: 0,
+    zIndex: 30,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center',
     pointerEvents: 'none',
-    width: 'max-content',
   },
   arenaLabelLandscape: {
     position: 'absolute',
@@ -1698,17 +1698,16 @@ const styles = {
   },
   arenaLabelLandscapeTop: {
     position: 'absolute',
-    top: 16,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 20,
+    top: 14,
+    left: 0,
+    right: 0,
+    zIndex: 30,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center',
     pointerEvents: 'none',
-    width: 'max-content',
   },
   arenaLabelSmall: {
     fontSize: 10,
@@ -1725,6 +1724,9 @@ const styles = {
     padding: '4px 10px',
     borderRadius: 999,
     backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    whiteSpace: 'nowrap',
+    margin: '0 auto',
   },
   championOverlay: {
     position: 'absolute',
@@ -1851,27 +1853,32 @@ const styles = {
     background: 'transparent',
   },
   bottomGhostBar: {
-    position: 'absolute',
+    position: 'fixed',
     bottom: 18,
-    left: 0,
-    right: 0,
+    left: '50%',
+    transform: 'translateX(-50%)',
     display: 'flex',
     justifyContent: 'center',
-    zIndex: 21,
+    zIndex: 999,
     pointerEvents: 'none',
   },
   invisibleUploadButton: {
     pointerEvents: 'auto',
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 999,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(8,10,14,0.32)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(8,10,14,0.42)',
     backdropFilter: 'blur(12px)',
-    color: 'rgba(255,255,255,0.72)',
+    WebkitBackdropFilter: 'blur(12px)',
+    color: 'rgba(255,255,255,0.82)',
     fontSize: 22,
     lineHeight: 1,
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
   },
   sheet: {
     position: 'absolute',
