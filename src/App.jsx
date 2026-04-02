@@ -214,11 +214,11 @@ function ArenaLabel({ arena, visible, isPortrait }) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: isPortrait ? -8 : 0, scale: 0.985 }}
+          initial={{ opacity: 0, y: -8, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: isPortrait ? -10 : 0, scale: 0.985 }}
+          exit={{ opacity: 0, y: -10, scale: 0.985 }}
           transition={{ duration: 0.28 }}
-          style={isPortrait ? styles.arenaLabelPortrait : styles.arenaLabelLandscape}
+          style={isPortrait ? styles.arenaLabelPortrait : styles.arenaLabelLandscapeTop}
         >
           <div style={styles.arenaLabelSmall}>Arena</div>
           <div style={{ ...styles.arenaLabelText, color: arena.accent }}>{arena.label}</div>
@@ -240,10 +240,10 @@ function DiamondVS({ accent }) {
   );
 }
 
-function PauseChip({ paused, isPortrait }) {
+function PauseChip({ paused, isPortrait, show }) {
   return (
     <AnimatePresence>
-      {paused && (
+      {paused && show && (
         <motion.div
           style={isPortrait ? styles.pausePortraitLayer : styles.pauseLandscapeLayer}
           initial={{ opacity: 0, scale: 0.88 }}
@@ -1363,7 +1363,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       />
 
       <DiamondVS accent={arena.accent} />
-      <PauseChip paused={paused} isPortrait={isPortrait} />
+      <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
       <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
 
@@ -1672,16 +1672,17 @@ const styles = {
   },
   arenaLabelPortrait: {
     position: 'absolute',
-    top: 18,
+    top: 16,
     left: '50%',
     transform: 'translateX(-50%)',
-    zIndex: 12,
-    width: '100%',
+    zIndex: 20,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
     textAlign: 'center',
     pointerEvents: 'none',
+    width: 'max-content',
   },
   arenaLabelLandscape: {
     position: 'absolute',
@@ -1694,6 +1695,20 @@ const styles = {
     alignItems: 'center',
     textAlign: 'center',
     pointerEvents: 'none',
+  },
+  arenaLabelLandscapeTop: {
+    position: 'absolute',
+    top: 16,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    pointerEvents: 'none',
+    width: 'max-content',
   },
   arenaLabelSmall: {
     fontSize: 10,
@@ -1837,12 +1852,12 @@ const styles = {
   },
   bottomGhostBar: {
     position: 'absolute',
-    bottom: 12,
+    bottom: 18,
     left: 0,
     right: 0,
     display: 'flex',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 21,
     pointerEvents: 'none',
   },
   invisibleUploadButton: {
