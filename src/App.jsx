@@ -381,7 +381,6 @@ function VoteFlash({ accent, visible }) {
   );
 }
 
-
 function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, paused, dimmed, showWinnerGlow, isPortrait }) {
   const mediaRef = useRef(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -719,14 +718,6 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
   }, [isOpen, initialArenaId]);
 
   useEffect(() => {
-    return () => {
-      if (objectUrl) {
-        // session-only preview URL; kept alive while contender is in state
-      }
-    };
-  }, [objectUrl]);
-
-  useEffect(() => {
     if (!isOpen) {
       setTitle('');
       setCreator('@me');
@@ -997,7 +988,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const holdTriggeredRef = useRef(false);
   const labelTimerRef = useRef(null);
   const bottomSwipeRef = useRef({ x: 0, y: 0, active: false });
-    const voteFlashTimerRef = useRef(null);
+  const voteFlashTimerRef = useRef(null);
 
   const [pair, setPair] = useState(() => pickTwo(arenaItems));
   const [winnerId, setWinnerId] = useState(null);
@@ -1019,15 +1010,15 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [enterState, setEnterState] = useState(null);
   const [transitioningArena, setTransitioningArena] = useState(false);
   const [voteFlashVisible, setVoteFlashVisible] = useState(false);
-  
-  useEffect(() => {
-    poolRef.current = pool;
-  }, [pool]);
 
   const detailsItem = useMemo(
     () => arenaItems.find((item) => item.id === detailsId) || null,
     [arenaItems, detailsId]
   );
+
+  useEffect(() => {
+    poolRef.current = pool;
+  }, [pool]);
 
   function showArenaLabel(direction = 0) {
     setLabelDirection(direction);
@@ -1041,6 +1032,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
     voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 240);
   }
+
   function pickNextPair(items, history) {
     if (items.length < 2) return pickTwo(items);
 
@@ -1081,7 +1073,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     return () => {
       if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-      if (authorityTimerRef.current) clearTimeout(authorityTimerRef.current);
       if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
     };
   }, []);
@@ -1243,6 +1234,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     };
 
     updatePoolWithResults(updatedWinner, updatedLoser);
+
     const nextWinnerStreak = winnerId === updatedWinner.id ? streak + 1 : 1;
     setWinnerId(updatedWinner.id);
     setStreak(nextWinnerStreak);
@@ -1409,7 +1401,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
       <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
-      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />      <DetailsOverlay item={detailsItem} accent={arena.accent} />
+      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />
+      <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div style={styles.bottomGhostBar}>
@@ -1906,44 +1899,6 @@ const styles = {
     inset: 0,
     zIndex: 12,
     pointerEvents: 'none',
-  },
-  winnerAuthorityWrap: {
-    position: 'absolute',
-    top: 54,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 17,
-    minWidth: 180,
-    maxWidth: '70vw',
-    borderRadius: 18,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(8,10,14,0.48)',
-    backdropFilter: 'blur(14px)',
-    WebkitBackdropFilter: 'blur(14px)',
-    padding: '10px 14px 12px',
-    textAlign: 'center',
-    boxShadow: '0 12px 34px rgba(0,0,0,0.24)',
-  },
-  winnerAuthorityLine: {
-    width: 40,
-    height: 2,
-    borderRadius: 999,
-    margin: '0 auto 8px',
-  },
-  winnerAuthorityEyebrow: {
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: '0.22em',
-    textTransform: 'uppercase',
-    opacity: 0.48,
-    marginBottom: 5,
-  },
-  winnerAuthorityTitle: {
-    fontSize: 14,
-    fontWeight: 800,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
   },
   leaderboardSwipeZone: {
     position: 'absolute',
