@@ -3,10 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 const THROW_DISTANCE = 110;
 const THROW_VELOCITY = 700;
+const CATEGORY_DISTANCE = 135;
+const CATEGORY_VELOCITY = 820;
 const HOLD_MS = 320;
 const LABEL_VISIBLE_MS = 2200;
-const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v6';
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v6';
+const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v7';
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v7';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -588,15 +590,7 @@ function PauseChip({ paused, isPortrait }) {
 }
 
 function SeamLine({ isPortrait }) {
-  return (
-    <div
-      style={
-        isPortrait
-          ? styles.seamLinePortrait
-          : styles.seamLineLandscape
-      }
-    />
-  );
+  return <div style={isPortrait ? styles.seamLinePortrait : styles.seamLineLandscape} />;
 }
 
 function ChampionMoment({ item, accent }) {
@@ -909,7 +903,7 @@ function OnboardingOverlay({ onClose }) {
     },
     {
       title: 'Throw or switch',
-      body: 'Middle to outside throws away the loser. Outside to middle changes category.',
+      body: 'Swipe outward to throw away a loser. Swipe inward to switch arenas.',
     },
   ];
 
@@ -1003,9 +997,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
 
   useEffect(() => {
     return () => {
-      if (objectUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      if (objectUrl?.startsWith('blob:')) URL.revokeObjectURL(objectUrl);
     };
   }, [objectUrl]);
 
@@ -1406,20 +1398,20 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (isPortrait) {
       if (side === 'first') {
         if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return 'throw';
-        if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return 'category-prev';
+        if (offsetY > CATEGORY_DISTANCE || velocityY > CATEGORY_VELOCITY) return 'category-prev';
       } else {
         if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return 'throw';
-        if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return 'category-next';
+        if (offsetY < -CATEGORY_DISTANCE || velocityY < -CATEGORY_VELOCITY) return 'category-next';
       }
       return 'none';
     }
 
     if (side === 'first') {
       if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return 'throw';
-      if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return 'category-prev';
+      if (offsetX > CATEGORY_DISTANCE || velocityX > CATEGORY_VELOCITY) return 'category-prev';
     } else {
       if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return 'throw';
-      if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return 'category-next';
+      if (offsetX < -CATEGORY_DISTANCE || velocityX < -CATEGORY_VELOCITY) return 'category-next';
     }
 
     return 'none';
@@ -1570,7 +1562,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function getThrownStyle(sideName) {
     if (!throwState || throwState.side !== sideName) return null;
-
     return {
       x: throwState.vector.x,
       y: throwState.vector.y,
@@ -1727,20 +1718,6 @@ export default function App() {
 
   return (
     <AppShell>
-      <div
-  style={{
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    fontSize: 24,
-    fontWeight: 800,
-    color: 'red',
-    zIndex: 9999,
-    pointerEvents: 'none',
-  }}
->
-  TEST BUILD
-</div>
       <BattleArena
         pool={pool}
         setPool={setPool}
