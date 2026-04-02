@@ -222,7 +222,7 @@ function ArenaLabel({ arena, visible, isPortrait, direction }) {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: initialX * 0.3, y: initialY * 0.3, scale: 0.98 }}
             transition={{ duration: 0.35 }}
-            style={styles.arenaHeroWrap}
+            style={isPortrait ? styles.arenaHeroWrapPortrait : styles.arenaHeroWrapLandscape}
           >
             <div style={styles.arenaHeroSmall}>Arena</div>
             <div
@@ -381,25 +381,6 @@ function VoteFlash({ accent, visible }) {
   );
 }
 
-function WinnerAuthority({ item, accent }) {
-  if (!item) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.985 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 6, scale: 0.99 }}
-        transition={{ duration: 0.22 }}
-        style={{ ...styles.winnerAuthorityWrap, borderColor: `${accent}4d` }}
-      >
-        <div style={{ ...styles.winnerAuthorityLine, background: accent }} />
-        <div style={styles.winnerAuthorityEyebrow}>Advancing</div>
-        <div style={styles.winnerAuthorityTitle}>{item.title}</div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
 
 function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, paused, dimmed, showWinnerGlow, isPortrait }) {
   const mediaRef = useRef(null);
@@ -608,7 +589,7 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
         if (info.offset.y > 80) setIsOpen(false);
         if (info.offset.y < -80) setIsOpen(true);
       }}
-      animate={{ y: isOpen ? 0 : 436 }}
+      animate={{ y: isOpen ? 0 : 446 }}
       transition={{ type: 'spring', stiffness: 280, damping: 30 }}
       style={styles.sheet}
     >
@@ -1016,8 +997,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const holdTriggeredRef = useRef(false);
   const labelTimerRef = useRef(null);
   const bottomSwipeRef = useRef({ x: 0, y: 0, active: false });
-  const authorityTimerRef = useRef(null);
-  const voteFlashTimerRef = useRef(null);
+    const voteFlashTimerRef = useRef(null);
 
   const [pair, setPair] = useState(() => pickTwo(arenaItems));
   const [winnerId, setWinnerId] = useState(null);
@@ -1039,8 +1019,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [enterState, setEnterState] = useState(null);
   const [transitioningArena, setTransitioningArena] = useState(false);
   const [voteFlashVisible, setVoteFlashVisible] = useState(false);
-  const [winnerAuthorityItem, setWinnerAuthorityItem] = useState(null);
-
+  
   useEffect(() => {
     poolRef.current = pool;
   }, [pool]);
@@ -1062,13 +1041,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
     voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 240);
   }
-
-  function showWinnerAuthority(item) {
-    setWinnerAuthorityItem(item);
-    if (authorityTimerRef.current) clearTimeout(authorityTimerRef.current);
-    authorityTimerRef.current = setTimeout(() => setWinnerAuthorityItem(null), 980);
-  }
-
   function pickNextPair(items, history) {
     if (items.length < 2) return pickTwo(items);
 
@@ -1093,7 +1065,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     setIsLocked(false);
     setThrowState(null);
     setEnterState(null);
-    setWinnerAuthorityItem(null);
     setVoteFlashVisible(false);
     setDecisionUnlockedAt(Date.now());
 
@@ -1272,8 +1243,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     };
 
     updatePoolWithResults(updatedWinner, updatedLoser);
-    showWinnerAuthority(updatedWinner);
-
     const nextWinnerStreak = winnerId === updatedWinner.id ? streak + 1 : 1;
     setWinnerId(updatedWinner.id);
     setStreak(nextWinnerStreak);
@@ -1440,9 +1409,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
       <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
-      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />
-      <WinnerAuthority item={winnerAuthorityItem} accent={arena.accent} />
-      <DetailsOverlay item={detailsItem} accent={arena.accent} />
+      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />      <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div style={styles.bottomGhostBar}>
@@ -1748,11 +1715,26 @@ const styles = {
     marginLeft: 2,
     color: '#ffffff',
   },
-  arenaHeroWrap: {
+  arenaHeroWrapPortrait: {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
+    zIndex: 30,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    pointerEvents: 'none',
+    width: 'min(88vw, 760px)',
+    padding: '0 18px',
+  },
+  arenaHeroWrapLandscape: {
+    position: 'absolute',
+    top: 38,
+    left: '50%',
+    transform: 'translateX(-50%)',
     zIndex: 30,
     display: 'flex',
     flexDirection: 'column',
@@ -2009,7 +1991,7 @@ const styles = {
     zIndex: 16,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    background: 'rgba(8,10,14,0.92)',
+    background: 'rgba(8,10,14,0.86)',
     backdropFilter: 'blur(18px)',
     border: '1px solid rgba(255,255,255,0.06)',
     boxShadow: '0 -24px 60px rgba(0,0,0,0.36)',
@@ -2023,10 +2005,10 @@ const styles = {
     cursor: 'pointer',
   },
   sheetHandle: {
-    width: 34,
+    width: 28,
     height: 3,
     borderRadius: 999,
-    background: 'rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.1)',
   },
   sheetHeader: {
     display: 'flex',
