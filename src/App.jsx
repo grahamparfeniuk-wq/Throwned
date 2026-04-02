@@ -6,9 +6,8 @@ const THROW_VELOCITY = 700;
 const CATEGORY_DISTANCE = 135;
 const CATEGORY_VELOCITY = 820;
 const HOLD_MS = 320;
-const LABEL_VISIBLE_MS = 2200;
-const STORAGE_KEY_UPLOADS = 'throwned-uploaded-media-v7';
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v7';
+const LABEL_VISIBLE_MS = 1400;
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v8';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -441,30 +440,6 @@ function formatSeconds(value) {
   return `${Number(value || 0).toFixed(1)}s`;
 }
 
-function mediaIconForArena(arena) {
-  return arena.mediaType === 'video' ? '🎥' : '🖼️';
-}
-
-function saveUploadsToStorage(items) {
-  try {
-    const uploadedOnly = items.filter((item) => item.uploaded);
-    localStorage.setItem(STORAGE_KEY_UPLOADS, JSON.stringify(uploadedOnly));
-  } catch {
-    // no-op
-  }
-}
-
-function loadUploadsFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_UPLOADS);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 function getArena(arenaId) {
   return ARENAS.find((a) => a.id === arenaId) || ARENAS[0];
 }
@@ -525,39 +500,44 @@ function getClipName(item) {
   return item?.title || 'Untitled';
 }
 
-function AppShell({ children }) {
+function AppShell({ children, accent }) {
   return (
     <div style={styles.app}>
-      <div style={styles.phone}>{children}</div>
+      <div
+        style={{
+          ...styles.phone,
+          background: `radial-gradient(circle at top, ${accent}18, transparent 24%), #050608`,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
 
-function ArenaLabel({ arena, visible }) {
+function ArenaLabel({ arena, visible, isPortrait }) {
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.24 }}
-          style={styles.arenaLabelWrap}
+          initial={{ opacity: 0, y: isPortrait ? -8 : 0, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: isPortrait ? -10 : 0, scale: 0.985 }}
+          transition={{ duration: 0.28 }}
+          style={isPortrait ? styles.arenaLabelPortrait : styles.arenaLabelLandscape}
         >
           <div style={styles.arenaLabelSmall}>Arena</div>
-          <div style={{ ...styles.arenaLabelText, color: arena.accent }}>
-            {mediaIconForArena(arena)} {arena.label}
-          </div>
+          <div style={{ ...styles.arenaLabelText, color: arena.accent }}>{arena.label}</div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-function DiamondVS() {
+function DiamondVS({ accent }) {
   return (
     <div style={styles.vsCenterLayer}>
-      <div style={styles.vsDiamond}>
+      <div style={{ ...styles.vsDiamond, borderColor: `${accent}` }}>
         <div style={styles.vsDiamondInner}>
           <span style={styles.vsText}>VS</span>
         </div>
@@ -589,8 +569,16 @@ function PauseChip({ paused, isPortrait }) {
   );
 }
 
-function SeamLine({ isPortrait }) {
-  return <div style={isPortrait ? styles.seamLinePortrait : styles.seamLineLandscape} />;
+function SeamLine({ isPortrait, accent }) {
+  return (
+    <div
+      style={
+        isPortrait
+          ? { ...styles.seamLinePortrait, background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }
+          : { ...styles.seamLineLandscape, background: `linear-gradient(180deg, transparent, ${accent}, transparent)` }
+      }
+    />
+  );
 }
 
 function ChampionMoment({ item, accent }) {
@@ -657,7 +645,7 @@ function DetailsOverlay({ item, accent }) {
           )}
 
           <div style={{ ...styles.detailsArena, color: accent }}>
-            {mediaIconForArena(getArena(item.arenaId))} {getArena(item.arenaId).label}
+            {getArena(item.arenaId).label}
           </div>
         </motion.div>
       </motion.div>
@@ -678,6 +666,7 @@ function MediaSurface({
   isLocked,
   dimmed,
   showWinnerGlow,
+  isPortrait,
 }) {
   const mediaRef = useRef(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -726,12 +715,27 @@ function MediaSurface({
 
   if (!item) return null;
 
+  const mediaStyle =
+    item.mediaType === 'video'
+      ? isPortrait
+        ? styles.videoMediaPortrait
+        : styles.videoMediaLandscape
+      : isPortrait
+        ? styles.imageMediaPortrait
+        : styles.imageMediaLandscape;
+
   return (
     <motion.div
       drag={isLocked ? false : dragAxis}
       dragMomentum
       dragElastic={0.06}
       dragSnapToOrigin
+      onDrag={(e, info) => {
+        const threshold = isPortrait ? Math.abs(info.offset.x) > 14 : Math.abs(info.offset.y) > 14;
+        if (threshold) {
+          e.stopPropagation();
+        }
+      }}
       onDragEnd={(_, info) => {
         if (isLocked) return;
         onGestureComplete(side, info.offset.x, info.offset.y, info.velocity.x, info.velocity.y);
@@ -755,7 +759,7 @@ function MediaSurface({
             src={item.src}
             playsInline
             preload="auto"
-            style={styles.media}
+            style={mediaStyle}
             onError={() => setLoadFailed(true)}
           />
         ) : (
@@ -763,7 +767,7 @@ function MediaSurface({
             ref={mediaRef}
             src={item.src}
             alt={item.title}
-            style={styles.media}
+            style={mediaStyle}
             onError={() => setLoadFailed(true)}
           />
         )
@@ -835,6 +839,7 @@ function BattleSlot({
         isLocked={isLocked}
         dimmed={dimmed}
         showWinnerGlow={showWinnerGlow}
+        isPortrait={isPortrait}
       />
     </motion.div>
   );
@@ -863,9 +868,7 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
       <div style={styles.sheetHeader}>
         <div>
           <div style={styles.sheetEyebrow}>Leaderboard</div>
-          <div style={{ ...styles.sheetTitle, color: arena.accent }}>
-            {mediaIconForArena(arena)} {arena.label}
-          </div>
+          <div style={{ ...styles.sheetTitle, color: arena.accent }}>{arena.label}</div>
         </div>
         <div style={styles.sheetCount}>{ranked.length} contenders</div>
       </div>
@@ -1099,7 +1102,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
                 >
                   {ARENAS.map((arena) => (
                     <option key={arena.id} value={arena.id}>
-                      {mediaIconForArena(arena)} {arena.label}
+                      {arena.label}
                     </option>
                   ))}
                 </select>
@@ -1108,7 +1111,7 @@ function UploadSheet({ isOpen, onClose, onSave }) {
               <label style={styles.uploadField}>
                 <span style={styles.uploadLabel}>Type</span>
                 <input
-                  value={mediaType === 'video' ? '🎥 Video' : '🖼️ Image'}
+                  value={mediaType === 'video' ? 'Video' : 'Image'}
                   readOnly
                   style={styles.uploadInput}
                 />
@@ -1276,6 +1279,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [totalVotes, setTotalVotes] = useState(0);
   const [throwState, setThrowState] = useState(null);
   const [enterState, setEnterState] = useState(null);
+  const [transitioningArena, setTransitioningArena] = useState(false);
 
   const detailsItem = useMemo(
     () => arenaItems.find((item) => item.id === detailsId) || null,
@@ -1317,6 +1321,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     const nextPair = pickNextPair(arenaItems, battleHistoryRef.current);
     setPair(nextPair);
     setActiveSide(nextPair?.second ? 'second' : 'first');
+    setTransitioningArena(true);
+
+    const t = setTimeout(() => setTransitioningArena(false), 260);
+    return () => clearTimeout(t);
   }, [arena.id, arenaItems.length]);
 
   useEffect(() => {
@@ -1370,7 +1378,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   function handleTogglePause() {
-    if (detailsId || showChampion) return;
+    if (detailsId || showChampion || transitioningArena) return;
     setPaused((prev) => !prev);
   }
 
@@ -1418,17 +1426,23 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   function handleSurfaceGesture(side, offsetX, offsetY, velocityX, velocityY) {
-    if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId) return;
+    if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId || transitioningArena) return;
 
     const outcome = resolveGesture(side, offsetX, offsetY, velocityX, velocityY);
 
     if (outcome === 'category-prev') {
-      onSwipeArena(-1);
+      setTransitioningArena(true);
+      setTimeout(() => {
+        onSwipeArena(-1);
+      }, 40);
       return;
     }
 
     if (outcome === 'category-next') {
-      onSwipeArena(1);
+      setTransitioningArena(true);
+      setTimeout(() => {
+        onSwipeArena(1);
+      }, 40);
       return;
     }
 
@@ -1584,10 +1598,20 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   return (
-    <div style={styles.battleRoot} onClick={handleTogglePause}>
-      <ArenaLabel arena={arena} visible={labelVisible} />
+    <div
+      style={{
+        ...styles.battleRoot,
+        background: `radial-gradient(circle at center, ${arena.accent}10, transparent 30%), #050608`,
+      }}
+      onClick={handleTogglePause}
+    >
+      <ArenaLabel arena={arena} visible={labelVisible} isPortrait={isPortrait} />
 
-      <div style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}>
+      <motion.div
+        animate={{ opacity: transitioningArena ? 0.88 : 1, scale: transitioningArena ? 0.992 : 1 }}
+        transition={{ duration: 0.18 }}
+        style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}
+      >
         <BattleSlot
           side="first"
           item={pair.first}
@@ -1600,7 +1624,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           onHoldEnd={endHold}
           isActivePlayback={activeSide === 'first'}
           paused={paused}
-          isLocked={isLocked}
+          isLocked={isLocked || transitioningArena}
           dimmed={activeSide !== 'first' || paused}
           showWinnerGlow={winnerId === pair.first.id}
           throwAnimate={getThrownStyle('first')}
@@ -1618,14 +1642,14 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           onHoldEnd={endHold}
           isActivePlayback={activeSide === 'second'}
           paused={paused}
-          isLocked={isLocked}
+          isLocked={isLocked || transitioningArena}
           dimmed={activeSide !== 'second' || paused}
           showWinnerGlow={winnerId === pair.second.id}
           throwAnimate={getThrownStyle('second')}
         />
-      </div>
+      </motion.div>
 
-      <SeamLine isPortrait={isPortrait} />
+      <SeamLine isPortrait={isPortrait} accent={`${arena.accent}aa`} />
 
       <div
         style={styles.leaderboardSwipeZone}
@@ -1634,7 +1658,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         onTouchEnd={handleBottomSwipeEnd}
       />
 
-      <DiamondVS />
+      <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} />
       <DetailsOverlay item={detailsItem} accent={arena.accent} />
       <ChampionMoment item={championItem} accent={arena.accent} />
@@ -1657,7 +1681,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 }
 
 export default function App() {
-  const [pool, setPool] = useState(() => sortLeaderboard([...DEMO_MEDIA, ...loadUploadsFromStorage()]));
+  const [pool, setPool] = useState(() => sortLeaderboard([...DEMO_MEDIA]));
   const [arenaIndex, setArenaIndex] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1673,10 +1697,6 @@ export default function App() {
       setShowOnboarding(true);
     }
   }, []);
-
-  useEffect(() => {
-    saveUploadsToStorage(pool);
-  }, [pool]);
 
   function closeOnboarding() {
     try {
@@ -1717,7 +1737,7 @@ export default function App() {
   }
 
   return (
-    <AppShell>
+    <AppShell accent={arena.accent}>
       <BattleArena
         pool={pool}
         setPool={setPool}
@@ -1753,15 +1773,12 @@ const styles = {
     width: '100vw',
     height: '100vh',
     overflow: 'hidden',
-    background: '#050608',
   },
   battleRoot: {
     position: 'relative',
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    background:
-      'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), #050608',
   },
   battleLayout: {
     position: 'absolute',
@@ -1793,11 +1810,32 @@ const styles = {
     touchAction: 'none',
     background: '#07080b',
   },
-  media: {
+  videoMediaPortrait: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    transform: 'scale(1.04)',
+    transform: 'scale(1.08)',
+    background: '#0b0b0d',
+  },
+  videoMediaLandscape: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transform: 'scale(1.01)',
+    background: '#0b0b0d',
+  },
+  imageMediaPortrait: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transform: 'scale(1.06)',
+    background: '#0b0b0d',
+  },
+  imageMediaLandscape: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transform: 'scale(1.02)',
     background: '#0b0b0d',
   },
   fallback: {
@@ -1850,7 +1888,6 @@ const styles = {
     right: 0,
     top: '50%',
     height: 1,
-    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
     zIndex: 6,
     pointerEvents: 'none',
   },
@@ -1860,7 +1897,6 @@ const styles = {
     bottom: 0,
     left: '50%',
     width: 1,
-    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent)',
     zIndex: 6,
     pointerEvents: 'none',
   },
@@ -1915,7 +1951,7 @@ const styles = {
     height: 42,
     transform: 'rotate(45deg)',
     borderRadius: 4,
-    border: '1px solid rgba(255,255,255,0.92)',
+    border: '1px solid',
     background: '#000000',
     display: 'flex',
     alignItems: 'center',
@@ -1937,11 +1973,20 @@ const styles = {
     marginLeft: 2,
     color: '#ffffff',
   },
-  arenaLabelWrap: {
+  arenaLabelPortrait: {
     position: 'absolute',
     top: 18,
     left: '50%',
     transform: 'translateX(-50%)',
+    zIndex: 12,
+    textAlign: 'center',
+    pointerEvents: 'none',
+  },
+  arenaLabelLandscape: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
     zIndex: 12,
     textAlign: 'center',
     pointerEvents: 'none',
@@ -1957,6 +2002,10 @@ const styles = {
     fontSize: 15,
     fontWeight: 700,
     letterSpacing: '0.01em',
+    background: 'rgba(0,0,0,0.28)',
+    padding: '4px 10px',
+    borderRadius: 999,
+    backdropFilter: 'blur(10px)',
   },
   championOverlay: {
     position: 'absolute',
