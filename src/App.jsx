@@ -1,57 +1,57 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const THROW_DISTANCE = 92;
 const THROW_VELOCITY = 640;
 const CATEGORY_DISTANCE = 118;
 const CATEGORY_VELOCITY = 760;
-const HOLD_MS = 320;
+const HOLD_MS = 280;
 const LABEL_VISIBLE_MS = 1600;
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v14';
+const STORAGE_KEY_ONBOARDING = "throwned-gesture-walkthrough-seen-v15";
 
 const ARENAS = [
-  { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
-  { id: 'epic-fails', label: 'Epic Fails', mediaType: 'video', accent: '#ef4444' },
-  { id: 'original-songs', label: 'Original Songs', mediaType: 'video', accent: '#f59e0b' },
-  { id: 'comedy', label: 'Comedy', mediaType: 'video', accent: '#22c55e' },
-  { id: 'sports', label: 'Sports', mediaType: 'video', accent: '#06b6d4' },
-  { id: 'best-sunset', label: 'Best Sunset', mediaType: 'image', accent: '#fb7185' },
-  { id: 'cute-kittens', label: 'Cute Kittens', mediaType: 'image', accent: '#a78bfa' },
-  { id: 'wildcard', label: 'Wildcard', mediaType: 'video', accent: '#8b5cf6' },
+  { id: "skateboard-tricks", label: "Skateboard Tricks", mediaType: "video", accent: "#7c3aed" },
+  { id: "epic-fails", label: "Epic Fails", mediaType: "video", accent: "#ef4444" },
+  { id: "original-songs", label: "Original Songs", mediaType: "video", accent: "#f59e0b" },
+  { id: "comedy", label: "Comedy", mediaType: "video", accent: "#22c55e" },
+  { id: "sports", label: "Sports", mediaType: "video", accent: "#06b6d4" },
+  { id: "best-sunset", label: "Best Sunset", mediaType: "image", accent: "#fb7185" },
+  { id: "cute-kittens", label: "Cute Kittens", mediaType: "image", accent: "#a78bfa" },
+  { id: "wildcard", label: "Wildcard", mediaType: "video", accent: "#8b5cf6" },
 ];
 
 const DEMO_MEDIA = [
-  { id: 1, arenaId: 'epic-fails', title: 'Slip Jacket', creator: '@fail_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3200, confidence: 0.78, wins: 0, losses: 0 },
-  { id: 2, arenaId: 'epic-fails', title: 'Box Miss', creator: '@fail_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3168, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 3, arenaId: 'epic-fails', title: 'Flower Chaos', creator: '@fail_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3144, confidence: 0.69, wins: 0, losses: 0 },
+  { id: 1, arenaId: "epic-fails", title: "Slip Jacket", creator: "@fail_1", mediaType: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3200, confidence: 0.78, wins: 0, losses: 0 },
+  { id: 2, arenaId: "epic-fails", title: "Box Miss", creator: "@fail_2", mediaType: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3168, confidence: 0.72, wins: 0, losses: 0 },
+  { id: 3, arenaId: "epic-fails", title: "Flower Chaos", creator: "@fail_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3144, confidence: 0.69, wins: 0, losses: 0 },
 
-  { id: 4, arenaId: 'sports', title: 'Track Burst', creator: '@sport_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3215, confidence: 0.8, wins: 0, losses: 0 },
-  { id: 5, arenaId: 'sports', title: 'Court Handle', creator: '@sport_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3177, confidence: 0.74, wins: 0, losses: 0 },
-  { id: 6, arenaId: 'sports', title: 'Rope Rhythm', creator: '@sport_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3138, confidence: 0.67, wins: 0, losses: 0 },
+  { id: 4, arenaId: "sports", title: "Track Burst", creator: "@sport_1", mediaType: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3215, confidence: 0.8, wins: 0, losses: 0 },
+  { id: 5, arenaId: "sports", title: "Court Handle", creator: "@sport_2", mediaType: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3177, confidence: 0.74, wins: 0, losses: 0 },
+  { id: 6, arenaId: "sports", title: "Rope Rhythm", creator: "@sport_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3138, confidence: 0.67, wins: 0, losses: 0 },
 
-  { id: 7, arenaId: 'original-songs', title: 'Neon Vocal', creator: '@song_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3194, confidence: 0.78, wins: 0, losses: 0 },
-  { id: 8, arenaId: 'original-songs', title: 'Studio Chorus', creator: '@song_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3155, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 9, arenaId: 'original-songs', title: 'Mic Room Hook', creator: '@song_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3115, confidence: 0.66, wins: 0, losses: 0 },
+  { id: 7, arenaId: "original-songs", title: "Neon Vocal", creator: "@song_1", mediaType: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3194, confidence: 0.78, wins: 0, losses: 0 },
+  { id: 8, arenaId: "original-songs", title: "Studio Chorus", creator: "@song_2", mediaType: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3155, confidence: 0.72, wins: 0, losses: 0 },
+  { id: 9, arenaId: "original-songs", title: "Mic Room Hook", creator: "@song_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3115, confidence: 0.66, wins: 0, losses: 0 },
 
-  { id: 10, arenaId: 'comedy', title: 'Dry Delivery', creator: '@comedy_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3188, confidence: 0.77, wins: 0, losses: 0 },
-  { id: 11, arenaId: 'comedy', title: 'Timing Break', creator: '@comedy_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3160, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 12, arenaId: 'comedy', title: 'Silent Look', creator: '@comedy_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3128, confidence: 0.68, wins: 0, losses: 0 },
+  { id: 10, arenaId: "comedy", title: "Dry Delivery", creator: "@comedy_1", mediaType: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3188, confidence: 0.77, wins: 0, losses: 0 },
+  { id: 11, arenaId: "comedy", title: "Timing Break", creator: "@comedy_2", mediaType: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3160, confidence: 0.72, wins: 0, losses: 0 },
+  { id: 12, arenaId: "comedy", title: "Silent Look", creator: "@comedy_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3128, confidence: 0.68, wins: 0, losses: 0 },
 
-  { id: 13, arenaId: 'skateboard-tricks', title: 'Rail Attempt', creator: '@skate_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3208, confidence: 0.79, wins: 0, losses: 0 },
-  { id: 14, arenaId: 'skateboard-tricks', title: 'Kickflip Gap', creator: '@skate_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3170, confidence: 0.73, wins: 0, losses: 0 },
-  { id: 15, arenaId: 'skateboard-tricks', title: 'Late Shuv', creator: '@skate_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3130, confidence: 0.68, wins: 0, losses: 0 },
+  { id: 13, arenaId: "skateboard-tricks", title: "Rail Attempt", creator: "@skate_1", mediaType: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3208, confidence: 0.79, wins: 0, losses: 0 },
+  { id: 14, arenaId: "skateboard-tricks", title: "Kickflip Gap", creator: "@skate_2", mediaType: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3170, confidence: 0.73, wins: 0, losses: 0 },
+  { id: 15, arenaId: "skateboard-tricks", title: "Late Shuv", creator: "@skate_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3130, confidence: 0.68, wins: 0, losses: 0 },
 
-  { id: 16, arenaId: 'wildcard', title: 'Anything Goes', creator: '@wild_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3175, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 17, arenaId: 'wildcard', title: 'Odd Moment', creator: '@wild_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3140, confidence: 0.69, wins: 0, losses: 0 },
-  { id: 18, arenaId: 'wildcard', title: 'Short Burst', creator: '@wild_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3110, confidence: 0.65, wins: 0, losses: 0 },
+  { id: 16, arenaId: "wildcard", title: "Anything Goes", creator: "@wild_1", mediaType: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3175, confidence: 0.75, wins: 0, losses: 0 },
+  { id: 17, arenaId: "wildcard", title: "Odd Moment", creator: "@wild_2", mediaType: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3140, confidence: 0.69, wins: 0, losses: 0 },
+  { id: 18, arenaId: "wildcard", title: "Short Burst", creator: "@wild_3", mediaType: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, uploaded: false, rating: 3110, confidence: 0.65, wins: 0, losses: 0 },
 
-  { id: 101, arenaId: 'best-sunset', title: 'Burning Horizon', creator: '@sunset_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3205, confidence: 0.8, wins: 0, losses: 0 },
-  { id: 102, arenaId: 'best-sunset', title: 'Pink Fade', creator: '@sunset_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3176, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 103, arenaId: 'best-sunset', title: 'Last Light', creator: '@sunset_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3138, confidence: 0.69, wins: 0, losses: 0 },
+  { id: 101, arenaId: "best-sunset", title: "Burning Horizon", creator: "@sunset_1", mediaType: "image", src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3205, confidence: 0.8, wins: 0, losses: 0 },
+  { id: 102, arenaId: "best-sunset", title: "Pink Fade", creator: "@sunset_2", mediaType: "image", src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3176, confidence: 0.75, wins: 0, losses: 0 },
+  { id: 103, arenaId: "best-sunset", title: "Last Light", creator: "@sunset_3", mediaType: "image", src: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3138, confidence: 0.69, wins: 0, losses: 0 },
 
-  { id: 111, arenaId: 'cute-kittens', title: 'Tiny Stare', creator: '@kitten_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3210, confidence: 0.81, wins: 0, losses: 0 },
-  { id: 112, arenaId: 'cute-kittens', title: 'Paw Lean', creator: '@kitten_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3174, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 113, arenaId: 'cute-kittens', title: 'Window Face', creator: '@kitten_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3142, confidence: 0.7, wins: 0, losses: 0 },
+  { id: 111, arenaId: "cute-kittens", title: "Tiny Stare", creator: "@kitten_1", mediaType: "image", src: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3210, confidence: 0.81, wins: 0, losses: 0 },
+  { id: 112, arenaId: "cute-kittens", title: "Paw Lean", creator: "@kitten_2", mediaType: "image", src: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3174, confidence: 0.75, wins: 0, losses: 0 },
+  { id: 113, arenaId: "cute-kittens", title: "Window Face", creator: "@kitten_3", mediaType: "image", src: "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=80", uploaded: false, rating: 3142, confidence: 0.7, wins: 0, losses: 0 },
 ];
 
 function clamp(value, min, max) {
@@ -86,28 +86,28 @@ function computeConfidenceAdjustedDelta(winner, loser, finalVoteWeight) {
 }
 
 function confidenceLabel(confidence) {
-  if (confidence >= 0.86) return 'Royalty';
-  if (confidence >= 0.73) return 'Elite';
-  if (confidence >= 0.58) return 'Rising';
-  return 'Wildcard';
+  if (confidence >= 0.86) return "Royalty";
+  if (confidence >= 0.73) return "Elite";
+  if (confidence >= 0.58) return "Rising";
+  return "Wildcard";
 }
 
 function safeDuration(item) {
-  if (!item) return 2000;
-  if (item.mediaType !== 'video') return 2600;
-  return Math.max(1000, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
+  if (!item) return 2200;
+  if (item.mediaType !== "video") return 2600;
+  return Math.max(1100, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
 }
 
 function useIsPortrait() {
   const getValue = () =>
-    typeof window !== 'undefined' ? window.innerHeight >= window.innerWidth : true;
+    typeof window !== "undefined" ? window.innerHeight >= window.innerWidth : true;
 
   const [isPortrait, setIsPortrait] = useState(getValue());
 
   useEffect(() => {
     const onResize = () => setIsPortrait(getValue());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   return isPortrait;
@@ -150,46 +150,46 @@ function pickTwo(pool, avoidIds = []) {
 
   const fallbackFirst = pool[0] || null;
   const fallbackSecond = pool.find((item) => item.id !== fallbackFirst?.id) || pool[1] || null;
-
   return { first: fallbackFirst, second: fallbackSecond };
 }
 
 function getThrowVector(side, isPortrait) {
   if (isPortrait) {
-    return side === 'first'
-      ? { x: 0, y: -window.innerHeight * 0.72 }
-      : { x: 0, y: window.innerHeight * 0.72 };
+    return side === "first"
+      ? { x: 0, y: -window.innerHeight * 0.82 }
+      : { x: 0, y: window.innerHeight * 0.82 };
   }
-  return side === 'first'
-    ? { x: -window.innerWidth * 0.72, y: 0 }
-    : { x: window.innerWidth * 0.72, y: 0 };
+
+  return side === "first"
+    ? { x: -window.innerWidth * 0.82, y: 0 }
+    : { x: window.innerWidth * 0.82, y: 0 };
 }
 
 function getEnterInitial(side, isPortrait) {
   const base = getThrowVector(side, isPortrait);
   return {
-    x: base.x * 0.38,
-    y: base.y * 0.38,
+    x: base.x * 0.28,
+    y: base.y * 0.28,
     opacity: 0.12,
-    scale: 0.99,
-    rotate: isPortrait ? base.y / 200 : base.x / 260,
+    scale: 0.985,
+    rotate: isPortrait ? base.y / 260 : base.x / 300,
   };
 }
 
 function getClipName(item) {
-  return item?.title || 'Untitled';
+  return item?.title || "Untitled";
 }
 
 function normalizeUploadContender(data, id) {
   return {
     id,
     arenaId: data.arenaId,
-    title: String(data.title || 'Untitled'),
-    creator: String(data.creator || '@me'),
-    mediaType: data.mediaType === 'image' ? 'image' : 'video',
+    title: String(data.title || "Untitled"),
+    creator: String(data.creator || "@me"),
+    mediaType: data.mediaType === "image" ? "image" : "video",
     src: String(data.src),
-    trimStart: data.mediaType === 'video' ? Number(data.trimStart || 0) : 0,
-    trimEnd: data.mediaType === 'video' ? Number(data.trimEnd || 7) : 0,
+    trimStart: data.mediaType === "video" ? Number(data.trimStart || 0) : 0,
+    trimEnd: data.mediaType === "video" ? Number(data.trimEnd || 7) : 0,
     uploaded: true,
     rating: 3000,
     confidence: 0.55,
@@ -204,7 +204,7 @@ function AppShell({ children, accent }) {
       <div
         style={{
           ...styles.phone,
-          background: `radial-gradient(circle at 50% 0%, ${accent}16, transparent 22%), radial-gradient(circle at 50% 52%, ${accent}10, transparent 34%), #050608`,
+          background: `radial-gradient(circle at 50% 0%, ${accent}16, transparent 22%), radial-gradient(circle at 50% 50%, ${accent}0d, transparent 36%), #050608`,
         }}
       >
         {children}
@@ -219,12 +219,14 @@ function ArenaLabel({ arena, visible }) {
       {visible && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 0.9, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.35 }}
           style={styles.arenaTopLabelWrap}
         >
-          <div style={{ ...styles.arenaTopLabel, color: arena.accent }}>{arena.label}</div>
+          <div style={{ ...styles.arenaTopLabel, borderColor: `${arena.accent}44` }}>
+            <span style={{ ...styles.arenaTopLabelText, color: arena.accent }}>{arena.label}</span>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -234,7 +236,7 @@ function ArenaLabel({ arena, visible }) {
 function DiamondVS({ accent }) {
   return (
     <div style={styles.vsCenterLayer}>
-      <div style={{ ...styles.vsDiamond, borderColor: accent }}>
+      <div style={{ ...styles.vsDiamond, borderColor: `${accent}aa`, boxShadow: `0 0 0 1px rgba(0,0,0,0.95), 0 0 22px ${accent}22` }}>
         <div style={styles.vsDiamondInner}>
           <span style={styles.vsText}>VS</span>
         </div>
@@ -243,36 +245,21 @@ function DiamondVS({ accent }) {
   );
 }
 
-function PauseChip({ paused, isPortrait, show }) {
+function SeamLine({ isPortrait, accent, pulse }) {
   return (
-    <AnimatePresence>
-      {paused && show && (
-        <motion.div
-          style={isPortrait ? styles.pausePortraitLayer : styles.pauseLandscapeLayer}
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.18 }}
-        >
-          <div style={styles.pauseChip}>
-            <div style={styles.pauseBars}>
-              <span style={styles.pauseBar} />
-              <span style={styles.pauseBar} />
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-function SeamLine({ isPortrait, accent }) {
-  return (
-    <div
+    <motion.div
+      animate={{ opacity: pulse ? 0.95 : 0.48, scale: pulse ? 1.04 : 1 }}
+      transition={{ duration: 0.22 }}
       style={
         isPortrait
-          ? { ...styles.seamLinePortrait, background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }
-          : { ...styles.seamLineLandscape, background: `linear-gradient(180deg, transparent, ${accent}, transparent)` }
+          ? {
+              ...styles.seamLinePortrait,
+              background: `linear-gradient(90deg, transparent, ${accent}dd, transparent)`,
+            }
+          : {
+              ...styles.seamLineLandscape,
+              background: `linear-gradient(180deg, transparent, ${accent}dd, transparent)`,
+            }
       }
     />
   );
@@ -290,13 +277,12 @@ function ChampionMoment({ item, accent }) {
         exit={{ opacity: 0 }}
       >
         <motion.div
-          style={{ ...styles.championCard, borderColor: `${accent}66` }}
-          initial={{ opacity: 0, scale: 0.96, y: 14 }}
+          style={{ ...styles.championCard, borderColor: `${accent}55` }}
+          initial={{ opacity: 0, scale: 0.97, y: 14 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.98, y: 6 }}
-          transition={{ duration: 0.26 }}
+          exit={{ opacity: 0, scale: 0.99, y: 6 }}
+          transition={{ duration: 0.22 }}
         >
-          <div style={styles.championGlow} />
           <div style={styles.championMicro}>3X DEFENDER</div>
           <div style={styles.championTitle}>{getClipName(item)}</div>
           <div style={styles.championCreator}>{item.creator}</div>
@@ -320,11 +306,11 @@ function DetailsOverlay({ item, accent }) {
         exit={{ opacity: 0 }}
       >
         <motion.div
-          style={{ ...styles.detailsCard, borderColor: `${accent}66` }}
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          style={{ ...styles.detailsCard, borderColor: `${accent}55` }}
+          initial={{ opacity: 0, y: 12, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: 8, scale: 0.985 }}
+          transition={{ duration: 0.18 }}
         >
           <div style={styles.detailsTitle}>{item.title}</div>
           <div style={styles.detailsCreator}>{item.creator}</div>
@@ -332,10 +318,10 @@ function DetailsOverlay({ item, accent }) {
           <div style={styles.detailsMetaRow}>
             <div style={styles.detailsPill}>Rating {item.rating}</div>
             <div style={styles.detailsPill}>{confidenceLabel(item.confidence)}</div>
-            <div style={styles.detailsPill}>{item.mediaType === 'video' ? 'Video' : 'Photo'}</div>
+            <div style={styles.detailsPill}>{item.mediaType === "video" ? "Video" : "Photo"}</div>
           </div>
 
-          {item.mediaType === 'video' && (
+          {item.mediaType === "video" && (
             <div style={styles.detailsSubText}>
               {formatSeconds(item.trimStart || 0)} – {formatSeconds(item.trimEnd || 0)}
             </div>
@@ -356,10 +342,10 @@ function VoteFlash({ accent, visible }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.22 }}
+          transition={{ duration: 0.18 }}
           style={{
             ...styles.voteFlash,
-            background: `radial-gradient(circle at center, ${accent}22, transparent 58%)`,
+            background: `radial-gradient(circle at center, ${accent}14, transparent 58%)`,
           }}
         />
       )}
@@ -375,7 +361,7 @@ function MediaSurface({
   isActivePlayback,
   paused,
   dimmed,
-  showWinnerGlow,
+  winnerBoost,
   isPortrait,
 }) {
   const mediaRef = useRef(null);
@@ -386,7 +372,7 @@ function MediaSurface({
   }, [item?.src]);
 
   useEffect(() => {
-    if (!item || item.mediaType !== 'video') return;
+    if (!item || item.mediaType !== "video") return;
 
     const el = mediaRef.current;
     if (!el) return;
@@ -395,10 +381,12 @@ function MediaSurface({
     const endTime = item.trimEnd || 7;
 
     const onTimeUpdate = () => {
-      if (el.currentTime >= endTime) el.pause();
+      if (el.currentTime >= endTime) {
+        el.pause();
+      }
     };
 
-    el.addEventListener('timeupdate', onTimeUpdate);
+    el.addEventListener("timeupdate", onTimeUpdate);
 
     if (paused || !isActivePlayback) {
       el.pause();
@@ -414,15 +402,13 @@ function MediaSurface({
       if (p?.catch) p.catch(() => {});
     }
 
-    return () => {
-      el.removeEventListener('timeupdate', onTimeUpdate);
-    };
+    return () => el.removeEventListener("timeupdate", onTimeUpdate);
   }, [item, isActivePlayback, paused]);
 
   if (!item) return null;
 
   const mediaStyle =
-    item.mediaType === 'video'
+    item.mediaType === "video"
       ? isPortrait
         ? styles.videoMediaPortrait
         : styles.videoMediaLandscape
@@ -434,7 +420,7 @@ function MediaSurface({
     <div
       style={{
         ...styles.surface,
-        boxShadow: showWinnerGlow ? `0 0 44px ${accent}2b inset` : 'none',
+        boxShadow: winnerBoost ? `0 0 52px ${accent}22 inset` : "none",
       }}
       onMouseDown={() => onHoldStart(item.id)}
       onMouseUp={onHoldEnd}
@@ -446,11 +432,11 @@ function MediaSurface({
       <div
         style={{
           ...styles.mediaLiveWrap,
-          transform: isActivePlayback && !paused ? 'scale(1.02)' : 'scale(1)',
+          transform: winnerBoost ? "scale(1.04)" : isActivePlayback && !paused ? "scale(1.025)" : "scale(1)",
         }}
       >
         {!loadFailed ? (
-          item.mediaType === 'video' ? (
+          item.mediaType === "video" ? (
             <video
               ref={mediaRef}
               src={item.src}
@@ -472,7 +458,7 @@ function MediaSurface({
           <div
             style={{
               ...styles.fallback,
-              background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,0.82))`,
+              background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,0.84))`,
             }}
           >
             <div style={styles.fallbackEyebrow}>{getArena(item.arenaId).label}</div>
@@ -540,7 +526,7 @@ function BattleSlot({
   paused,
   isLocked,
   dimmed,
-  showWinnerGlow,
+  winnerBoost,
   throwAnimate,
 }) {
   const initial = isEntering ? getEnterInitial(side, isPortrait) : false;
@@ -549,8 +535,21 @@ function BattleSlot({
     <motion.div
       key={`${side}-${item?.id}`}
       initial={initial}
-      animate={throwAnimate || { x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-      transition={{ type: 'spring', stiffness: 220, damping: 24, opacity: { duration: 0.18 } }}
+      animate={
+        throwAnimate || {
+          x: 0,
+          y: 0,
+          opacity: 1,
+          scale: winnerBoost ? 1.04 : 1,
+          rotate: 0,
+        }
+      }
+      transition={{
+        type: "spring",
+        stiffness: 220,
+        damping: 24,
+        opacity: { duration: 0.16 },
+      }}
       style={{ ...styles.slot, ...(isPortrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
       <MediaSurface
@@ -561,7 +560,7 @@ function BattleSlot({
         isActivePlayback={isActivePlayback}
         paused={paused}
         dimmed={dimmed}
-        showWinnerGlow={showWinnerGlow}
+        winnerBoost={winnerBoost}
         isPortrait={isPortrait}
       />
       <GestureLayer side={side} onGestureComplete={onGestureComplete} disabled={isLocked} />
@@ -575,14 +574,14 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
   return (
     <motion.div
       drag="y"
-      dragElastic={0.08}
+      dragElastic={0.06}
       dragConstraints={{ top: 0, bottom: 460 }}
       onDragEnd={(_, info) => {
         if (info.offset.y > 80) setIsOpen(false);
         if (info.offset.y < -80) setIsOpen(true);
       }}
-      animate={{ y: isOpen ? 0 : 446 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+      animate={{ y: isOpen ? 0 : 420 }}
+      transition={{ type: "spring", stiffness: 280, damping: 30 }}
       style={styles.sheet}
     >
       <div style={styles.sheetHandleTap} onClick={() => setIsOpen((prev) => !prev)}>
@@ -618,10 +617,11 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
 
 function OnboardingOverlay({ onClose }) {
   const [step, setStep] = useState(0);
+
   const steps = [
-    { title: 'Watch the contest', body: 'Only one contender plays at a time. The arena gives each one a clean shot.' },
-    { title: 'Hold for details', body: 'Press and hold any contender to reveal its identity, rank state, and arena.' },
-    { title: 'Throw or switch', body: 'Swipe outward to throw away a loser. Swipe inward to switch arenas.' },
+    { title: "Watch the contest", body: "Only one contender plays at a time. The arena gives each one a clean shot." },
+    { title: "Hold for details", body: "Press and hold any contender to reveal its identity, rank state, and arena." },
+    { title: "Throw or switch", body: "Swipe outward to throw away a loser. Swipe inward to switch arenas." },
   ];
 
   const current = steps[step];
@@ -635,14 +635,19 @@ function OnboardingOverlay({ onClose }) {
   }
 
   return (
-    <motion.div style={styles.onboardingOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+    <motion.div
+      style={styles.onboardingOverlay}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <motion.div
         key={step}
         style={styles.onboardingCard}
         initial={{ opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.985 }}
-        transition={{ duration: 0.24 }}
+        transition={{ duration: 0.22 }}
       >
         <div style={styles.onboardingStep}>0{step + 1}</div>
         <div style={styles.onboardingTitle}>{current.title}</div>
@@ -655,7 +660,7 @@ function OnboardingOverlay({ onClose }) {
               style={{
                 ...styles.onboardingDot,
                 opacity: idx === step ? 1 : 0.22,
-                transform: idx === step ? 'scale(1.05)' : 'scale(1)',
+                transform: idx === step ? "scale(1.05)" : "scale(1)",
               }}
             />
           ))}
@@ -664,7 +669,7 @@ function OnboardingOverlay({ onClose }) {
         <div style={styles.onboardingActions}>
           <button style={styles.onboardingGhost} onClick={onClose}>Skip</button>
           <button style={styles.onboardingPrimary} onClick={next}>
-            {step === steps.length - 1 ? 'Enter Arena' : 'Next'}
+            {step === steps.length - 1 ? "Enter Arena" : "Next"}
           </button>
         </div>
       </motion.div>
@@ -674,11 +679,11 @@ function OnboardingOverlay({ onClose }) {
 
 function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
   const [arenaId, setArenaId] = useState(initialArenaId || ARENAS[0].id);
-  const [title, setTitle] = useState('');
-  const [creator, setCreator] = useState('@me');
+  const [title, setTitle] = useState("");
+  const [creator, setCreator] = useState("@me");
   const [mediaType, setMediaType] = useState(getArena(initialArenaId || ARENAS[0].id).mediaType);
   const [file, setFile] = useState(null);
-  const [objectUrl, setObjectUrl] = useState('');
+  const [objectUrl, setObjectUrl] = useState("");
   const [duration, setDuration] = useState(0);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(7);
@@ -695,10 +700,10 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
   useEffect(() => {
     if (!isOpen) {
-      setTitle('');
-      setCreator('@me');
+      setTitle("");
+      setCreator("@me");
       setFile(null);
-      setObjectUrl('');
+      setObjectUrl("");
       setDuration(0);
       setTrimStart(0);
       setTrimEnd(7);
@@ -714,27 +719,27 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
     const nextType = getArena(nextArenaId).mediaType;
     setMediaType(nextType);
     setFile(null);
-    setObjectUrl('');
+    setObjectUrl("");
     setDuration(0);
     setTrimStart(0);
     setTrimEnd(7);
   }
 
   function acceptString(type) {
-    return type === 'image' ? 'image/*' : 'video/*';
+    return type === "image" ? "image/*" : "video/*";
   }
 
   function loadFile(selected) {
     if (!selected) return;
 
-    const fileType = selected.type?.startsWith('image/')
-      ? 'image'
-      : selected.type?.startsWith('video/')
-        ? 'video'
+    const fileType = selected.type?.startsWith("image/")
+      ? "image"
+      : selected.type?.startsWith("video/")
+        ? "video"
         : null;
 
     if (!fileType || fileType !== mediaType) {
-      alert(`This arena only accepts ${mediaType === 'video' ? 'video' : 'image'} uploads.`);
+      alert(`This arena only accepts ${mediaType === "video" ? "video" : "image"} uploads.`);
       return;
     }
 
@@ -742,7 +747,9 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
     setFile(selected);
     setObjectUrl(nextUrl);
 
-    if (!title.trim()) setTitle(selected.name.replace(/\.[^/.]+$/, ''));
+    if (!title.trim()) {
+      setTitle(selected.name.replace(/\.[^/.]+$/, ""));
+    }
   }
 
   function handleFileChange(e) {
@@ -763,20 +770,25 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
     if (!file || !objectUrl) return;
 
     onSave({
-      title: title.trim() || file.name.replace(/\.[^/.]+$/, ''),
-      creator: creator.trim() || '@me',
+      title: title.trim() || file.name.replace(/\.[^/.]+$/, ""),
+      creator: creator.trim() || "@me",
       arenaId,
       mediaType,
       src: objectUrl,
-      trimStart: mediaType === 'video' ? trimStart : 0,
-      trimEnd: mediaType === 'video' ? trimEnd : 0,
+      trimStart: mediaType === "video" ? trimStart : 0,
+      trimEnd: mediaType === "video" ? trimEnd : 0,
     });
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div style={styles.uploadOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div
+          style={styles.uploadOverlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <motion.div
             style={styles.uploadCard}
             initial={{ opacity: 0, y: 14, scale: 0.985 }}
@@ -803,7 +815,7 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
               <label style={styles.uploadField}>
                 <span style={styles.uploadLabel}>Type</span>
-                <input value={mediaType === 'video' ? 'Video' : 'Image'} readOnly style={styles.uploadInput} />
+                <input value={mediaType === "video" ? "Video" : "Image"} readOnly style={styles.uploadInput} />
               </label>
 
               <label style={styles.uploadField}>
@@ -820,24 +832,25 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
             <div style={styles.captureButtons}>
               <button style={styles.uploadActionButton} onClick={() => inputLibraryRef.current?.click()}>From library</button>
               <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>
-                {mediaType === 'video' ? 'Record now' : 'Take photo'}
+                {mediaType === "video" ? "Record now" : "Take photo"}
               </button>
 
-              <input ref={inputLibraryRef} type="file" accept={acceptString(mediaType)} onChange={handleFileChange} style={{ display: 'none' }} />
-              <input ref={inputCaptureRef} type="file" accept={acceptString(mediaType)} capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+              <input ref={inputLibraryRef} type="file" accept={acceptString(mediaType)} onChange={handleFileChange} style={{ display: "none" }} />
+              <input ref={inputCaptureRef} type="file" accept={acceptString(mediaType)} capture="environment" onChange={handleFileChange} style={{ display: "none" }} />
             </div>
 
             <div style={styles.previewBox}>
               {!objectUrl ? (
-                <div style={styles.previewEmpty}>Choose a {mediaType === 'video' ? 'video' : 'photo'} that belongs in this arena.</div>
-              ) : mediaType === 'video' ? (
+                <div style={styles.previewEmpty}>Choose a {mediaType === "video" ? "video" : "photo"} that belongs in this arena.</div>
+              ) : mediaType === "video" ? (
                 <>
                   <video ref={previewVideoRef} src={objectUrl} controls playsInline style={styles.previewMedia} onLoadedMetadata={handleLoadedMetadata} />
                   <div style={styles.trimStats}>
-                    <div style={styles.trimStatPill}>Full: {duration ? formatSeconds(duration) : '...'}</div>
+                    <div style={styles.trimStatPill}>Full: {duration ? formatSeconds(duration) : "..."}</div>
                     <div style={styles.trimStatPill}>Selected: {formatSeconds(Math.max(0, trimEnd - trimStart))}</div>
                     <div style={styles.trimStatPill}>Max: 7.0s</div>
                   </div>
+
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>Start: {formatSeconds(trimStart)}</label>
                     <input
@@ -855,6 +868,7 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
                       style={styles.slider}
                     />
                   </div>
+
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>End: {formatSeconds(trimEnd)}</label>
                     <input
@@ -881,7 +895,11 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
             <div style={styles.uploadActions}>
               <button style={styles.uploadSecondary} onClick={onClose}>Cancel</button>
               <button
-                style={{ ...styles.uploadPrimary, opacity: objectUrl ? 1 : 0.45, cursor: objectUrl ? 'pointer' : 'not-allowed' }}
+                style={{
+                  ...styles.uploadPrimary,
+                  opacity: objectUrl ? 1 : 0.45,
+                  cursor: objectUrl ? "pointer" : "not-allowed",
+                }}
                 onClick={handleSave}
                 disabled={!objectUrl}
               >
@@ -917,7 +935,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [labelVisible, setLabelVisible] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [activeSide, setActiveSide] = useState('second');
+  const [activeSide, setActiveSide] = useState("second");
   const [decisionUnlockedAt, setDecisionUnlockedAt] = useState(Date.now());
   const [userTrust, setUserTrust] = useState(1);
   const [rushedVotes, setRushedVotes] = useState(0);
@@ -927,7 +945,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [transitioningArena, setTransitioningArena] = useState(false);
   const [voteFlashVisible, setVoteFlashVisible] = useState(false);
 
-  const detailsItem = useMemo(() => arenaItems.find((item) => item.id === detailsId) || null, [arenaItems, detailsId]);
+  const detailsItem = useMemo(
+    () => arenaItems.find((item) => item.id === detailsId) || null,
+    [arenaItems, detailsId]
+  );
 
   useEffect(() => {
     poolRef.current = pool;
@@ -942,7 +963,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   function pulseVoteFlash() {
     setVoteFlashVisible(true);
     if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
-    voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 240);
+    voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 220);
   }
 
   function pickNextPair(items, history) {
@@ -971,10 +992,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
     const nextPair = pickNextPair(arenaItems, battleHistoryRef.current);
     setPair(nextPair);
-    setActiveSide(nextPair?.second ? 'second' : 'first');
+    setActiveSide(nextPair?.second ? "second" : "first");
     setTransitioningArena(true);
 
-    const t = setTimeout(() => setTransitioningArena(false), 230);
+    const t = setTimeout(() => setTransitioningArena(false), 220);
     return () => clearTimeout(t);
   }, [arena.id, arenaItems.length]);
 
@@ -987,11 +1008,15 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }, []);
 
   useEffect(() => {
-    if (!pair?.first || !pair?.second || paused || showChampion || detailsId || isLocked || transitioningArena) return;
-    const activeItem = activeSide === 'first' ? pair.first : pair.second;
+    if (!pair?.first || !pair?.second || paused || showChampion || detailsId || isLocked || transitioningArena) {
+      return;
+    }
+
+    const activeItem = activeSide === "first" ? pair.first : pair.second;
     const timer = setTimeout(() => {
-      setActiveSide((prev) => (prev === 'first' ? 'second' : 'first'));
+      setActiveSide((prev) => (prev === "first" ? "second" : "first"));
     }, safeDuration(activeItem));
+
     return () => clearTimeout(timer);
   }, [pair, activeSide, paused, showChampion, detailsId, isLocked, transitioningArena]);
 
@@ -1028,7 +1053,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function handleTogglePause() {
     if (detailsId || showChampion || transitioningArena || sheetOpen) return;
-    if (arena.mediaType !== 'video') return;
+    if (arena.mediaType !== "video") return;
     setPaused((prev) => !prev);
   }
 
@@ -1044,6 +1069,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     if (!t) return;
     const dx = t.clientX - bottomSwipeRef.current.x;
     const dy = t.clientY - bottomSwipeRef.current.y;
+
     if (dy < -70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(true);
     if (dy > 70 && Math.abs(dy) > Math.abs(dx)) setSheetOpen(false);
     bottomSwipeRef.current.active = false;
@@ -1051,55 +1077,58 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   function resolveGesture(side, offsetX, offsetY, velocityX, velocityY) {
     if (isPortrait) {
-      if (side === 'first') {
-        if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return 'throw';
-        if (offsetY > CATEGORY_DISTANCE || velocityY > CATEGORY_VELOCITY) return 'category-prev';
+      if (side === "first") {
+        if (offsetY < -THROW_DISTANCE || velocityY < -THROW_VELOCITY) return "throw";
+        if (offsetY > CATEGORY_DISTANCE || velocityY > CATEGORY_VELOCITY) return "category-prev";
       } else {
-        if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return 'throw';
-        if (offsetY < -CATEGORY_DISTANCE || velocityY < -CATEGORY_VELOCITY) return 'category-next';
+        if (offsetY > THROW_DISTANCE || velocityY > THROW_VELOCITY) return "throw";
+        if (offsetY < -CATEGORY_DISTANCE || velocityY < -CATEGORY_VELOCITY) return "category-next";
       }
-      return 'none';
+      return "none";
     }
 
-    if (side === 'first') {
-      if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return 'throw';
-      if (offsetX > CATEGORY_DISTANCE || velocityX > CATEGORY_VELOCITY) return 'category-prev';
+    if (side === "first") {
+      if (offsetX < -THROW_DISTANCE || velocityX < -THROW_VELOCITY) return "throw";
+      if (offsetX > CATEGORY_DISTANCE || velocityX > CATEGORY_VELOCITY) return "category-prev";
     } else {
-      if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return 'throw';
-      if (offsetX < -CATEGORY_DISTANCE || velocityX < -CATEGORY_VELOCITY) return 'category-next';
+      if (offsetX > THROW_DISTANCE || velocityX > THROW_VELOCITY) return "throw";
+      if (offsetX < -CATEGORY_DISTANCE || velocityX < -CATEGORY_VELOCITY) return "category-next";
     }
 
-    return 'none';
+    return "none";
   }
 
   function handleSurfaceGesture(side, offsetX, offsetY, velocityX, velocityY) {
-    if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId || transitioningArena) return;
+    if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId || transitioningArena) {
+      return;
+    }
 
     const outcome = resolveGesture(side, offsetX, offsetY, velocityX, velocityY);
 
-    if (outcome === 'category-prev') {
+    if (outcome === "category-prev") {
       setTransitioningArena(true);
       showArenaLabel();
       setTimeout(() => onSwipeArena(-1), 35);
       return;
     }
 
-    if (outcome === 'category-next') {
+    if (outcome === "category-next") {
       setTransitioningArena(true);
       showArenaLabel();
       setTimeout(() => onSwipeArena(1), 35);
       return;
     }
 
-    if (outcome !== 'throw') return;
+    if (outcome !== "throw") return;
 
     setIsLocked(true);
     pulseVoteFlash();
+
     const throwVector = getThrowVector(side, isPortrait);
     setThrowState({ side, vector: throwVector });
 
-    const loser = side === 'first' ? pair.first : pair.second;
-    const winner = side === 'first' ? pair.second : pair.first;
+    const loser = side === "first" ? pair.first : pair.second;
+    const winner = side === "first" ? pair.second : pair.first;
 
     const now = Date.now();
     const msSinceUnlock = now - decisionUnlockedAt;
@@ -1161,11 +1190,16 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         setShowChampion(true);
 
         window.setTimeout(() => {
-          const withoutChampionPair = freshArenaItems.filter((item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id);
-          const nextPair = pickNextPair(withoutChampionPair.length >= 2 ? withoutChampionPair : freshArenaItems, battleHistoryRef.current);
+          const withoutChampionPair = freshArenaItems.filter(
+            (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
+          );
+          const nextPair = pickNextPair(
+            withoutChampionPair.length >= 2 ? withoutChampionPair : freshArenaItems,
+            battleHistoryRef.current
+          );
 
           setPair(nextPair);
-          setActiveSide(nextPair?.second ? 'second' : 'first');
+          setActiveSide(nextPair?.second ? "second" : "first");
           setWinnerId(null);
           setStreak(0);
           setShowChampion(false);
@@ -1175,21 +1209,27 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           setIsLocked(false);
           setPaused(false);
           setDecisionUnlockedAt(Date.now());
-        }, 1280);
+        }, 1150);
 
         return;
       }
 
-      const challengerPool = freshArenaItems.filter((item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id);
+      const challengerPool = freshArenaItems.filter(
+        (item) => item.id !== updatedWinner.id && item.id !== updatedLoser.id
+      );
       const recentIds = battleHistoryRef.current.slice(-4);
       const challenger = pickRandom(challengerPool, recentIds) || pickRandom(freshArenaItems, [updatedWinner.id]);
       const safeChallenger = challenger || freshArenaItems.find((item) => item.id !== updatedWinner.id) || updatedWinner;
       const enteringSide = side;
-      const nextPair = side === 'first' ? { first: safeChallenger, second: updatedWinner } : { first: updatedWinner, second: safeChallenger };
+
+      const nextPair =
+        side === "first"
+          ? { first: safeChallenger, second: updatedWinner }
+          : { first: updatedWinner, second: safeChallenger };
 
       setPair(nextPair);
       setEnterState({ side: enteringSide, itemId: safeChallenger.id });
-      setActiveSide(side === 'first' ? 'second' : 'first');
+      setActiveSide(side === "first" ? "second" : "first");
       setThrowState(null);
       setPaused(false);
       setDecisionUnlockedAt(Date.now());
@@ -1197,8 +1237,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       window.setTimeout(() => {
         setEnterState(null);
         setIsLocked(false);
-      }, 340);
-    }, 360);
+      }, 320);
+    }, 300);
   }
 
   function getThrownStyle(sideName) {
@@ -1207,8 +1247,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       x: throwState.vector.x,
       y: throwState.vector.y,
       opacity: 0,
-      scale: 0.965,
-      rotate: isPortrait ? throwState.vector.y / 120 : throwState.vector.x / 140,
+      scale: 0.95,
+      rotate: isPortrait ? throwState.vector.y / 120 : throwState.vector.x / 130,
     };
   }
 
@@ -1223,50 +1263,60 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   return (
-    <div style={{ ...styles.battleRoot, background: `radial-gradient(circle at 50% 50%, ${arena.accent}12, transparent 32%), #050608` }} onClick={handleTogglePause}>
+    <div
+      style={{
+        ...styles.battleRoot,
+        background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608`,
+      }}
+      onClick={handleTogglePause}
+    >
       <ArenaLabel arena={arena} visible={labelVisible} />
 
       <motion.div
         animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }}
-        transition={{ duration: 0.18 }}
+        transition={{ duration: 0.16 }}
         style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}
       >
         <BattleSlot
           side="first"
           item={pair.first}
           isPortrait={isPortrait}
-          isEntering={enterState?.side === 'first' && enterState?.itemId === pair.first?.id}
+          isEntering={enterState?.side === "first" && enterState?.itemId === pair.first?.id}
           accent={arena.accent}
           onGestureComplete={handleSurfaceGesture}
           onHoldStart={startHold}
           onHoldEnd={endHold}
-          isActivePlayback={activeSide === 'first'}
+          isActivePlayback={activeSide === "first"}
           paused={paused}
           isLocked={isLocked || transitioningArena}
-          dimmed={arena.mediaType === 'video' ? activeSide !== 'first' || paused : false}
-          showWinnerGlow={winnerId === pair.first.id}
-          throwAnimate={getThrownStyle('first')}
+          dimmed={arena.mediaType === "video" ? activeSide !== "first" || paused : false}
+          winnerBoost={winnerId === pair.first.id}
+          throwAnimate={getThrownStyle("first")}
         />
 
         <BattleSlot
           side="second"
           item={pair.second}
           isPortrait={isPortrait}
-          isEntering={enterState?.side === 'second' && enterState?.itemId === pair.second?.id}
+          isEntering={enterState?.side === "second" && enterState?.itemId === pair.second?.id}
           accent={arena.accent}
           onGestureComplete={handleSurfaceGesture}
           onHoldStart={startHold}
           onHoldEnd={endHold}
-          isActivePlayback={activeSide === 'second'}
+          isActivePlayback={activeSide === "second"}
           paused={paused}
           isLocked={isLocked || transitioningArena}
-          dimmed={arena.mediaType === 'video' ? activeSide !== 'second' || paused : false}
-          showWinnerGlow={winnerId === pair.second.id}
-          throwAnimate={getThrownStyle('second')}
+          dimmed={arena.mediaType === "video" ? activeSide !== "second" || paused : false}
+          winnerBoost={winnerId === pair.second.id}
+          throwAnimate={getThrownStyle("second")}
         />
       </motion.div>
 
-      <SeamLine isPortrait={isPortrait} accent={`${arena.accent}bb`} />
+      <SeamLine isPortrait={isPortrait} accent={arena.accent} pulse={voteFlashVisible} />
+      <DiamondVS accent={arena.accent} />
+      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />
+      <DetailsOverlay item={detailsItem} accent={arena.accent} />
+      <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div
         style={styles.leaderboardSwipeZone}
@@ -1274,12 +1324,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
         onTouchStart={handleBottomSwipeStart}
         onTouchEnd={handleBottomSwipeEnd}
       />
-
-      <DiamondVS accent={arena.accent} />
-      <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
-      <VoteFlash accent={arena.accent} visible={voteFlashVisible} />
-      <DetailsOverlay item={detailsItem} accent={arena.accent} />
-      <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div style={styles.bottomGhostBar}>
         <button
@@ -1318,7 +1362,7 @@ export default function App() {
 
   function closeOnboarding() {
     try {
-      localStorage.setItem(STORAGE_KEY_ONBOARDING, 'true');
+      localStorage.setItem(STORAGE_KEY_ONBOARDING, "true");
     } catch {}
     setShowOnboarding(false);
   }
@@ -1363,117 +1407,117 @@ export default function App() {
 
 const styles = {
   app: {
-    minHeight: '100vh',
-    background: 'radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    minHeight: "100vh",
+    background: "radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
     fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   phone: {
-    position: 'relative',
-    width: '100vw',
-    height: '100vh',
-    overflow: 'hidden',
+    position: "relative",
+    width: "100vw",
+    height: "100vh",
+    overflow: "hidden",
   },
   battleRoot: {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
-    overflow: 'hidden',
+    position: "relative",
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
   },
   battleLayout: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    display: 'flex',
+    display: "flex",
     gap: 0,
   },
   stackPortrait: {
-    flexDirection: 'column',
-    height: '100%',
+    flexDirection: "column",
+    height: "100%",
   },
   stackLandscape: {
-    flexDirection: 'row',
-    width: '100%',
+    flexDirection: "row",
+    width: "100%",
   },
   slot: {
-    position: 'relative',
-    overflow: 'hidden',
-    background: '#040506',
+    position: "relative",
+    overflow: "hidden",
+    background: "#040506",
     minHeight: 0,
     minWidth: 0,
   },
   slotPortrait: {
-    flex: '0 0 50%',
-    height: '50%',
+    flex: "0 0 50%",
+    height: "50%",
   },
   slotLandscape: {
-    flex: '0 0 50%',
-    width: '50%',
+    flex: "0 0 50%",
+    width: "50%",
   },
   surface: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    overflow: 'hidden',
-    background: '#07080b',
+    overflow: "hidden",
+    background: "#07080b",
   },
   mediaLiveWrap: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    transition: 'transform 260ms ease',
-    transformOrigin: 'center center',
-    willChange: 'transform',
+    transition: "transform 240ms cubic-bezier(.22,1,.36,1)",
+    transformOrigin: "center center",
+    willChange: "transform",
   },
   gestureLayer: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 3,
-    background: 'transparent',
-    touchAction: 'none',
+    background: "transparent",
+    touchAction: "none",
   },
   videoMediaPortrait: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    transform: 'scale(1.06)',
-    background: '#0b0b0d',
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transform: "scale(1.06)",
+    background: "#0b0b0d",
   },
   videoMediaLandscape: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    transform: 'scale(1.0)',
-    background: '#0b0b0d',
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transform: "scale(1.01)",
+    background: "#0b0b0d",
   },
   imageMediaPortrait: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    transform: 'scale(1.04)',
-    background: '#0b0b0d',
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transform: "scale(1.04)",
+    background: "#0b0b0d",
   },
   imageMediaLandscape: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    transform: 'scale(1.01)',
-    background: '#0b0b0d',
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transform: "scale(1.01)",
+    background: "#0b0b0d",
   },
   fallback: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-end",
     padding: 22,
   },
   fallbackEyebrow: {
     fontSize: 11,
-    letterSpacing: '0.18em',
+    letterSpacing: "0.18em",
     opacity: 0.7,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginBottom: 8,
   },
   fallbackTitle: {
@@ -1487,175 +1531,130 @@ const styles = {
     opacity: 0.72,
   },
   surfaceScrim: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.08) 35%, rgba(0,0,0,0.22) 100%)',
-    pointerEvents: 'none',
+    background: "linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.07) 36%, rgba(0,0,0,0.22) 100%)",
+    pointerEvents: "none",
   },
   surfaceEdgeVignette: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    boxShadow: 'inset 0 0 72px rgba(0,0,0,0.24)',
-    pointerEvents: 'none',
+    boxShadow: "inset 0 0 68px rgba(0,0,0,0.22)",
+    pointerEvents: "none",
   },
   inactiveShade: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    background: 'rgba(0,0,0,0.24)',
-    pointerEvents: 'none',
+    background: "rgba(0,0,0,0.24)",
+    pointerEvents: "none",
   },
   seamLinePortrait: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
-    top: '50%',
-    height: 1,
+    top: "50%",
+    height: 2,
     zIndex: 6,
-    pointerEvents: 'none',
+    pointerEvents: "none",
+    transform: "translateY(-1px)",
   },
   seamLineLandscape: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     bottom: 0,
-    left: '50%',
-    width: 1,
+    left: "50%",
+    width: 2,
     zIndex: 6,
-    pointerEvents: 'none',
-  },
-  pausePortraitLayer: {
-    position: 'absolute',
-    top: 18,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 15,
-    pointerEvents: 'none',
-  },
-  pauseLandscapeLayer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 15,
-    pointerEvents: 'none',
-  },
-  pauseChip: {
-    width: 34,
-    height: 34,
-    borderRadius: 999,
-    background: 'rgba(8,10,14,0.24)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.05)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pauseBars: {
-    display: 'flex',
-    gap: 4,
-  },
-  pauseBar: {
-    width: 3,
-    height: 10,
-    borderRadius: 999,
-    background: 'rgba(255,255,255,0.76)',
+    pointerEvents: "none",
+    transform: "translateX(-1px)",
   },
   vsCenterLayer: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    pointerEvents: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 8,
   },
   vsDiamond: {
     width: 40,
     height: 40,
-    transform: 'rotate(45deg)',
-    borderRadius: 4,
-    border: '1px solid',
-    background: '#000000',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 0 0 1px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.28)',
+    transform: "rotate(45deg)",
+    borderRadius: 5,
+    border: "1px solid",
+    background: "rgba(0,0,0,0.88)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   vsDiamondInner: {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: 'rotate(-45deg)',
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: "rotate(-45deg)",
   },
   vsText: {
     fontSize: 10,
     fontWeight: 900,
-    letterSpacing: '0.2em',
+    letterSpacing: "0.2em",
     marginLeft: 2,
-    color: '#ffffff',
+    color: "#ffffff",
   },
   arenaTopLabelWrap: {
-    position: 'absolute',
+    position: "absolute",
     top: 14,
     left: 0,
     right: 0,
     zIndex: 30,
-    display: 'flex',
-    justifyContent: 'center',
-    pointerEvents: 'none',
+    display: "flex",
+    justifyContent: "center",
+    pointerEvents: "none",
   },
   arenaTopLabel: {
+    padding: "7px 12px",
+    borderRadius: 999,
+    background: "rgba(8,10,14,0.34)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.06)",
+  },
+  arenaTopLabelText: {
     fontSize: 11,
     fontWeight: 800,
-    letterSpacing: '0.18em',
-    textTransform: 'uppercase',
-    opacity: 0.82,
-    padding: '6px 10px',
-    borderRadius: 999,
-    background: 'rgba(8,10,14,0.28)',
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)',
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    opacity: 0.92,
   },
   championOverlay: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 25,
-    background: 'rgba(4,6,10,0.36)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    background: "rgba(4,6,10,0.34)",
+    backdropFilter: "blur(10px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 24,
   },
   championCard: {
-    position: 'relative',
-    width: 'min(420px, 92vw)',
-    borderRadius: 28,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'linear-gradient(180deg, rgba(14,18,25,0.96), rgba(8,10,14,0.96))',
-    overflow: 'hidden',
-    padding: '28px 24px 24px',
-    textAlign: 'center',
-    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
-  },
-  championGlow: {
-    position: 'absolute',
-    top: -90,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 220,
-    height: 220,
-    borderRadius: 999,
-    background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 62%)',
-    pointerEvents: 'none',
+    width: "min(400px, 90vw)",
+    borderRadius: 24,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "linear-gradient(180deg, rgba(14,18,25,0.96), rgba(8,10,14,0.96))",
+    overflow: "hidden",
+    padding: "24px 22px 22px",
+    textAlign: "center",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.42)",
   },
   championMicro: {
     fontSize: 11,
     fontWeight: 800,
-    letterSpacing: '0.26em',
-    opacity: 0.52,
-    marginBottom: 14,
+    letterSpacing: "0.24em",
+    opacity: 0.5,
+    marginBottom: 12,
   },
   championTitle: {
     fontSize: 28,
@@ -1671,8 +1670,8 @@ const styles = {
   championRule: {
     width: 72,
     height: 1,
-    background: 'rgba(255,255,255,0.16)',
-    margin: '0 auto 16px',
+    background: "rgba(255,255,255,0.16)",
+    margin: "0 auto 16px",
   },
   championSub: {
     fontSize: 14,
@@ -1680,23 +1679,23 @@ const styles = {
     opacity: 0.7,
   },
   detailsOverlay: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 18,
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    padding: 22,
-    pointerEvents: 'none',
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    padding: 18,
+    pointerEvents: "none",
   },
   detailsCard: {
-    width: 'min(520px, 92vw)',
-    borderRadius: 24,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(8,10,14,0.74)',
-    backdropFilter: 'blur(18px)',
-    padding: 18,
-    boxShadow: '0 18px 60px rgba(0,0,0,0.35)',
+    width: "min(520px, 92vw)",
+    borderRadius: 22,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(8,10,14,0.72)",
+    backdropFilter: "blur(18px)",
+    padding: 16,
+    boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
   },
   detailsTitle: {
     fontSize: 22,
@@ -1710,16 +1709,16 @@ const styles = {
     marginBottom: 12,
   },
   detailsMetaRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
+    display: "flex",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 10,
   },
   detailsPill: {
-    padding: '7px 10px',
+    padding: "7px 10px",
     borderRadius: 999,
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.06)',
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.06)",
     fontSize: 12,
     fontWeight: 700,
   },
@@ -1733,50 +1732,51 @@ const styles = {
     fontWeight: 700,
   },
   voteFlash: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 12,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
   leaderboardSwipeZone: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     height: 84,
     zIndex: 9,
-    background: 'transparent',
+    background: "transparent",
   },
   bottomGhostBar: {
-    position: 'fixed',
+    position: "fixed",
     bottom: 18,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    justifyContent: 'center',
+    left: "50%",
+    transform: "translateX(-50%)",
+    display: "flex",
+    justifyContent: "center",
     zIndex: 999,
-    pointerEvents: 'none',
+    pointerEvents: "none",
+    opacity: 0.4,
   },
   invisibleUploadButton: {
-    pointerEvents: 'auto',
+    pointerEvents: "auto",
     width: 36,
     height: 36,
     borderRadius: 999,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(8,10,14,0.42)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    color: 'rgba(255,255,255,0.82)',
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(8,10,14,0.42)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    color: "rgba(255,255,255,0.82)",
     fontSize: 22,
     lineHeight: 1,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
   },
   sheet: {
-    position: 'absolute',
+    position: "absolute",
     left: 10,
     right: 10,
     bottom: -2,
@@ -1784,35 +1784,35 @@ const styles = {
     zIndex: 16,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    background: 'rgba(8,10,14,0.86)',
-    backdropFilter: 'blur(18px)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    boxShadow: '0 -24px 60px rgba(0,0,0,0.36)',
-    overflow: 'hidden',
+    background: "rgba(8,10,14,0.82)",
+    backdropFilter: "blur(18px)",
+    border: "1px solid rgba(255,255,255,0.06)",
+    boxShadow: "0 -24px 60px rgba(0,0,0,0.34)",
+    overflow: "hidden",
   },
   sheetHandleTap: {
     paddingTop: 10,
     paddingBottom: 10,
-    display: 'flex',
-    justifyContent: 'center',
-    cursor: 'pointer',
+    display: "flex",
+    justifyContent: "center",
+    cursor: "pointer",
   },
   sheetHandle: {
-    width: 28,
-    height: 3,
+    width: 30,
+    height: 4,
     borderRadius: 999,
-    background: 'rgba(255,255,255,0.1)',
+    background: "rgba(255,255,255,0.12)",
   },
   sheetHeader: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    padding: '0 18px 14px',
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    padding: "0 18px 14px",
   },
   sheetEyebrow: {
     fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: '0.22em',
+    textTransform: "uppercase",
+    letterSpacing: "0.22em",
     opacity: 0.46,
     marginBottom: 6,
   },
@@ -1827,18 +1827,18 @@ const styles = {
     fontWeight: 700,
   },
   sheetList: {
-    padding: '0 10px 18px',
-    overflowY: 'auto',
+    padding: "0 10px 18px",
+    overflowY: "auto",
     height: 390,
   },
   sheetRow: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 12,
-    padding: '12px 10px',
+    padding: "12px 10px",
     borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.04)',
-    background: 'rgba(255,255,255,0.02)',
+    border: "1px solid rgba(255,255,255,0.04)",
+    background: "rgba(255,255,255,0.02)",
     marginBottom: 8,
   },
   sheetRank: {
@@ -1854,9 +1854,9 @@ const styles = {
   sheetItemTitle: {
     fontSize: 14,
     fontWeight: 800,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   sheetItemCreator: {
     fontSize: 12,
@@ -1864,7 +1864,7 @@ const styles = {
     marginTop: 2,
   },
   sheetRight: {
-    textAlign: 'right',
+    textAlign: "right",
   },
   sheetRating: {
     fontSize: 14,
@@ -1876,28 +1876,28 @@ const styles = {
     marginTop: 2,
   },
   onboardingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 40,
-    background: 'rgba(4,6,10,0.52)',
-    backdropFilter: 'blur(14px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    background: "rgba(4,6,10,0.52)",
+    backdropFilter: "blur(14px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 18,
   },
   onboardingCard: {
-    width: 'min(420px, 92vw)',
+    width: "min(420px, 92vw)",
     borderRadius: 28,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))',
-    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.45)",
     padding: 22,
   },
   onboardingStep: {
     fontSize: 11,
     fontWeight: 800,
-    letterSpacing: '0.22em',
+    letterSpacing: "0.22em",
     opacity: 0.48,
     marginBottom: 12,
   },
@@ -1914,7 +1914,7 @@ const styles = {
     marginBottom: 18,
   },
   onboardingDots: {
-    display: 'flex',
+    display: "flex",
     gap: 8,
     marginBottom: 18,
   },
@@ -1922,63 +1922,63 @@ const styles = {
     width: 10,
     height: 10,
     borderRadius: 999,
-    background: 'white',
+    background: "white",
   },
   onboardingActions: {
-    display: 'flex',
+    display: "flex",
     gap: 10,
   },
   onboardingGhost: {
     flex: 1,
     borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.03)',
-    color: 'white',
-    padding: '12px 14px',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.03)",
+    color: "white",
+    padding: "12px 14px",
     fontWeight: 800,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   onboardingPrimary: {
     flex: 1,
     borderRadius: 16,
-    border: 'none',
-    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
-    color: 'white',
-    padding: '12px 14px',
+    border: "none",
+    background: "linear-gradient(180deg, #7c3aed, #5b21b6)",
+    color: "white",
+    padding: "12px 14px",
     fontWeight: 800,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   uploadOverlay: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
     zIndex: 32,
-    background: 'rgba(4,6,10,0.52)',
-    backdropFilter: 'blur(16px)',
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    background: "rgba(4,6,10,0.52)",
+    backdropFilter: "blur(16px)",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
     padding: 12,
   },
   uploadCard: {
-    width: 'min(720px, 100%)',
-    maxHeight: '88vh',
-    overflowY: 'auto',
+    width: "min(720px, 100%)",
+    maxHeight: "88vh",
+    overflowY: "auto",
     borderRadius: 28,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))',
-    boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "linear-gradient(180deg, rgba(13,17,24,0.98), rgba(8,10,14,0.98))",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.45)",
     padding: 18,
   },
   uploadHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 14,
   },
   uploadEyebrow: {
     fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: '0.2em',
+    textTransform: "uppercase",
+    letterSpacing: "0.2em",
     opacity: 0.46,
     marginBottom: 5,
   },
@@ -1991,19 +1991,19 @@ const styles = {
     width: 34,
     height: 34,
     borderRadius: 999,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: 'white',
-    cursor: 'pointer',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "white",
+    cursor: "pointer",
   },
   uploadGrid: {
-    display: 'grid',
+    display: "grid",
     gap: 12,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
     marginBottom: 14,
   },
   uploadField: {
-    display: 'grid',
+    display: "grid",
     gap: 6,
   },
   uploadLabel: {
@@ -2012,73 +2012,73 @@ const styles = {
     opacity: 0.72,
   },
   uploadInput: {
-    width: '100%',
+    width: "100%",
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: 'white',
-    padding: '12px 12px',
-    outline: 'none',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "white",
+    padding: "12px 12px",
+    outline: "none",
   },
   captureButtons: {
-    display: 'flex',
+    display: "flex",
     gap: 10,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
     marginBottom: 14,
   },
   uploadActionButton: {
     flex: 1,
     minWidth: 140,
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: 'white',
-    padding: '12px 14px',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "white",
+    padding: "12px 14px",
     fontWeight: 800,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   previewBox: {
     borderRadius: 20,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.03)',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.03)",
     padding: 12,
     marginBottom: 14,
   },
   previewEmpty: {
     minHeight: 150,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
     fontSize: 14,
     lineHeight: 1.5,
     opacity: 0.62,
     padding: 20,
   },
   previewMedia: {
-    width: '100%',
+    width: "100%",
     maxHeight: 320,
-    objectFit: 'cover',
+    objectFit: "cover",
     borderRadius: 16,
-    background: '#08090c',
+    background: "#08090c",
   },
   trimStats: {
-    display: 'flex',
+    display: "flex",
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
     marginTop: 10,
     marginBottom: 12,
   },
   trimStatPill: {
     borderRadius: 999,
-    padding: '7px 10px',
+    padding: "7px 10px",
     fontSize: 12,
     fontWeight: 700,
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.06)',
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.06)",
   },
   sliderGroup: {
-    display: 'grid',
+    display: "grid",
     gap: 6,
     marginBottom: 10,
   },
@@ -2088,41 +2088,41 @@ const styles = {
     opacity: 0.72,
   },
   slider: {
-    width: '100%',
+    width: "100%",
   },
   uploadActions: {
-    display: 'flex',
+    display: "flex",
     gap: 10,
   },
   uploadSecondary: {
     flex: 1,
     borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: 'white',
-    padding: '12px 14px',
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "white",
+    padding: "12px 14px",
     fontWeight: 800,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   uploadPrimary: {
     flex: 1,
     borderRadius: 16,
-    border: 'none',
-    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
-    color: 'white',
-    padding: '12px 14px',
+    border: "none",
+    background: "linear-gradient(180deg, #7c3aed, #5b21b6)",
+    color: "white",
+    padding: "12px 14px",
     fontWeight: 800,
   },
   emptyArena: {
-    position: 'absolute',
+    position: "absolute",
     inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
     padding: 24,
-    background: '#050608',
+    background: "#050608",
   },
   emptyArenaTitle: {
     fontSize: 26,
@@ -2138,11 +2138,11 @@ const styles = {
   },
   emptyArenaButton: {
     borderRadius: 16,
-    border: 'none',
-    background: 'linear-gradient(180deg, #7c3aed, #5b21b6)',
-    color: 'white',
-    padding: '12px 16px',
+    border: "none",
+    background: "linear-gradient(180deg, #7c3aed, #5b21b6)",
+    color: "white",
+    padding: "12px 16px",
     fontWeight: 800,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
 };
