@@ -7,7 +7,7 @@ const CATEGORY_DISTANCE = 118;
 const CATEGORY_VELOCITY = 760;
 const HOLD_MS = 320;
 const LABEL_VISIBLE_MS = 1600;
-const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v13';
+const STORAGE_KEY_ONBOARDING = 'throwned-gesture-walkthrough-seen-v14';
 
 const ARENAS = [
   { id: 'skateboard-tricks', label: 'Skateboard Tricks', mediaType: 'video', accent: '#7c3aed' },
@@ -24,24 +24,31 @@ const DEMO_MEDIA = [
   { id: 1, arenaId: 'epic-fails', title: 'Slip Jacket', creator: '@fail_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3200, confidence: 0.78, wins: 0, losses: 0 },
   { id: 2, arenaId: 'epic-fails', title: 'Box Miss', creator: '@fail_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3168, confidence: 0.72, wins: 0, losses: 0 },
   { id: 3, arenaId: 'epic-fails', title: 'Flower Chaos', creator: '@fail_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3144, confidence: 0.69, wins: 0, losses: 0 },
+
   { id: 4, arenaId: 'sports', title: 'Track Burst', creator: '@sport_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3215, confidence: 0.8, wins: 0, losses: 0 },
   { id: 5, arenaId: 'sports', title: 'Court Handle', creator: '@sport_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3177, confidence: 0.74, wins: 0, losses: 0 },
   { id: 6, arenaId: 'sports', title: 'Rope Rhythm', creator: '@sport_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3138, confidence: 0.67, wins: 0, losses: 0 },
+
   { id: 7, arenaId: 'original-songs', title: 'Neon Vocal', creator: '@song_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3194, confidence: 0.78, wins: 0, losses: 0 },
   { id: 8, arenaId: 'original-songs', title: 'Studio Chorus', creator: '@song_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3155, confidence: 0.72, wins: 0, losses: 0 },
   { id: 9, arenaId: 'original-songs', title: 'Mic Room Hook', creator: '@song_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3115, confidence: 0.66, wins: 0, losses: 0 },
+
   { id: 10, arenaId: 'comedy', title: 'Dry Delivery', creator: '@comedy_1', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3188, confidence: 0.77, wins: 0, losses: 0 },
   { id: 11, arenaId: 'comedy', title: 'Timing Break', creator: '@comedy_2', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3160, confidence: 0.72, wins: 0, losses: 0 },
   { id: 12, arenaId: 'comedy', title: 'Silent Look', creator: '@comedy_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3128, confidence: 0.68, wins: 0, losses: 0 },
+
   { id: 13, arenaId: 'skateboard-tricks', title: 'Rail Attempt', creator: '@skate_1', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3208, confidence: 0.79, wins: 0, losses: 0 },
   { id: 14, arenaId: 'skateboard-tricks', title: 'Kickflip Gap', creator: '@skate_2', mediaType: 'video', src: 'https://www.w3schools.com/html/mov_bbb.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3170, confidence: 0.73, wins: 0, losses: 0 },
   { id: 15, arenaId: 'skateboard-tricks', title: 'Late Shuv', creator: '@skate_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3130, confidence: 0.68, wins: 0, losses: 0 },
+
   { id: 16, arenaId: 'wildcard', title: 'Anything Goes', creator: '@wild_1', mediaType: 'video', src: 'https://www.w3schools.com/html/movie.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3175, confidence: 0.75, wins: 0, losses: 0 },
   { id: 17, arenaId: 'wildcard', title: 'Odd Moment', creator: '@wild_2', mediaType: 'video', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3140, confidence: 0.69, wins: 0, losses: 0 },
   { id: 18, arenaId: 'wildcard', title: 'Short Burst', creator: '@wild_3', mediaType: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm', trimStart: 0, trimEnd: 7, uploaded: false, rating: 3110, confidence: 0.65, wins: 0, losses: 0 },
+
   { id: 101, arenaId: 'best-sunset', title: 'Burning Horizon', creator: '@sunset_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3205, confidence: 0.8, wins: 0, losses: 0 },
   { id: 102, arenaId: 'best-sunset', title: 'Pink Fade', creator: '@sunset_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3176, confidence: 0.75, wins: 0, losses: 0 },
   { id: 103, arenaId: 'best-sunset', title: 'Last Light', creator: '@sunset_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3138, confidence: 0.69, wins: 0, losses: 0 },
+
   { id: 111, arenaId: 'cute-kittens', title: 'Tiny Stare', creator: '@kitten_1', mediaType: 'image', src: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3210, confidence: 0.81, wins: 0, losses: 0 },
   { id: 112, arenaId: 'cute-kittens', title: 'Paw Lean', creator: '@kitten_2', mediaType: 'image', src: 'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3174, confidence: 0.75, wins: 0, losses: 0 },
   { id: 113, arenaId: 'cute-kittens', title: 'Window Face', creator: '@kitten_3', mediaType: 'image', src: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=80', uploaded: false, rating: 3142, confidence: 0.7, wins: 0, losses: 0 },
@@ -149,9 +156,13 @@ function pickTwo(pool, avoidIds = []) {
 
 function getThrowVector(side, isPortrait) {
   if (isPortrait) {
-    return side === 'first' ? { x: 0, y: -window.innerHeight * 0.72 } : { x: 0, y: window.innerHeight * 0.72 };
+    return side === 'first'
+      ? { x: 0, y: -window.innerHeight * 0.72 }
+      : { x: 0, y: window.innerHeight * 0.72 };
   }
-  return side === 'first' ? { x: -window.innerWidth * 0.72, y: 0 } : { x: window.innerWidth * 0.72, y: 0 };
+  return side === 'first'
+    ? { x: -window.innerWidth * 0.72, y: 0 }
+    : { x: window.innerWidth * 0.72, y: 0 };
 }
 
 function getEnterInitial(side, isPortrait) {
@@ -202,54 +213,28 @@ function AppShell({ children, accent }) {
   );
 }
 
-function ArenaLabel({ arena, visible, isPortrait, direction }) {
-  const initialX = !isPortrait ? direction * 34 : 0;
-  const initialY = isPortrait ? direction * 16 : 0;
-
+function ArenaLabel({ arena, visible }) {
   return (
-    <>
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            initial={{ opacity: 0, x: initialX, y: initialY, scale: 0.96 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            exit={{ opacity: 0, x: initialX * 0.3, y: initialY * 0.3, scale: 0.98 }}
-            transition={{ duration: 0.35 }}
-            style={isPortrait ? styles.arenaHeroStagePortrait : styles.arenaHeroStageLandscape}
-          >
-            <div
-              style={
-                isPortrait
-                  ? { ...styles.arenaHeroInner, top: '50%', transform: 'translate(-50%, -50%)' }
-                  : { ...styles.arenaHeroInner, top: 0, transform: 'translateX(-50%)' }
-              }
-            >
-              <div style={styles.arenaHeroSmall}>Arena</div>
-              <div
-                style={{
-                  ...styles.arenaHeroText,
-                  color: arena.accent,
-                  textShadow: `0 0 24px ${arena.accent}55`,
-                }}
-              >
-                {arena.label}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div style={isPortrait ? styles.arenaWhisperPortrait : styles.arenaWhisperLandscapeTop}>
-        <div style={{ ...styles.arenaWhisperText, color: arena.accent }}>{arena.label}</div>
-      </div>
-    </>
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 0.9, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.4 }}
+          style={styles.arenaTopLabelWrap}
+        >
+          <div style={{ ...styles.arenaTopLabel, color: arena.accent }}>{arena.label}</div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
 function DiamondVS({ accent }) {
   return (
     <div style={styles.vsCenterLayer}>
-      <div style={{ ...styles.vsDiamond, borderColor: `${accent}` }}>
+      <div style={{ ...styles.vsDiamond, borderColor: accent }}>
         <div style={styles.vsDiamondInner}>
           <span style={styles.vsText}>VS</span>
         </div>
@@ -382,7 +367,17 @@ function VoteFlash({ accent, visible }) {
   );
 }
 
-function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, paused, dimmed, showWinnerGlow, isPortrait }) {
+function MediaSurface({
+  item,
+  accent,
+  onHoldStart,
+  onHoldEnd,
+  isActivePlayback,
+  paused,
+  dimmed,
+  showWinnerGlow,
+  isPortrait,
+}) {
   const mediaRef = useRef(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -448,37 +443,44 @@ function MediaSurface({ item, accent, onHoldStart, onHoldEnd, isActivePlayback, 
       onTouchEnd={onHoldEnd}
       onTouchCancel={onHoldEnd}
     >
-      {!loadFailed ? (
-        item.mediaType === 'video' ? (
-          <video
-            ref={mediaRef}
-            src={item.src}
-            playsInline
-            preload="auto"
-            style={mediaStyle}
-            onError={() => setLoadFailed(true)}
-          />
+      <div
+        style={{
+          ...styles.mediaLiveWrap,
+          transform: isActivePlayback && !paused ? 'scale(1.02)' : 'scale(1)',
+        }}
+      >
+        {!loadFailed ? (
+          item.mediaType === 'video' ? (
+            <video
+              ref={mediaRef}
+              src={item.src}
+              playsInline
+              preload="auto"
+              style={mediaStyle}
+              onError={() => setLoadFailed(true)}
+            />
+          ) : (
+            <img
+              ref={mediaRef}
+              src={item.src}
+              alt={item.title}
+              style={mediaStyle}
+              onError={() => setLoadFailed(true)}
+            />
+          )
         ) : (
-          <img
-            ref={mediaRef}
-            src={item.src}
-            alt={item.title}
-            style={mediaStyle}
-            onError={() => setLoadFailed(true)}
-          />
-        )
-      ) : (
-        <div
-          style={{
-            ...styles.fallback,
-            background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,0.82))`,
-          }}
-        >
-          <div style={styles.fallbackEyebrow}>{getArena(item.arenaId).label}</div>
-          <div style={styles.fallbackTitle}>{item.title}</div>
-          <div style={styles.fallbackCreator}>{item.creator}</div>
-        </div>
-      )}
+          <div
+            style={{
+              ...styles.fallback,
+              background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,0.82))`,
+            }}
+          >
+            <div style={styles.fallbackEyebrow}>{getArena(item.arenaId).label}</div>
+            <div style={styles.fallbackTitle}>{item.title}</div>
+            <div style={styles.fallbackCreator}>{item.creator}</div>
+          </div>
+        )}
+      </div>
 
       <div style={styles.surfaceScrim} />
       <div style={styles.surfaceEdgeVignette} />
@@ -775,7 +777,12 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
     <AnimatePresence>
       {isOpen && (
         <motion.div style={styles.uploadOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div style={styles.uploadCard} initial={{ opacity: 0, y: 14, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.985 }}>
+          <motion.div
+            style={styles.uploadCard}
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.985 }}
+          >
             <div style={styles.uploadHeader}>
               <div>
                 <div style={styles.uploadEyebrow}>Add contender</div>
@@ -812,7 +819,9 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
             <div style={styles.captureButtons}>
               <button style={styles.uploadActionButton} onClick={() => inputLibraryRef.current?.click()}>From library</button>
-              <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>{mediaType === 'video' ? 'Record now' : 'Take photo'}</button>
+              <button style={styles.uploadActionButton} onClick={() => inputCaptureRef.current?.click()}>
+                {mediaType === 'video' ? 'Record now' : 'Take photo'}
+              </button>
 
               <input ref={inputLibraryRef} type="file" accept={acceptString(mediaType)} onChange={handleFileChange} style={{ display: 'none' }} />
               <input ref={inputCaptureRef} type="file" accept={acceptString(mediaType)} capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
@@ -831,21 +840,37 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
                   </div>
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>Start: {formatSeconds(trimStart)}</label>
-                    <input type="range" min={0} max={Math.max(0, duration - 0.1)} step={0.1} value={trimStart} onChange={(e) => {
-                      const nextStart = Number(e.target.value);
-                      setTrimStart(nextStart);
-                      if (trimEnd - nextStart > 7) setTrimEnd(nextStart + 7);
-                      if (trimEnd <= nextStart) setTrimEnd(nextStart + 0.2);
-                    }} style={styles.slider} />
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, duration - 0.1)}
+                      step={0.1}
+                      value={trimStart}
+                      onChange={(e) => {
+                        const nextStart = Number(e.target.value);
+                        setTrimStart(nextStart);
+                        if (trimEnd - nextStart > 7) setTrimEnd(nextStart + 7);
+                        if (trimEnd <= nextStart) setTrimEnd(nextStart + 0.2);
+                      }}
+                      style={styles.slider}
+                    />
                   </div>
                   <div style={styles.sliderGroup}>
                     <label style={styles.sliderLabel}>End: {formatSeconds(trimEnd)}</label>
-                    <input type="range" min={0.1} max={duration || 7} step={0.1} value={trimEnd} onChange={(e) => {
-                      let nextEnd = Number(e.target.value);
-                      if (nextEnd <= trimStart) nextEnd = trimStart + 0.2;
-                      if (nextEnd - trimStart > 7) nextEnd = trimStart + 7;
-                      setTrimEnd(nextEnd);
-                    }} style={styles.slider} />
+                    <input
+                      type="range"
+                      min={0.1}
+                      max={duration || 7}
+                      step={0.1}
+                      value={trimEnd}
+                      onChange={(e) => {
+                        let nextEnd = Number(e.target.value);
+                        if (nextEnd <= trimStart) nextEnd = trimStart + 0.2;
+                        if (nextEnd - trimStart > 7) nextEnd = trimStart + 7;
+                        setTrimEnd(nextEnd);
+                      }}
+                      style={styles.slider}
+                    />
                   </div>
                 </>
               ) : (
@@ -855,7 +880,13 @@ function UploadSheet({ isOpen, onClose, onSave, initialArenaId }) {
 
             <div style={styles.uploadActions}>
               <button style={styles.uploadSecondary} onClick={onClose}>Cancel</button>
-              <button style={{ ...styles.uploadPrimary, opacity: objectUrl ? 1 : 0.45, cursor: objectUrl ? 'pointer' : 'not-allowed' }} onClick={handleSave} disabled={!objectUrl}>Save contender</button>
+              <button
+                style={{ ...styles.uploadPrimary, opacity: objectUrl ? 1 : 0.45, cursor: objectUrl ? 'pointer' : 'not-allowed' }}
+                onClick={handleSave}
+                disabled={!objectUrl}
+              >
+                Save contender
+              </button>
             </div>
           </motion.div>
         </motion.div>
@@ -884,7 +915,6 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [detailsId, setDetailsId] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [labelVisible, setLabelVisible] = useState(true);
-  const [labelDirection, setLabelDirection] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [activeSide, setActiveSide] = useState('second');
@@ -903,8 +933,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     poolRef.current = pool;
   }, [pool]);
 
-  function showArenaLabel(direction = 0) {
-    setLabelDirection(direction);
+  function showArenaLabel() {
     setLabelVisible(true);
     if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
     labelTimerRef.current = setTimeout(() => setLabelVisible(false), LABEL_VISIBLE_MS);
@@ -926,7 +955,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   }
 
   useEffect(() => {
-    showArenaLabel(0);
+    showArenaLabel();
     setSheetOpen(false);
     setDetailsId(null);
     setPaused(false);
@@ -1050,14 +1079,14 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
     if (outcome === 'category-prev') {
       setTransitioningArena(true);
-      showArenaLabel(-1);
+      showArenaLabel();
       setTimeout(() => onSwipeArena(-1), 35);
       return;
     }
 
     if (outcome === 'category-next') {
       setTransitioningArena(true);
-      showArenaLabel(1);
+      showArenaLabel();
       setTimeout(() => onSwipeArena(1), 35);
       return;
     }
@@ -1195,9 +1224,13 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
   return (
     <div style={{ ...styles.battleRoot, background: `radial-gradient(circle at 50% 50%, ${arena.accent}12, transparent 32%), #050608` }} onClick={handleTogglePause}>
-      <ArenaLabel arena={arena} visible={labelVisible} isPortrait={isPortrait} direction={labelDirection} />
+      <ArenaLabel arena={arena} visible={labelVisible} />
 
-      <motion.div animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }} transition={{ duration: 0.18 }} style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}>
+      <motion.div
+        animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }}
+        transition={{ duration: 0.18 }}
+        style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}
+      >
         <BattleSlot
           side="first"
           item={pair.first}
@@ -1235,7 +1268,12 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
 
       <SeamLine isPortrait={isPortrait} accent={`${arena.accent}bb`} />
 
-      <div style={styles.leaderboardSwipeZone} onClick={(e) => e.stopPropagation()} onTouchStart={handleBottomSwipeStart} onTouchEnd={handleBottomSwipeEnd} />
+      <div
+        style={styles.leaderboardSwipeZone}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleBottomSwipeStart}
+        onTouchEnd={handleBottomSwipeEnd}
+      />
 
       <DiamondVS accent={arena.accent} />
       <PauseChip paused={paused} isPortrait={isPortrait} show={arena.mediaType === 'video'} />
@@ -1244,7 +1282,15 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       <ChampionMoment item={championItem} accent={arena.accent} />
 
       <div style={styles.bottomGhostBar}>
-        <button style={styles.invisibleUploadButton} onClick={(e) => { e.stopPropagation(); onOpenUpload(); }}>+</button>
+        <button
+          style={styles.invisibleUploadButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenUpload();
+          }}
+        >
+          +
+        </button>
       </div>
 
       <LeaderboardSheet items={arenaItems} arena={arena} isOpen={sheetOpen} setIsOpen={setSheetOpen} />
@@ -1293,13 +1339,24 @@ export default function App() {
 
   return (
     <AppShell accent={arena.accent}>
-      <BattleArena pool={pool} setPool={setPool} arena={arena} onSwipeArena={changeArena} onOpenUpload={() => setShowUpload(true)} />
+      <BattleArena
+        pool={pool}
+        setPool={setPool}
+        arena={arena}
+        onSwipeArena={changeArena}
+        onOpenUpload={() => setShowUpload(true)}
+      />
 
       <AnimatePresence>
         {showOnboarding && <OnboardingOverlay onClose={closeOnboarding} />}
       </AnimatePresence>
 
-      <UploadSheet isOpen={showUpload} onClose={() => setShowUpload(false)} onSave={handleSaveUpload} initialArenaId={arena.id} />
+      <UploadSheet
+        isOpen={showUpload}
+        onClose={() => setShowUpload(false)}
+        onSave={handleSaveUpload}
+        initialArenaId={arena.id}
+      />
     </AppShell>
   );
 }
@@ -1335,25 +1392,39 @@ const styles = {
   },
   stackPortrait: {
     flexDirection: 'column',
+    height: '100%',
   },
   stackLandscape: {
     flexDirection: 'row',
+    width: '100%',
   },
   slot: {
     position: 'relative',
     overflow: 'hidden',
     background: '#040506',
-    flex: 1,
     minHeight: 0,
     minWidth: 0,
   },
-  slotPortrait: {},
-  slotLandscape: {},
+  slotPortrait: {
+    flex: '0 0 50%',
+    height: '50%',
+  },
+  slotLandscape: {
+    flex: '0 0 50%',
+    width: '50%',
+  },
   surface: {
     position: 'absolute',
     inset: 0,
     overflow: 'hidden',
     background: '#07080b',
+  },
+  mediaLiveWrap: {
+    position: 'absolute',
+    inset: 0,
+    transition: 'transform 260ms ease',
+    transformOrigin: 'center center',
+    willChange: 'transform',
   },
   gestureLayer: {
     position: 'absolute',
@@ -1430,7 +1501,7 @@ const styles = {
   inactiveShade: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(0,0,0,0.2)',
+    background: 'rgba(0,0,0,0.24)',
     pointerEvents: 'none',
   },
   seamLinePortrait: {
@@ -1524,76 +1595,27 @@ const styles = {
     marginLeft: 2,
     color: '#ffffff',
   },
-  arenaHeroStagePortrait: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 30,
-    pointerEvents: 'none',
-  },
-  arenaHeroStageLandscape: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 30,
-    pointerEvents: 'none',
-    paddingTop: 26,
-  },
-  arenaHeroInner: {
-    position: 'absolute',
-    left: '50%',
-    width: 'min(88vw, 760px)',
-    padding: '0 18px',
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-  },
-  arenaHeroSmall: {
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: '0.3em',
-    opacity: 0.38,
-    marginBottom: 10,
-  },
-  arenaHeroText: {
-    fontSize: 'clamp(32px, 6vw, 56px)',
-    fontWeight: 900,
-    lineHeight: 0.96,
-    letterSpacing: '-0.02em',
-    width: '100%',
-    textAlign: 'center',
-    margin: 0,
-  },
-  arenaWhisperPortrait: {
+  arenaTopLabelWrap: {
     position: 'absolute',
     top: 14,
     left: 0,
     right: 0,
-    zIndex: 11,
+    zIndex: 30,
     display: 'flex',
     justifyContent: 'center',
     pointerEvents: 'none',
   },
-  arenaWhisperLandscapeTop: {
-    position: 'absolute',
-    top: 14,
-    left: 0,
-    right: 0,
-    zIndex: 11,
-    display: 'flex',
-    justifyContent: 'center',
-    pointerEvents: 'none',
-  },
-  arenaWhisperText: {
+  arenaTopLabel: {
     fontSize: 11,
-    opacity: 0.1,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    whiteSpace: 'nowrap',
+    fontWeight: 800,
+    letterSpacing: '0.18em',
     textTransform: 'uppercase',
+    opacity: 0.82,
+    padding: '6px 10px',
+    borderRadius: 999,
+    background: 'rgba(8,10,14,0.28)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
   },
   championOverlay: {
     position: 'absolute',
