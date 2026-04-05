@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const THROW_DISTANCE = 92;
-const THROW_VELOCITY = 640;
-const CATEGORY_DISTANCE = 118;
-const CATEGORY_VELOCITY = 760;
+const THROW_DISTANCE = 96;
+const THROW_VELOCITY = 720;
+const CATEGORY_DISTANCE = 126;
+const CATEGORY_VELOCITY = 820;
 const HOLD_MS = 280;
 const LABEL_VISIBLE_MS = 1600;
-const STORAGE_KEY_ONBOARDING = "throwned-gesture-walkthrough-seen-v15";
+const STORAGE_KEY_ONBOARDING = "throwned-gesture-walkthrough-seen-v16";
 
 const ARENAS = [
   { id: "skateboard-tricks", label: "Skateboard Tricks", mediaType: "video", accent: "#7c3aed" },
@@ -156,23 +156,23 @@ function pickTwo(pool, avoidIds = []) {
 function getThrowVector(side, isPortrait) {
   if (isPortrait) {
     return side === "first"
-      ? { x: 0, y: -window.innerHeight * 0.82 }
-      : { x: 0, y: window.innerHeight * 0.82 };
+      ? { x: 0, y: -window.innerHeight * 0.92 }
+      : { x: 0, y: window.innerHeight * 0.92 };
   }
 
   return side === "first"
-    ? { x: -window.innerWidth * 0.82, y: 0 }
-    : { x: window.innerWidth * 0.82, y: 0 };
+    ? { x: -window.innerWidth * 0.92, y: 0 }
+    : { x: window.innerWidth * 0.92, y: 0 };
 }
 
 function getEnterInitial(side, isPortrait) {
   const base = getThrowVector(side, isPortrait);
   return {
-    x: base.x * 0.28,
-    y: base.y * 0.28,
-    opacity: 0.12,
-    scale: 0.985,
-    rotate: isPortrait ? base.y / 260 : base.x / 300,
+    x: base.x * 0.24,
+    y: base.y * 0.24,
+    opacity: 0.1,
+    scale: 0.99,
+    rotate: isPortrait ? base.y / 320 : base.x / 360,
   };
 }
 
@@ -221,7 +221,7 @@ function ArenaLabel({ arena, visible }) {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35 }}
+          transition={{ duration: 0.32 }}
           style={styles.arenaTopLabelWrap}
         >
           <div style={{ ...styles.arenaTopLabel, borderColor: `${arena.accent}44` }}>
@@ -236,7 +236,13 @@ function ArenaLabel({ arena, visible }) {
 function DiamondVS({ accent }) {
   return (
     <div style={styles.vsCenterLayer}>
-      <div style={{ ...styles.vsDiamond, borderColor: `${accent}aa`, boxShadow: `0 0 0 1px rgba(0,0,0,0.95), 0 0 22px ${accent}22` }}>
+      <div
+        style={{
+          ...styles.vsDiamond,
+          borderColor: `${accent}aa`,
+          boxShadow: `0 0 0 1px rgba(0,0,0,0.95), 0 0 22px ${accent}22`,
+        }}
+      >
         <div style={styles.vsDiamondInner}>
           <span style={styles.vsText}>VS</span>
         </div>
@@ -248,17 +254,20 @@ function DiamondVS({ accent }) {
 function SeamLine({ isPortrait, accent, pulse }) {
   return (
     <motion.div
-      animate={{ opacity: pulse ? 0.95 : 0.48, scale: pulse ? 1.04 : 1 }}
-      transition={{ duration: 0.22 }}
+      animate={{
+        opacity: pulse ? 0.98 : 0.52,
+        scale: pulse ? 1.03 : 1,
+      }}
+      transition={{ duration: 0.18 }}
       style={
         isPortrait
           ? {
               ...styles.seamLinePortrait,
-              background: `linear-gradient(90deg, transparent, ${accent}dd, transparent)`,
+              background: `linear-gradient(90deg, transparent, ${accent}e6, transparent)`,
             }
           : {
               ...styles.seamLineLandscape,
-              background: `linear-gradient(180deg, transparent, ${accent}dd, transparent)`,
+              background: `linear-gradient(180deg, transparent, ${accent}e6, transparent)`,
             }
       }
     />
@@ -342,10 +351,10 @@ function VoteFlash({ accent, visible }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.16 }}
           style={{
             ...styles.voteFlash,
-            background: `radial-gradient(circle at center, ${accent}14, transparent 58%)`,
+            background: `radial-gradient(circle at center, ${accent}12, transparent 58%)`,
           }}
         />
       )}
@@ -420,7 +429,7 @@ function MediaSurface({
     <div
       style={{
         ...styles.surface,
-        boxShadow: winnerBoost ? `0 0 52px ${accent}22 inset` : "none",
+        boxShadow: winnerBoost ? `0 0 54px ${accent}24 inset` : "none",
       }}
       onMouseDown={() => onHoldStart(item.id)}
       onMouseUp={onHoldEnd}
@@ -432,7 +441,11 @@ function MediaSurface({
       <div
         style={{
           ...styles.mediaLiveWrap,
-          transform: winnerBoost ? "scale(1.04)" : isActivePlayback && !paused ? "scale(1.025)" : "scale(1)",
+          filter: winnerBoost
+            ? "brightness(1.12)"
+            : isActivePlayback && !paused
+              ? "brightness(1.08)"
+              : "brightness(0.92)",
         }}
       >
         {!loadFailed ? (
@@ -475,8 +488,23 @@ function MediaSurface({
   );
 }
 
-function GestureLayer({ side, onGestureComplete, disabled }) {
+function GestureLayer({ side, onGestureComplete, onDragMove, disabled }) {
   const startRef = useRef({ x: 0, y: 0 });
+
+  function handleMove(clientX, clientY) {
+    const dx = clientX - startRef.current.x;
+    const dy = clientY - startRef.current.y;
+    onDragMove(side, dx, dy);
+  }
+
+  function handleEnd(clientX, clientY) {
+    const dx = clientX - startRef.current.x;
+    const dy = clientY - startRef.current.y;
+    const vx = dx * 8;
+    const vy = dy * 8;
+    onGestureComplete(side, dx, dy, vx, vy);
+    onDragMove(side, 0, 0);
+  }
 
   return (
     <div
@@ -487,27 +515,33 @@ function GestureLayer({ side, onGestureComplete, disabled }) {
         if (!t) return;
         startRef.current = { x: t.clientX, y: t.clientY };
       }}
+      onTouchMove={(e) => {
+        if (disabled) return;
+        const t = e.touches?.[0];
+        if (!t) return;
+        handleMove(t.clientX, t.clientY);
+      }}
       onTouchEnd={(e) => {
         if (disabled) return;
         const t = e.changedTouches?.[0];
         if (!t) return;
-        const dx = t.clientX - startRef.current.x;
-        const dy = t.clientY - startRef.current.y;
-        const vx = dx * 8;
-        const vy = dy * 8;
-        onGestureComplete(side, dx, dy, vx, vy);
+        handleEnd(t.clientX, t.clientY);
       }}
       onMouseDown={(e) => {
         if (disabled) return;
         startRef.current = { x: e.clientX, y: e.clientY };
       }}
+      onMouseMove={(e) => {
+        if (disabled || e.buttons !== 1) return;
+        handleMove(e.clientX, e.clientY);
+      }}
       onMouseUp={(e) => {
         if (disabled) return;
-        const dx = e.clientX - startRef.current.x;
-        const dy = e.clientY - startRef.current.y;
-        const vx = dx * 8;
-        const vy = dy * 8;
-        onGestureComplete(side, dx, dy, vx, vy);
+        handleEnd(e.clientX, e.clientY);
+      }}
+      onMouseLeave={() => {
+        if (disabled) return;
+        onDragMove(side, 0, 0);
       }}
     />
   );
@@ -520,6 +554,7 @@ function BattleSlot({
   isEntering,
   accent,
   onGestureComplete,
+  onDragMove,
   onHoldStart,
   onHoldEnd,
   isActivePlayback,
@@ -528,27 +563,41 @@ function BattleSlot({
   dimmed,
   winnerBoost,
   throwAnimate,
+  dragPreview,
 }) {
   const initial = isEntering ? getEnterInitial(side, isPortrait) : false;
+
+  const livePreview =
+    !throwAnimate && dragPreview
+      ? {
+          x: dragPreview.x,
+          y: dragPreview.y,
+          rotate: dragPreview.rotate,
+          opacity: 1,
+          scale: 1,
+        }
+      : null;
 
   return (
     <motion.div
       key={`${side}-${item?.id}`}
       initial={initial}
       animate={
-        throwAnimate || {
+        throwAnimate ||
+        livePreview || {
           x: 0,
           y: 0,
           opacity: 1,
-          scale: winnerBoost ? 1.04 : 1,
+          scale: 1,
           rotate: 0,
         }
       }
       transition={{
         type: "spring",
-        stiffness: 220,
-        damping: 24,
-        opacity: { duration: 0.16 },
+        stiffness: throwAnimate ? 300 : 240,
+        damping: throwAnimate ? 18 : 26,
+        mass: 0.8,
+        opacity: { duration: 0.14 },
       }}
       style={{ ...styles.slot, ...(isPortrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
@@ -563,7 +612,13 @@ function BattleSlot({
         winnerBoost={winnerBoost}
         isPortrait={isPortrait}
       />
-      <GestureLayer side={side} onGestureComplete={onGestureComplete} disabled={isLocked} />
+
+      <GestureLayer
+        side={side}
+        onGestureComplete={onGestureComplete}
+        onDragMove={onDragMove}
+        disabled={isLocked}
+      />
     </motion.div>
   );
 }
@@ -574,14 +629,14 @@ function LeaderboardSheet({ items, arena, isOpen, setIsOpen }) {
   return (
     <motion.div
       drag="y"
-      dragElastic={0.06}
-      dragConstraints={{ top: 0, bottom: 460 }}
+      dragElastic={0.05}
+      dragConstraints={{ top: 0, bottom: 500 }}
       onDragEnd={(_, info) => {
         if (info.offset.y > 80) setIsOpen(false);
         if (info.offset.y < -80) setIsOpen(true);
       }}
-      animate={{ y: isOpen ? 0 : 420 }}
-      transition={{ type: "spring", stiffness: 280, damping: 30 }}
+      animate={{ y: isOpen ? 0 : 500 }}
+      transition={{ type: "spring", stiffness: 280, damping: 32 }}
       style={styles.sheet}
     >
       <div style={styles.sheetHandleTap} onClick={() => setIsOpen((prev) => !prev)}>
@@ -944,6 +999,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   const [enterState, setEnterState] = useState(null);
   const [transitioningArena, setTransitioningArena] = useState(false);
   const [voteFlashVisible, setVoteFlashVisible] = useState(false);
+  const [dragState, setDragState] = useState({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
 
   const detailsItem = useMemo(
     () => arenaItems.find((item) => item.id === detailsId) || null,
@@ -963,7 +1019,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
   function pulseVoteFlash() {
     setVoteFlashVisible(true);
     if (voteFlashTimerRef.current) clearTimeout(voteFlashTimerRef.current);
-    voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 220);
+    voteFlashTimerRef.current = setTimeout(() => setVoteFlashVisible(false), 190);
   }
 
   function pickNextPair(items, history) {
@@ -988,6 +1044,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     setThrowState(null);
     setEnterState(null);
     setVoteFlashVisible(false);
+    setDragState({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
     setDecisionUnlockedAt(Date.now());
 
     const nextPair = pickNextPair(arenaItems, battleHistoryRef.current);
@@ -995,7 +1052,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     setActiveSide(nextPair?.second ? "second" : "first");
     setTransitioningArena(true);
 
-    const t = setTimeout(() => setTransitioningArena(false), 220);
+    const t = setTimeout(() => setTransitioningArena(false), 210);
     return () => clearTimeout(t);
   }, [arena.id, arenaItems.length]);
 
@@ -1098,12 +1155,56 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
     return "none";
   }
 
+  function handleDragMove(side, dx, dy) {
+    if (isLocked || showChampion || detailsId || transitioningArena) return;
+
+    const rawThrow = isPortrait ? dy : dx;
+    const throwDirection = side === "first" ? -1 : 1;
+    const outward = rawThrow * throwDirection;
+
+    const rawCategory = isPortrait ? dy : dx;
+    const categoryDirection = side === "first" ? 1 : -1;
+    const inward = rawCategory * categoryDirection;
+
+    let previewX = 0;
+    let previewY = 0;
+
+    if (outward > 0) {
+      const resisted = outward * 0.18;
+      if (isPortrait) previewY = dy < 0 ? -resisted : resisted;
+      else previewX = dx < 0 ? -resisted : resisted;
+    } else if (inward > 0) {
+      const resisted = inward * 0.12;
+      if (isPortrait) previewY = dy > 0 ? resisted : -resisted;
+      else previewX = dx > 0 ? resisted : -resisted;
+    }
+
+    const rotate = isPortrait ? previewY / 40 : previewX / 48;
+
+    setDragState((prev) => ({
+      ...prev,
+      [side]: {
+        x: previewX,
+        y: previewY,
+        rotate,
+      },
+    }));
+  }
+
+  function resetDragPreview() {
+    setDragState({
+      first: { x: 0, y: 0, rotate: 0 },
+      second: { x: 0, y: 0, rotate: 0 },
+    });
+  }
+
   function handleSurfaceGesture(side, offsetX, offsetY, velocityX, velocityY) {
     if (isLocked || !pair?.first || !pair?.second || showChampion || detailsId || transitioningArena) {
       return;
     }
 
     const outcome = resolveGesture(side, offsetX, offsetY, velocityX, velocityY);
+    resetDragPreview();
 
     if (outcome === "category-prev") {
       setTransitioningArena(true);
@@ -1209,7 +1310,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           setIsLocked(false);
           setPaused(false);
           setDecisionUnlockedAt(Date.now());
-        }, 1150);
+        }, 1100);
 
         return;
       }
@@ -1219,9 +1320,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       );
       const recentIds = battleHistoryRef.current.slice(-4);
       const challenger = pickRandom(challengerPool, recentIds) || pickRandom(freshArenaItems, [updatedWinner.id]);
-      const safeChallenger = challenger || freshArenaItems.find((item) => item.id !== updatedWinner.id) || updatedWinner;
-      const enteringSide = side;
+      const safeChallenger =
+        challenger || freshArenaItems.find((item) => item.id !== updatedWinner.id) || updatedWinner;
 
+      const enteringSide = side;
       const nextPair =
         side === "first"
           ? { first: safeChallenger, second: updatedWinner }
@@ -1237,8 +1339,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       window.setTimeout(() => {
         setEnterState(null);
         setIsLocked(false);
-      }, 320);
-    }, 300);
+      }, 300);
+    }, 230);
   }
 
   function getThrownStyle(sideName) {
@@ -1247,8 +1349,8 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       x: throwState.vector.x,
       y: throwState.vector.y,
       opacity: 0,
-      scale: 0.95,
-      rotate: isPortrait ? throwState.vector.y / 120 : throwState.vector.x / 130,
+      scale: 0.96,
+      rotate: isPortrait ? throwState.vector.y / 78 : throwState.vector.x / 88,
     };
   }
 
@@ -1273,7 +1375,10 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
       <ArenaLabel arena={arena} visible={labelVisible} />
 
       <motion.div
-        animate={{ opacity: transitioningArena ? 0.9 : 1, scale: transitioningArena ? 0.994 : 1 }}
+        animate={{
+          opacity: transitioningArena ? 0.85 : 1,
+          scale: transitioningArena ? 0.98 : 1,
+        }}
         transition={{ duration: 0.16 }}
         style={{ ...styles.battleLayout, ...(isPortrait ? styles.stackPortrait : styles.stackLandscape) }}
       >
@@ -1284,6 +1389,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           isEntering={enterState?.side === "first" && enterState?.itemId === pair.first?.id}
           accent={arena.accent}
           onGestureComplete={handleSurfaceGesture}
+          onDragMove={handleDragMove}
           onHoldStart={startHold}
           onHoldEnd={endHold}
           isActivePlayback={activeSide === "first"}
@@ -1292,6 +1398,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           dimmed={arena.mediaType === "video" ? activeSide !== "first" || paused : false}
           winnerBoost={winnerId === pair.first.id}
           throwAnimate={getThrownStyle("first")}
+          dragPreview={dragState.first}
         />
 
         <BattleSlot
@@ -1301,6 +1408,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           isEntering={enterState?.side === "second" && enterState?.itemId === pair.second?.id}
           accent={arena.accent}
           onGestureComplete={handleSurfaceGesture}
+          onDragMove={handleDragMove}
           onHoldStart={startHold}
           onHoldEnd={endHold}
           isActivePlayback={activeSide === "second"}
@@ -1309,6 +1417,7 @@ function BattleArena({ pool, setPool, arena, onSwipeArena, onOpenUpload }) {
           dimmed={arena.mediaType === "video" ? activeSide !== "second" || paused : false}
           winnerBoost={winnerId === pair.second.id}
           throwAnimate={getThrownStyle("second")}
+          dragPreview={dragState.second}
         />
       </motion.div>
 
@@ -1408,13 +1517,15 @@ export default function App() {
 const styles = {
   app: {
     minHeight: "100vh",
-    background: "radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)",
+    background:
+      "radial-gradient(circle at top, rgba(124,58,237,0.12), transparent 28%), linear-gradient(180deg, #06070a 0%, #090b0f 100%)",
     color: "white",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   phone: {
     position: "relative",
@@ -1466,9 +1577,8 @@ const styles = {
   mediaLiveWrap: {
     position: "absolute",
     inset: 0,
-    transition: "transform 240ms cubic-bezier(.22,1,.36,1)",
-    transformOrigin: "center center",
-    willChange: "transform",
+    transition: "filter 180ms ease",
+    willChange: "filter",
   },
   gestureLayer: {
     position: "absolute",
@@ -1685,34 +1795,34 @@ const styles = {
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "center",
-    padding: 18,
+    padding: 16,
     pointerEvents: "none",
   },
   detailsCard: {
-    width: "min(520px, 92vw)",
-    borderRadius: 22,
+    width: "min(480px, 92vw)",
+    borderRadius: 20,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(8,10,14,0.72)",
     backdropFilter: "blur(18px)",
-    padding: 16,
+    padding: 14,
     boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
   },
   detailsTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 800,
-    lineHeight: 1.04,
+    lineHeight: 1.08,
     marginBottom: 6,
   },
   detailsCreator: {
-    fontSize: 14,
+    fontSize: 13,
     opacity: 0.72,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   detailsMetaRow: {
     display: "flex",
     flexWrap: "wrap",
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   detailsPill: {
     padding: "7px 10px",
@@ -1723,12 +1833,12 @@ const styles = {
     fontWeight: 700,
   },
   detailsSubText: {
-    fontSize: 13,
+    fontSize: 12,
     opacity: 0.58,
     marginBottom: 8,
   },
   detailsArena: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 700,
   },
   voteFlash: {
@@ -1755,7 +1865,7 @@ const styles = {
     justifyContent: "center",
     zIndex: 999,
     pointerEvents: "none",
-    opacity: 0.4,
+    opacity: 0.34,
   },
   invisibleUploadButton: {
     pointerEvents: "auto",
@@ -1780,14 +1890,14 @@ const styles = {
     left: 10,
     right: 10,
     bottom: -2,
-    height: 470,
+    height: 440,
     zIndex: 16,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     background: "rgba(8,10,14,0.82)",
     backdropFilter: "blur(18px)",
     border: "1px solid rgba(255,255,255,0.06)",
-    boxShadow: "0 -24px 60px rgba(0,0,0,0.34)",
+    boxShadow: "0 -20px 54px rgba(0,0,0,0.32)",
     overflow: "hidden",
   },
   sheetHandleTap: {
@@ -1829,7 +1939,7 @@ const styles = {
   sheetList: {
     padding: "0 10px 18px",
     overflowY: "auto",
-    height: 390,
+    height: 360,
   },
   sheetRow: {
     display: "flex",
