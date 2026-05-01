@@ -324,6 +324,8 @@ function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStar
 
   if (!item) return null;
 
+  const isImage = item.type === "image";
+
   return (
     <div
       style={{ ...styles.surface, boxShadow: winner ? `inset 0 0 58px ${accent}2a` : "none" }}
@@ -337,7 +339,7 @@ function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStar
       <div
         style={{
           ...styles.mediaWrap,
-          filter: winner ? "brightness(1.13)" : active && !paused ? "brightness(1.06)" : "brightness(0.92)",
+          filter: isImage ? "brightness(1.03)" : winner ? "brightness(1.13)" : active && !paused ? "brightness(1.06)" : "brightness(0.92)",
         }}
       >
         {!failed ? (
@@ -353,7 +355,7 @@ function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStar
 
       <div style={styles.scrim} />
       <div style={styles.vignette} />
-      {dimmed && <div style={styles.inactive} />}
+      {!isImage && dimmed && <div style={styles.inactive} />}
     </div>
   );
 }
@@ -653,10 +655,20 @@ function UploadSheet({ open, onClose, onSave, arenaId }) {
 
             <div style={styles.previewBox}>
               {!url ? (
-                <div style={styles.previewEmpty}>Choose a {arena.type === "video" ? "video" : "photo"}.</div>
+                <div style={styles.previewEmpty}>
+                  Record or choose a {arena.type === "video" ? "video" : "photo"}. After selection, you’ll see the exact center crop used in battle.
+                </div>
               ) : (
                 <>
+                  <div style={styles.cropHeader}>
+                    <span>Battle Crop Preview</span>
+                    <small>What voters will see</small>
+                  </div>
+
                   <div style={styles.battlePreviewFrame}>
+                    <div style={styles.cropGuideVertical} />
+                    <div style={styles.cropGuideHorizontal} />
+
                     {arena.type === "video" ? (
                       <video
                         ref={previewRef}
@@ -674,9 +686,11 @@ function UploadSheet({ open, onClose, onSave, arenaId }) {
                     ) : (
                       <img src={url} alt="Preview" style={styles.previewBattleMedia} />
                     )}
+
+                    <div style={styles.cropFrameLabel}>CENTER CROP</div>
                   </div>
 
-                  <div style={styles.cropNote}>Preview shows battle crop: center-cropped to fill the arena.</div>
+                  <div style={styles.cropNote}>The app will fill the arena and crop edges automatically. Future version: drag to reposition crop.</div>
 
                   {arena.type === "video" && (
                     <>
@@ -798,7 +812,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
 
     const next = pickPair(items, history.current.slice(-4));
     setPair(next);
-    setActiveSide(next?.second ? "second" : "first");
+    setActiveSide(arena.type === "image" ? "both" : next?.second ? "second" : "first");
     setTransitioning(true);
     const t = setTimeout(() => setTransitioning(false), 210);
     return () => clearTimeout(t);
@@ -812,6 +826,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
   }, []);
 
   useEffect(() => {
+    if (arena.type === "image") return;
     if (!pair?.first || !pair?.second || paused || detailsId || locked || champion || transitioning) return;
 
     const active = activeSide === "first" ? pair.first : pair.second;
@@ -820,7 +835,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
     }, safeDuration(active));
 
     return () => clearTimeout(t);
-  }, [pair, activeSide, paused, detailsId, locked, champion, transitioning]);
+  }, [arena.type, pair, activeSide, paused, detailsId, locked, champion, transitioning]);
 
   function startHold(id) {
     holdTriggered.current = false;
@@ -973,7 +988,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
           const cleared = fresh.filter((x) => x.id !== updatedWinner.id && x.id !== updatedLoser.id);
           const next = pickPair(cleared.length >= 2 ? cleared : fresh, history.current.slice(-4));
           setPair(next);
-          setActiveSide(next?.second ? "second" : "first");
+          setActiveSide(arena.type === "image" ? "both" : next?.second ? "second" : "first");
           setWinnerId(null);
           setStreak(0);
           setChampion(null);
@@ -1001,7 +1016,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
 
       setPair(next);
       setEnterState({ side, id: challenger.id });
-      setActiveSide(side === "first" ? "second" : "first");
+      setActiveSide(arena.type === "image" ? "both" : side === "first" ? "second" : "first");
       setThrowState(null);
       setPaused(false);
       setUnlockedAt(Date.now());
@@ -1034,6 +1049,8 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
     );
   }
 
+  const isImageArena = arena.type === "image";
+
   return (
     <div
       style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
@@ -1053,9 +1070,9 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
           item={pair.first}
           portrait={portrait}
           accent={arena.accent}
-          active={activeSide === "first"}
+          active={isImageArena || activeSide === "first"}
           paused={paused}
-          dimmed={arena.type === "video" ? activeSide !== "first" || paused : false}
+          dimmed={false}
           winner={winnerId === pair.first.id}
           locked={locked || transitioning}
           entering={enterState?.side === "first" && enterState?.id === pair.first.id}
@@ -1072,9 +1089,9 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
           item={pair.second}
           portrait={portrait}
           accent={arena.accent}
-          active={activeSide === "second"}
+          active={isImageArena || activeSide === "second"}
           paused={paused}
-          dimmed={arena.type === "video" ? activeSide !== "second" || paused : false}
+          dimmed={false}
           winner={winnerId === pair.second.id}
           locked={locked || transitioning}
           entering={enterState?.side === "second" && enterState?.id === pair.second.id}
@@ -1647,14 +1664,26 @@ const styles = {
     opacity: 0.62,
     padding: 20,
   },
+  cropHeader: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 10,
+    fontWeight: 800,
+    fontSize: 13,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+  },
   battlePreviewFrame: {
     width: "100%",
     aspectRatio: "9 / 8",
     borderRadius: 18,
     overflow: "hidden",
     background: "#050608",
-    border: "1px solid rgba(255,255,255,.08)",
+    border: "1px solid rgba(255,255,255,.12)",
     position: "relative",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.04)",
   },
   previewBattleMedia: {
     width: "100%",
@@ -1663,6 +1692,39 @@ const styles = {
     objectPosition: "center center",
     display: "block",
     background: "#08090c",
+  },
+  cropGuideVertical: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "50%",
+    width: 1,
+    background: "rgba(255,255,255,.18)",
+    zIndex: 4,
+    pointerEvents: "none",
+  },
+  cropGuideHorizontal: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "50%",
+    height: 1,
+    background: "rgba(255,255,255,.18)",
+    zIndex: 4,
+    pointerEvents: "none",
+  },
+  cropFrameLabel: {
+    position: "absolute",
+    right: 10,
+    bottom: 10,
+    zIndex: 5,
+    padding: "5px 8px",
+    borderRadius: 999,
+    background: "rgba(0,0,0,.46)",
+    border: "1px solid rgba(255,255,255,.12)",
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: "0.12em",
   },
   cropNote: {
     marginTop: 8,
