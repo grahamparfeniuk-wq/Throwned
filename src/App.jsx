@@ -174,6 +174,8 @@ function normalizeUpload(data, id) {
     wins: 0,
     losses: 0,
     uploaded: true,
+    fit: "cover",
+    position: "center center",
   };
 }
 
@@ -181,6 +183,37 @@ function safeDuration(item) {
   if (!item) return 2200;
   if (item.type !== "video") return 2600;
   return Math.max(1200, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
+}
+
+function BattleMedia({ item, refProp, onError }) {
+  const mediaStyle = {
+    ...styles.mediaFill,
+    objectFit: "cover",
+    objectPosition: item?.position || "center center",
+  };
+
+  if (item.type === "video") {
+    return (
+      <video
+        ref={refProp}
+        src={item.src}
+        playsInline
+        preload="auto"
+        style={mediaStyle}
+        onError={onError}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={item.src}
+      alt={item.title}
+      draggable={false}
+      style={mediaStyle}
+      onError={onError}
+    />
+  );
 }
 
 function ArenaLabel({ arena, visible }) {
@@ -223,14 +256,20 @@ function Seam({ portrait, accent, pulse, dragging }) {
 function VS({ accent }) {
   return (
     <div style={styles.vsLayer}>
-      <div style={{ ...styles.vsDiamond, borderColor: `${accent}aa`, boxShadow: `0 0 0 1px rgba(0,0,0,.95), 0 0 26px ${accent}28` }}>
+      <div
+        style={{
+          ...styles.vsDiamond,
+          borderColor: `${accent}aa`,
+          boxShadow: `0 0 0 1px rgba(0,0,0,.95), 0 0 26px ${accent}28`,
+        }}
+      >
         <div style={styles.vsInner}>VS</div>
       </div>
     </div>
   );
 }
 
-function MediaSurface({ item, active, paused, dimmed, winner, accent, portrait, onHoldStart, onHoldEnd }) {
+function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStart, onHoldEnd }) {
   const ref = useRef(null);
   const [failed, setFailed] = useState(false);
 
@@ -302,11 +341,7 @@ function MediaSurface({ item, active, paused, dimmed, winner, accent, portrait, 
         }}
       >
         {!failed ? (
-          item.type === "video" ? (
-            <video ref={ref} src={item.src} playsInline preload="auto" style={portrait ? styles.mediaPortrait : styles.mediaLandscape} onError={() => setFailed(true)} />
-          ) : (
-            <img src={item.src} alt={item.title} draggable={false} style={portrait ? styles.mediaPortrait : styles.mediaLandscape} onError={() => setFailed(true)} />
-          )
+          <BattleMedia item={item} refProp={ref} onError={() => setFailed(true)} />
         ) : (
           <div style={{ ...styles.fallback, background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,.86))` }}>
             <div style={styles.fallbackArena}>{arenaById(item.arenaId).label}</div>
@@ -394,7 +429,16 @@ function BattleSlot({ side, item, portrait, accent, active, paused, dimmed, winn
       }}
       style={{ ...styles.slot, ...(portrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
-      <MediaSurface item={item} active={active} paused={paused} dimmed={dimmed} winner={winner} accent={accent} portrait={portrait} onHoldStart={onHoldStart} onHoldEnd={onHoldEnd} />
+      <MediaSurface
+        item={item}
+        active={active}
+        paused={paused}
+        dimmed={dimmed}
+        winner={winner}
+        accent={accent}
+        onHoldStart={onHoldStart}
+        onHoldEnd={onHoldEnd}
+      />
       <GestureLayer side={side} disabled={locked} onMove={onMove} onDone={onDone} />
     </motion.div>
   );
@@ -610,65 +654,76 @@ function UploadSheet({ open, onClose, onSave, arenaId }) {
             <div style={styles.previewBox}>
               {!url ? (
                 <div style={styles.previewEmpty}>Choose a {arena.type === "video" ? "video" : "photo"}.</div>
-              ) : arena.type === "video" ? (
+              ) : (
                 <>
-                  <video
-                    ref={previewRef}
-                    src={url}
-                    controls
-                    playsInline
-                    style={styles.previewMedia}
-                    onLoadedMetadata={() => {
-                      const d = Number(previewRef.current?.duration || 0);
-                      setDuration(d);
-                      setTrimStart(0);
-                      setTrimEnd(Math.min(7, d || 7));
-                    }}
-                  />
-                  <div style={styles.trimRow}>
-                    <span>Full: {duration ? duration.toFixed(1) : "..."}s</span>
-                    <span>Selected: {Math.max(0, trimEnd - trimStart).toFixed(1)}s</span>
-                    <span>Max: 7.0s</span>
+                  <div style={styles.battlePreviewFrame}>
+                    {arena.type === "video" ? (
+                      <video
+                        ref={previewRef}
+                        src={url}
+                        controls
+                        playsInline
+                        style={styles.previewBattleMedia}
+                        onLoadedMetadata={() => {
+                          const d = Number(previewRef.current?.duration || 0);
+                          setDuration(d);
+                          setTrimStart(0);
+                          setTrimEnd(Math.min(7, d || 7));
+                        }}
+                      />
+                    ) : (
+                      <img src={url} alt="Preview" style={styles.previewBattleMedia} />
+                    )}
                   </div>
 
-                  <label style={styles.sliderLabel}>
-                    Start: {trimStart.toFixed(1)}s
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(0, duration - 0.1)}
-                      step={0.1}
-                      value={trimStart}
-                      onChange={(e) => {
-                        const next = Number(e.target.value);
-                        setTrimStart(next);
-                        if (trimEnd - next > 7) setTrimEnd(next + 7);
-                        if (trimEnd <= next) setTrimEnd(next + 0.2);
-                      }}
-                      style={styles.slider}
-                    />
-                  </label>
+                  <div style={styles.cropNote}>Preview shows battle crop: center-cropped to fill the arena.</div>
 
-                  <label style={styles.sliderLabel}>
-                    End: {trimEnd.toFixed(1)}s
-                    <input
-                      type="range"
-                      min={0.1}
-                      max={duration || 7}
-                      step={0.1}
-                      value={trimEnd}
-                      onChange={(e) => {
-                        let next = Number(e.target.value);
-                        if (next <= trimStart) next = trimStart + 0.2;
-                        if (next - trimStart > 7) next = trimStart + 7;
-                        setTrimEnd(next);
-                      }}
-                      style={styles.slider}
-                    />
-                  </label>
+                  {arena.type === "video" && (
+                    <>
+                      <div style={styles.trimRow}>
+                        <span>Full: {duration ? duration.toFixed(1) : "..."}s</span>
+                        <span>Selected: {Math.max(0, trimEnd - trimStart).toFixed(1)}s</span>
+                        <span>Max: 7.0s</span>
+                      </div>
+
+                      <label style={styles.sliderLabel}>
+                        Start: {trimStart.toFixed(1)}s
+                        <input
+                          type="range"
+                          min={0}
+                          max={Math.max(0, duration - 0.1)}
+                          step={0.1}
+                          value={trimStart}
+                          onChange={(e) => {
+                            const next = Number(e.target.value);
+                            setTrimStart(next);
+                            if (trimEnd - next > 7) setTrimEnd(next + 7);
+                            if (trimEnd <= next) setTrimEnd(next + 0.2);
+                          }}
+                          style={styles.slider}
+                        />
+                      </label>
+
+                      <label style={styles.sliderLabel}>
+                        End: {trimEnd.toFixed(1)}s
+                        <input
+                          type="range"
+                          min={0.1}
+                          max={duration || 7}
+                          step={0.1}
+                          value={trimEnd}
+                          onChange={(e) => {
+                            let next = Number(e.target.value);
+                            if (next <= trimStart) next = trimStart + 0.2;
+                            if (next - trimStart > 7) next = trimStart + 7;
+                            setTrimEnd(next);
+                          }}
+                          style={styles.slider}
+                        />
+                      </label>
+                    </>
+                  )}
                 </>
-              ) : (
-                <img src={url} alt="Preview" style={styles.previewMedia} />
               )}
             </div>
 
@@ -1163,24 +1218,19 @@ const styles = {
     position: "absolute",
     inset: 0,
     transition: "filter 180ms ease",
+    overflow: "hidden",
   },
-  mediaPortrait: {
+  mediaFill: {
+    position: "absolute",
+    inset: 0,
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    transform: "scale(1.04)",
+    objectPosition: "center center",
     userSelect: "none",
     WebkitUserDrag: "none",
     background: "#0b0b0d",
-  },
-  mediaLandscape: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    transform: "scale(1.01)",
-    userSelect: "none",
-    WebkitUserDrag: "none",
-    background: "#0b0b0d",
+    display: "block",
   },
   gestureLayer: {
     position: "absolute",
@@ -1597,12 +1647,28 @@ const styles = {
     opacity: 0.62,
     padding: 20,
   },
-  previewMedia: {
+  battlePreviewFrame: {
     width: "100%",
-    maxHeight: 320,
+    aspectRatio: "9 / 8",
+    borderRadius: 18,
+    overflow: "hidden",
+    background: "#050608",
+    border: "1px solid rgba(255,255,255,.08)",
+    position: "relative",
+  },
+  previewBattleMedia: {
+    width: "100%",
+    height: "100%",
     objectFit: "cover",
-    borderRadius: 16,
+    objectPosition: "center center",
+    display: "block",
     background: "#08090c",
+  },
+  cropNote: {
+    marginTop: 8,
+    marginBottom: 10,
+    fontSize: 12,
+    opacity: 0.56,
   },
   trimRow: {
     display: "flex",
