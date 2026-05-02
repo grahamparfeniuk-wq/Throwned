@@ -5,10 +5,48 @@ import { BattleMedia } from "./BattleMedia";
 export function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStart, onHoldEnd, styles }) {
   const ref = useRef(null);
   const [failed, setFailed] = useState(false);
+  const prevItemId = useRef(null);
+  const prevActive = useRef(false);
 
   useEffect(() => {
     setFailed(false);
   }, [item?.src]);
+
+  useEffect(() => {
+    if (!item || item.type !== "video") return;
+    const video = ref.current;
+    if (!video) return;
+
+    const start = Number(item.trimStart || 0);
+    const itemChanged = prevItemId.current !== item.id;
+    const becameActive = !prevActive.current && active;
+
+    if (itemChanged || becameActive) {
+      try {
+        video.currentTime = start;
+      } catch {}
+    }
+
+    prevItemId.current = item.id;
+    prevActive.current = active;
+  }, [item?.id, item?.type, item?.trimStart, active]);
+
+  useEffect(() => {
+    if (!item || item.type !== "video") return;
+    const video = ref.current;
+    if (!video) return;
+
+    if (active && !paused) {
+      video.muted = false;
+      video.playsInline = true;
+      const p = video.play();
+      if (p?.catch) p.catch(() => {});
+      return;
+    }
+
+    video.pause();
+    video.muted = true;
+  }, [item?.id, item?.src, item?.type, active, paused]);
 
   useEffect(() => {
     if (!item || item.type !== "video") return;
@@ -19,41 +57,20 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, onH
     const start = Number(item.trimStart || 0);
     const end = Number(item.trimEnd || 7);
 
-    const resetToStart = () => {
-      try {
-        video.currentTime = start;
-      } catch {}
-    };
-
-    const playFromStart = () => {
-      resetToStart();
-      video.muted = false;
-      video.playsInline = true;
-      const p = video.play();
-      if (p?.catch) p.catch(() => {});
-    };
-
-    const stop = () => {
-      video.pause();
-      video.muted = true;
-    };
-
     const onTimeUpdate = () => {
       if (!active || paused) return;
       if (video.currentTime >= end - 0.04) {
-        resetToStart();
+        try {
+          video.currentTime = start;
+        } catch {}
         const p = video.play();
         if (p?.catch) p.catch(() => {});
       }
     };
 
     video.addEventListener("timeupdate", onTimeUpdate);
-
-    if (active && !paused) playFromStart();
-    else stop();
-
     return () => video.removeEventListener("timeupdate", onTimeUpdate);
-  }, [item?.id, item?.src, item?.trimStart, item?.trimEnd, active, paused]);
+  }, [item?.id, item?.src, item?.type, item?.trimStart, item?.trimEnd, active, paused]);
 
   if (!item) return null;
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useIsPortrait } from "../../hooks/useIsPortrait";
+import { ARENAS } from "../../data/arenas";
 import {
   arenaItems,
   clamp,
@@ -23,7 +24,7 @@ const THROW_DISTANCE = 92;
 const CATEGORY_DISTANCE = 116;
 const LABEL_MS = 1600;
 
-export function Battle({ pool, setPool, arena, changeArena, openUpload, styles, renderDetails, renderLeaderboard }) {
+export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpload, styles, renderDetails, renderLeaderboard }) {
   const portrait = useIsPortrait();
   const items = useMemo(() => sortRank(arenaItems(pool, arena)), [pool, arena]);
   const poolRef = useRef(pool);
@@ -37,6 +38,8 @@ export function Battle({ pool, setPool, arena, changeArena, openUpload, styles, 
   const [paused, setPaused] = useState(false);
   const [detailsId, setDetailsId] = useState(null);
   const [labelVisible, setLabelVisible] = useState(true);
+  const [arenaPickerOpen, setArenaPickerOpen] = useState(false);
+  const [arenaQuery, setArenaQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [winnerId, setWinnerId] = useState(null);
@@ -54,6 +57,11 @@ export function Battle({ pool, setPool, arena, changeArena, openUpload, styles, 
   });
 
   const detailsItem = useMemo(() => items.find((x) => x.id === detailsId), [items, detailsId]);
+  const filteredArenas = useMemo(() => {
+    const q = arenaQuery.trim().toLowerCase();
+    if (!q) return ARENAS;
+    return ARENAS.filter((a) => a.label.toLowerCase().includes(q) || a.id.toLowerCase().includes(q));
+  }, [arenaQuery]);
   const dragging = Math.abs(drag.first.x) + Math.abs(drag.first.y) + Math.abs(drag.second.x) + Math.abs(drag.second.y) > 1;
 
   useEffect(() => {
@@ -74,6 +82,8 @@ export function Battle({ pool, setPool, arena, changeArena, openUpload, styles, 
     setWinnerId(null);
     setStreak(0);
     setChampion(null);
+    setArenaPickerOpen(false);
+    setArenaQuery("");
     setThrowState(null);
     setEnterState(null);
     setLocked(false);
@@ -329,7 +339,54 @@ export function Battle({ pool, setPool, arena, changeArena, openUpload, styles, 
         if (arena.type === "video" && !detailsId && !champion && !sheetOpen) setPaused((p) => !p);
       }}
     >
-      <ArenaLabel arena={arena} visible={labelVisible} styles={styles} />
+      <ArenaLabel arena={arena} visible={labelVisible} styles={styles} onClick={() => setArenaPickerOpen(true)} />
+
+      <AnimatePresence>
+        {arenaPickerOpen && (
+          <motion.div
+            style={styles.arenaPickerOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setArenaPickerOpen(false);
+            }}
+          >
+            <motion.div
+              style={styles.arenaPickerCard}
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                value={arenaQuery}
+                onChange={(e) => setArenaQuery(e.target.value)}
+                placeholder="Search arenas"
+                style={styles.arenaPickerInput}
+                autoFocus
+              />
+              <div style={styles.arenaPickerList}>
+                {filteredArenas.map((a) => (
+                  <button
+                    key={a.id}
+                    style={{ ...styles.arenaPickerItem, ...(a.id === arena.id ? styles.arenaPickerItemActive : null) }}
+                    onClick={() => {
+                      jumpToArena(a.id);
+                      setArenaPickerOpen(false);
+                      setArenaQuery("");
+                    }}
+                  >
+                    <span style={{ ...styles.arenaPickerDot, background: a.accent }} />
+                    <span style={styles.arenaPickerText}>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
         style={{ ...styles.layout, ...(portrait ? styles.layoutPortrait : styles.layoutLandscape) }}

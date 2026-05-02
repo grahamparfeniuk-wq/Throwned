@@ -100,6 +100,11 @@ export default function App() {
     });
   }
 
+  function jumpToArena(arenaId) {
+    const index = ARENAS.findIndex((a) => a.id === arenaId);
+    if (index >= 0) setArenaIndex(index);
+  }
+
   function saveUpload(data) {
     const contender = normalizeUpload(data, nextId.current++);
     setPool((prev) => sortRank([...prev, contender]));
@@ -115,6 +120,7 @@ export default function App() {
         setPool={setPool}
         arena={arena}
         changeArena={changeArena}
+        jumpToArena={jumpToArena}
         openUpload={() => setUploadOpen(true)}
         styles={styles}
         renderDetails={(props) => <Details {...props} />}
