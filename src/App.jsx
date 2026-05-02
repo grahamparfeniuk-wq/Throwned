@@ -1,189 +1,30 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ARENAS } from "./data/arenas";
+import { START_MEDIA } from "./data/startMedia";
+import {
+  arenaById,
+  arenaItems,
+  clamp,
+  confidenceLabel,
+  pickPair,
+  pickRandom,
+  scoreDelta,
+  sortRank,
+  updateConfidence,
+  voteTrust,
+} from "./utils/ranking";
+import { enterVector, normalizeUpload, safeDuration, throwVector } from "./utils/media";
+import { useIsPortrait } from "./hooks/useIsPortrait";
+import { Seam } from "./components/battle/Seam";
+import { VSBadge } from "./components/battle/VSBadge";
+import { ArenaLabel } from "./components/overlays/ArenaLabel";
+import { ChampionBanner } from "./components/overlays/ChampionBanner";
 
 const HOLD_MS = 260;
 const THROW_DISTANCE = 92;
 const CATEGORY_DISTANCE = 116;
 const LABEL_MS = 1600;
-
-const ARENAS = [
-  { id: "skateboard", label: "Skateboard Tricks", type: "video", accent: "#7c3aed" },
-  { id: "fails", label: "Epic Fails", type: "video", accent: "#ef4444" },
-  { id: "songs", label: "Original Songs", type: "video", accent: "#f59e0b" },
-  { id: "comedy", label: "Comedy", type: "video", accent: "#22c55e" },
-  { id: "sports", label: "Sports", type: "video", accent: "#06b6d4" },
-  { id: "sunset", label: "Best Sunset", type: "image", accent: "#fb7185" },
-  { id: "kittens", label: "Cute Kittens", type: "image", accent: "#a78bfa" },
-  { id: "wildcard", label: "Wildcard", type: "video", accent: "#8b5cf6" },
-];
-
-const START_MEDIA = [
-  { id: 1, arenaId: "skateboard", title: "Rail Attempt", creator: "@skate_1", type: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, rating: 3208, confidence: 0.79, wins: 0, losses: 0 },
-  { id: 2, arenaId: "skateboard", title: "Kickflip Gap", creator: "@skate_2", type: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, rating: 3170, confidence: 0.73, wins: 0, losses: 0 },
-  { id: 3, arenaId: "skateboard", title: "Late Shuv", creator: "@skate_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, rating: 3130, confidence: 0.68, wins: 0, losses: 0 },
-
-  { id: 4, arenaId: "fails", title: "Slip Jacket", creator: "@fail_1", type: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, rating: 3200, confidence: 0.78, wins: 0, losses: 0 },
-  { id: 5, arenaId: "fails", title: "Box Miss", creator: "@fail_2", type: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, rating: 3168, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 6, arenaId: "fails", title: "Flower Chaos", creator: "@fail_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, rating: 3144, confidence: 0.69, wins: 0, losses: 0 },
-
-  { id: 7, arenaId: "songs", title: "Neon Vocal", creator: "@song_1", type: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, rating: 3194, confidence: 0.78, wins: 0, losses: 0 },
-  { id: 8, arenaId: "songs", title: "Studio Chorus", creator: "@song_2", type: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, rating: 3155, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 9, arenaId: "songs", title: "Mic Room Hook", creator: "@song_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", trimStart: 0, trimEnd: 7, rating: 3115, confidence: 0.66, wins: 0, losses: 0 },
-
-  { id: 10, arenaId: "comedy", title: "Dry Delivery", creator: "@comedy_1", type: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, rating: 3188, confidence: 0.77, wins: 0, losses: 0 },
-  { id: 11, arenaId: "comedy", title: "Timing Break", creator: "@comedy_2", type: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, rating: 3160, confidence: 0.72, wins: 0, losses: 0 },
-  { id: 12, arenaId: "comedy", title: "Silent Look", creator: "@comedy_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, rating: 3128, confidence: 0.68, wins: 0, losses: 0 },
-
-  { id: 13, arenaId: "sports", title: "Track Burst", creator: "@sport_1", type: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, rating: 3215, confidence: 0.8, wins: 0, losses: 0 },
-  { id: 14, arenaId: "sports", title: "Court Handle", creator: "@sport_2", type: "video", src: "https://www.w3schools.com/html/mov_bbb.mp4", trimStart: 0, trimEnd: 7, rating: 3177, confidence: 0.74, wins: 0, losses: 0 },
-  { id: 15, arenaId: "sports", title: "Rope Rhythm", creator: "@sport_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, rating: 3138, confidence: 0.67, wins: 0, losses: 0 },
-
-  { id: 16, arenaId: "wildcard", title: "Anything Goes", creator: "@wild_1", type: "video", src: "https://www.w3schools.com/html/movie.mp4", trimStart: 0, trimEnd: 7, rating: 3175, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 17, arenaId: "wildcard", title: "Odd Moment", creator: "@wild_2", type: "video", src: "https://media.w3.org/2010/05/sintel/trailer.mp4", trimStart: 0, trimEnd: 7, rating: 3140, confidence: 0.69, wins: 0, losses: 0 },
-  { id: 18, arenaId: "wildcard", title: "Short Burst", creator: "@wild_3", type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm", trimStart: 0, trimEnd: 7, rating: 3110, confidence: 0.65, wins: 0, losses: 0 },
-
-  { id: 101, arenaId: "sunset", title: "Burning Horizon", creator: "@sunset_1", type: "image", src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80", rating: 3205, confidence: 0.8, wins: 0, losses: 0 },
-  { id: 102, arenaId: "sunset", title: "Pink Fade", creator: "@sunset_2", type: "image", src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80", rating: 3176, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 103, arenaId: "sunset", title: "Last Light", creator: "@sunset_3", type: "image", src: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80", rating: 3138, confidence: 0.69, wins: 0, losses: 0 },
-
-  { id: 111, arenaId: "kittens", title: "Tiny Stare", creator: "@kitten_1", type: "image", src: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80", rating: 3210, confidence: 0.81, wins: 0, losses: 0 },
-  { id: 112, arenaId: "kittens", title: "Paw Lean", creator: "@kitten_2", type: "image", src: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=1400&q=80", rating: 3174, confidence: 0.75, wins: 0, losses: 0 },
-  { id: 113, arenaId: "kittens", title: "Window Face", creator: "@kitten_3", type: "image", src: "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1400&q=80", rating: 3142, confidence: 0.7, wins: 0, losses: 0 },
-];
-
-function clamp(v, min, max) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function confidenceLabel(c) {
-  if (c >= 0.86) return "Royalty";
-  if (c >= 0.73) return "Elite";
-  if (c >= 0.58) return "Rising";
-  return "Wildcard";
-}
-
-function expectedScore(a, b) {
-  return 1 / (1 + 10 ** ((b - a) / 400));
-}
-
-function voteTrust(ms) {
-  if (ms < 350) return 0.2;
-  if (ms < 850) return 0.45;
-  if (ms < 1500) return 0.7;
-  return 1;
-}
-
-function updateConfidence(current, strong) {
-  return clamp(current + (strong ? 0.04 : 0.022), 0.35, 0.98);
-}
-
-function scoreDelta(winner, loser, weight) {
-  const k = 32;
-  const expected = expectedScore(winner.rating, loser.rating);
-  const wVol = 1.15 + (1 - winner.confidence) * 0.85;
-  const lVol = 1.15 + (1 - loser.confidence) * 0.85;
-
-  return {
-    winnerDelta: Math.max(2, Math.round(k * (1 - expected) * weight * wVol)),
-    loserDelta: Math.max(2, Math.round(k * (1 - expected) * weight * lVol)),
-  };
-}
-
-function useIsPortrait() {
-  const get = () => window.innerHeight >= window.innerWidth;
-  const [portrait, setPortrait] = useState(get);
-
-  useEffect(() => {
-    const onResize = () => setPortrait(get());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  return portrait;
-}
-
-function arenaById(id) {
-  return ARENAS.find((a) => a.id === id) || ARENAS[0];
-}
-
-function arenaItems(pool, arena) {
-  return pool.filter((m) => m.arenaId === arena.id && m.type === arena.type);
-}
-
-function sortRank(items) {
-  return items
-    .slice()
-    .sort((a, b) => {
-      if (b.rating !== a.rating) return b.rating - a.rating;
-      return b.confidence - a.confidence;
-    })
-    .map((x, i) => ({ ...x, rank: i + 1 }));
-}
-
-function pickRandom(items, exclude = []) {
-  const choices = items.filter((x) => !exclude.includes(x.id));
-  if (!choices.length) return null;
-  return choices[Math.floor(Math.random() * choices.length)];
-}
-
-function pickPair(items, avoid = []) {
-  const first = pickRandom(items, avoid);
-  const second = pickRandom(items, [...avoid, first?.id]);
-
-  if (first && second && first.id !== second.id) return { first, second };
-
-  const fallbackFirst = items[0] || null;
-  const fallbackSecond = items.find((x) => x.id !== fallbackFirst?.id) || null;
-  return { first: fallbackFirst, second: fallbackSecond };
-}
-
-function throwVector(side, portrait) {
-  if (portrait) {
-    return side === "first"
-      ? { x: 0, y: -window.innerHeight * 0.98 }
-      : { x: 0, y: window.innerHeight * 0.98 };
-  }
-
-  return side === "first"
-    ? { x: -window.innerWidth * 0.98, y: 0 }
-    : { x: window.innerWidth * 0.98, y: 0 };
-}
-
-function enterVector(side, portrait) {
-  const v = throwVector(side, portrait);
-  return {
-    x: v.x * 0.22,
-    y: v.y * 0.22,
-    opacity: 0.08,
-    rotate: portrait ? v.y / 340 : v.x / 380,
-  };
-}
-
-function normalizeUpload(data, id) {
-  return {
-    id,
-    arenaId: data.arenaId,
-    title: data.title || "Untitled",
-    creator: data.creator || "@me",
-    type: data.type,
-    src: data.src,
-    trimStart: data.type === "video" ? Number(data.trimStart || 0) : 0,
-    trimEnd: data.type === "video" ? Number(data.trimEnd || 7) : 0,
-    rating: 3000,
-    confidence: 0.55,
-    wins: 0,
-    losses: 0,
-    uploaded: true,
-    fit: "cover",
-    position: "center center",
-  };
-}
-
-function safeDuration(item) {
-  if (!item) return 2200;
-  if (item.type !== "video") return 2600;
-  return Math.max(1200, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
-}
 
 function BattleMedia({ item, refProp, onError }) {
   const mediaStyle = {
@@ -213,59 +54,6 @@ function BattleMedia({ item, refProp, onError }) {
       style={mediaStyle}
       onError={onError}
     />
-  );
-}
-
-function ArenaLabel({ arena, visible }) {
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          style={styles.arenaLabelWrap}
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.32 }}
-        >
-          <div style={{ ...styles.arenaLabel, borderColor: `${arena.accent}44` }}>
-            <span style={{ color: arena.accent }}>{arena.label}</span>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-function Seam({ portrait, accent, pulse, dragging }) {
-  return (
-    <motion.div
-      animate={{
-        opacity: pulse ? 1 : dragging ? 0.85 : 0.52,
-        scale: pulse ? 1.05 : dragging ? 1.02 : 1,
-      }}
-      transition={{ duration: 0.16 }}
-      style={
-        portrait
-          ? { ...styles.seamPortrait, background: `linear-gradient(90deg, transparent, ${accent}f0, transparent)` }
-          : { ...styles.seamLandscape, background: `linear-gradient(180deg, transparent, ${accent}f0, transparent)` }
-      }
-    />
-  );
-}
-
-function VS({ accent }) {
-  return (
-    <div style={styles.vsLayer}>
-      <div
-        style={{
-          ...styles.vsDiamond,
-          borderColor: `${accent}aa`,
-          boxShadow: `0 0 0 1px rgba(0,0,0,.95), 0 0 26px ${accent}28`,
-        }}
-      >
-        <div style={styles.vsInner}>VS</div>
-      </div>
-    </div>
   );
 }
 
@@ -466,24 +254,6 @@ function Details({ item, accent }) {
             <div style={styles.pill}>{item.type === "video" ? "Video" : "Photo"}</div>
           </div>
           <div style={{ ...styles.detailsArena, color: accent }}>{arenaById(item.arenaId).label}</div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
-function Champion({ item, accent }) {
-  if (!item) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div style={styles.championWrap} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.div style={{ ...styles.championCard, borderColor: `${accent}55` }} initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}>
-          <div style={styles.championMicro}>3X DEFENDER</div>
-          <div style={styles.championTitle}>{item.title}</div>
-          <div style={styles.championCreator}>{item.creator}</div>
-          <div style={styles.championRule} />
-          <div style={styles.championSub}>Crowned, then cleared for fresh contenders.</div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -1058,7 +828,7 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
         if (arena.type === "video" && !detailsId && !champion && !sheetOpen) setPaused((p) => !p);
       }}
     >
-      <ArenaLabel arena={arena} visible={labelVisible} />
+      <ArenaLabel arena={arena} visible={labelVisible} styles={styles} />
 
       <motion.div
         style={{ ...styles.layout, ...(portrait ? styles.layoutPortrait : styles.layoutLandscape) }}
@@ -1104,10 +874,10 @@ function Battle({ pool, setPool, arena, changeArena, openUpload }) {
         />
       </motion.div>
 
-      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} dragging={dragging} />
-      <VS accent={arena.accent} />
+      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} dragging={dragging} styles={styles} />
+      <VSBadge accent={arena.accent} styles={styles} />
       <Details item={detailsItem} accent={arena.accent} />
-      <Champion item={champion} accent={arena.accent} />
+      <ChampionBanner item={champion} accent={arena.accent} styles={styles} />
 
       <div
         style={styles.swipeZone}
