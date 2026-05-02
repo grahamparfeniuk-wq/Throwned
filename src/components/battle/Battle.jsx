@@ -13,6 +13,7 @@ import {
   voteTrust,
 } from "../../utils/ranking";
 import { safeDuration, throwVector } from "../../utils/media";
+import { vibrateThrow } from "../../utils/haptics";
 import { VSBadge } from "./VSBadge";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
@@ -20,9 +21,28 @@ import { ChampionBanner } from "../overlays/ChampionBanner";
 import { BattleSlot } from "./BattleSlot";
 
 const HOLD_MS = 260;
-const THROW_DISTANCE = 92;
+/** Slower deliberate swipe: full travel still commits without needing flick speed */
+const THROW_DISTANCE_HARD = 88;
+/** Blend scale for distance term (slightly less travel than first-pass 92px) */
+const THROW_DISTANCE_SOFT = 76;
 const CATEGORY_DISTANCE = 116;
+/** Release velocity scale for blend + lone extreme-flick gate */
+const THROW_VELOCITY_REF = 540;
+const THROW_VELOCITY_LONE = 620;
+/** Velocity weighted higher than distance for the blend gate */
+const THROW_BLEND_W_D = 0.37;
+const THROW_BLEND_W_V = 0.63;
+const CATEGORY_VELOCITY_PX_S = 820;
 const LABEL_MS = 1600;
+/** Faster follow-up after throw commit */
+const THROW_RESOLVE_MS = 165;
+const THROW_UNLOCK_MS = 232;
+
+function throwBlendPasses(distMag, velMag) {
+  const d = Math.min(Math.abs(distMag) / THROW_DISTANCE_SOFT, 1.35);
+  const v = Math.min(Math.abs(velMag) / THROW_VELOCITY_REF, 1.35);
+  return THROW_BLEND_W_D * d + THROW_BLEND_W_V * v >= 1;
+}
 
 export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpload, styles, renderDetails, renderLeaderboard }) {
   const portrait = useIsPortrait();
@@ -168,21 +188,29 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   function outcome(side, dx, dy, vx, vy) {
     if (portrait) {
       if (side === "first") {
-        if (dy < -THROW_DISTANCE || vy < -720) return "throw";
-        if (dy > CATEGORY_DISTANCE || vy > 820) return "prev";
+        if (dy > CATEGORY_DISTANCE || vy > CATEGORY_VELOCITY_PX_S) return "prev";
+        if (dy < -THROW_DISTANCE_HARD) return "throw";
+        if (dy < 0 && vy < 0 && throwBlendPasses(-dy, -vy)) return "throw";
+        if (vy < -THROW_VELOCITY_LONE && dy < -42) return "throw";
       } else {
-        if (dy > THROW_DISTANCE || vy > 720) return "throw";
-        if (dy < -CATEGORY_DISTANCE || vy < -820) return "next";
+        if (dy < -CATEGORY_DISTANCE || vy < -CATEGORY_VELOCITY_PX_S) return "next";
+        if (dy > THROW_DISTANCE_HARD) return "throw";
+        if (dy > 0 && vy > 0 && throwBlendPasses(dy, vy)) return "throw";
+        if (vy > THROW_VELOCITY_LONE && dy > 42) return "throw";
       }
       return "none";
     }
 
     if (side === "first") {
-      if (dx < -THROW_DISTANCE || vx < -720) return "throw";
-      if (dx > CATEGORY_DISTANCE || vx > 820) return "prev";
+      if (dx > CATEGORY_DISTANCE || vx > CATEGORY_VELOCITY_PX_S) return "prev";
+      if (dx < -THROW_DISTANCE_HARD) return "throw";
+      if (dx < 0 && vx < 0 && throwBlendPasses(-dx, -vx)) return "throw";
+      if (vx < -THROW_VELOCITY_LONE && dx < -42) return "throw";
     } else {
-      if (dx > THROW_DISTANCE || vx > 720) return "throw";
-      if (dx < -CATEGORY_DISTANCE || vx < -820) return "next";
+      if (dx < -CATEGORY_DISTANCE || vx < -CATEGORY_VELOCITY_PX_S) return "next";
+      if (dx > THROW_DISTANCE_HARD) return "throw";
+      if (dx > 0 && vx > 0 && throwBlendPasses(dx, vx)) return "throw";
+      if (vx > THROW_VELOCITY_LONE && dx > 42) return "throw";
     }
 
     return "none";
@@ -203,9 +231,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
     if (result !== "throw") return;
 
+    vibrateThrow();
     setLocked(true);
     setPulse(true);
-    setTimeout(() => setPulse(false), 190);
+    setTimeout(() => setPulse(false), 155);
 
     const vector = throwVector(side, portrait);
     setThrowState({ side, vector });
@@ -305,8 +334,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       setTimeout(() => {
         setEnterState(null);
         setLocked(false);
-      }, 290);
-    }, 220);
+      }, THROW_UNLOCK_MS);
+    }, THROW_RESOLVE_MS);
   }
 
   function thrownStyle(side) {

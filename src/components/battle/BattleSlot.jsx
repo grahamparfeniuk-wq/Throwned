@@ -19,10 +19,10 @@ export function BattleSlot({ side, item, portrait, accent, active, paused, dimme
       }
       transition={{
         type: "spring",
-        stiffness: thrown ? 330 : 245,
-        damping: thrown ? 17 : 26,
-        mass: 0.78,
-        opacity: { duration: 0.12 },
+        stiffness: thrown ? 520 : 245,
+        damping: thrown ? 31 : 26,
+        mass: thrown ? 0.62 : 0.78,
+        opacity: { duration: 0.1 },
       }}
       style={{ ...styles.slot, ...(portrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
