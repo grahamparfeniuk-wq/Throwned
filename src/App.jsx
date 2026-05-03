@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ARENAS } from "./data/arenas";
 import { START_MEDIA } from "./data/startMedia";
-import { arenaById, confidenceLabel } from "./utils/ranking";
+import { arenaById, confidenceLabel, sortRank } from "./utils/ranking";
 import { normalizeUpload } from "./utils/media";
 import { Battle } from "./components/battle/Battle";
 import { Leaderboard } from "./components/leaderboard/Leaderboard";
