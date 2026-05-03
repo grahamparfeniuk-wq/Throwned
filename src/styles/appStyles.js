@@ -352,25 +352,41 @@ export const styles = {
     display: "flex",
     flexDirection: "column",
   },
-  /** Leaderboard — landscape side panel (fully on-screen when open) */
-  lbSheetLandscape: {
+  /** Leaderboard — landscape: full-screen overlay host (centered card inside) */
+  lbLandOverlay: {
     position: "absolute",
-    top: "max(12px, env(safe-area-inset-top))",
-    bottom: "max(12px, env(safe-area-inset-bottom))",
-    right: "max(12px, env(safe-area-inset-right))",
-    width: "min(400px, 44vw)",
-    minWidth: 280,
-    maxWidth: 440,
-    maxHeight: "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)",
-    borderRadius: 22,
-    background: "linear-gradient(200deg, rgba(20,22,30,.96) 0%, rgba(10,12,18,.94) 55%, rgba(6,8,12,.93) 100%)",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: "max(12px, env(safe-area-inset-left))",
+    paddingRight: "max(12px, env(safe-area-inset-right))",
+    paddingTop: "max(12px, env(safe-area-inset-top))",
+    paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+  },
+  lbLandBackdrop: {
+    position: "absolute",
+    inset: 0,
+    background: "rgba(3,5,10,.7)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+  },
+  /** Centered standings card (landscape) */
+  lbCardLandscape: {
+    position: "relative",
+    width: "min(520px, calc(100vw - 28px))",
+    maxWidth: 520,
+    maxHeight: "min(85vh, 720px)",
+    borderRadius: 24,
+    background: "linear-gradient(198deg, rgba(22,24,32,.98) 0%, rgba(12,14,20,.96) 55%, rgba(8,10,14,.94) 100%)",
     backdropFilter: "blur(22px)",
     WebkitBackdropFilter: "blur(22px)",
-    border: "1px solid rgba(255,255,255,.09)",
-    boxShadow: "-36px 0 96px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.06)",
+    border: "1px solid rgba(255,255,255,.1)",
+    boxShadow: "0 28px 100px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.07)",
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+    zIndex: 1,
   },
   lbHandleTap: {
     flexShrink: 0,
@@ -437,7 +453,8 @@ export const styles = {
     padding: "6px 14px calc(18px + env(safe-area-inset-bottom))",
     scrollbarWidth: "thin",
   },
-  lbListLandscape: {
+  /** Scroll region inside landscape centered modal */
+  lbListModal: {
     flex: 1,
     minHeight: 0,
     overflowY: "auto",

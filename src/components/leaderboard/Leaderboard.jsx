@@ -1,35 +1,25 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { sortRank } from "../../utils/ranking";
 import { useIsPortrait } from "../../hooks/useIsPortrait";
 import { LeaderboardRow } from "./LeaderboardRow";
 
-/** When closed: lower z-index than swipe zone so bottom-edge gestures always hit Battle swipe strip */
+/** When closed: lower z-index than swipe zone so bottom-edge gestures hit Battle swipe strip */
 const LB_Z_OPEN = 22;
 const LB_Z_CLOSED = 12;
 
 export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
   const portrait = useIsPortrait();
   const ranked = useMemo(() => sortRank(items), [items]);
-  const landRef = useRef(null);
-  const [closedX, setClosedX] = useState(420);
-
-  useLayoutEffect(() => {
-    if (portrait) return;
-    const el = landRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setClosedX(el.offsetWidth + 32);
-    });
-    ro.observe(el);
-    setClosedX(el.offsetWidth + 32);
-    return () => ro.disconnect();
-  }, [portrait, ranked.length, open, arena.id]);
 
   const sheetSurface = {
     pointerEvents: open ? "auto" : "none",
     zIndex: open ? LB_Z_OPEN : LB_Z_CLOSED,
   };
+
+  const rows = ranked.map((item, i) => (
+    <LeaderboardRow key={item.id} item={item} index={i} accent={arena.accent} styles={styles} />
+  ));
 
   const header = (
     <>
@@ -48,14 +38,6 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
     </>
   );
 
-  const list = (
-    <div style={portrait ? styles.lbListPortrait : styles.lbListLandscape}>
-      {ranked.map((item, i) => (
-        <LeaderboardRow key={item.id} item={item} index={i} accent={arena.accent} styles={styles} />
-      ))}
-    </div>
-  );
-
   if (portrait) {
     return (
       <motion.div
@@ -72,28 +54,30 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
         style={{ ...styles.lbSheetPortrait, ...sheetSurface }}
       >
         {header}
-        {list}
+        <div style={styles.lbListPortrait}>{rows}</div>
       </motion.div>
     );
   }
 
+  /** Landscape: gesture-only reveal from bottom (same `open` as portrait); centered overlay, no side rail */
   return (
     <motion.div
-      ref={landRef}
-      drag={open ? "x" : false}
-      dragElastic={0.06}
-      dragConstraints={{ left: -80, right: 0 }}
-      onDragEnd={(_, info) => {
-        if (info.offset.x > 72) setOpen(false);
-        if (info.offset.x < -72) setOpen(true);
-      }}
+      style={{ ...styles.lbLandOverlay, ...sheetSurface }}
       initial={false}
-      animate={{ x: open ? 0 : closedX }}
-      transition={{ type: "spring", stiffness: 300, damping: 34 }}
-      style={{ ...styles.lbSheetLandscape, ...sheetSurface }}
+      animate={{ opacity: open ? 1 : 0 }}
+      transition={{ duration: 0.22 }}
     >
-      {header}
-      {list}
+      <div style={styles.lbLandBackdrop} onClick={() => setOpen(false)} aria-hidden={!open} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!open}
+        style={styles.lbCardLandscape}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {header}
+        <div style={styles.lbListModal}>{rows}</div>
+      </div>
     </motion.div>
   );
 }
