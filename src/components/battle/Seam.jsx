@@ -1,13 +1,14 @@
 import { motion } from "framer-motion";
 
-export function Seam({ portrait, accent, pulse, dragging, styles }) {
+export function Seam({ portrait, accent, pulse, impactHit, dragging, styles }) {
+  const hit = !!impactHit;
   return (
     <motion.div
       animate={{
-        opacity: pulse ? 1 : dragging ? 0.85 : 0.52,
-        scale: pulse ? 1.05 : dragging ? 1.02 : 1,
+        opacity: hit ? 1 : pulse ? 1 : dragging ? 0.85 : 0.52,
+        scale: hit ? 1.09 : pulse ? 1.05 : dragging ? 1.02 : 1,
       }}
-      transition={{ duration: 0.16 }}
+      transition={{ duration: hit ? 0.09 : 0.16 }}
       style={
         portrait
           ? { ...styles.seamPortrait, background: `linear-gradient(90deg, transparent, ${accent}f0, transparent)` }

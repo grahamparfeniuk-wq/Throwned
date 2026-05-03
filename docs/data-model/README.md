@@ -1,3 +1,42 @@
-# Data model
+# Data Model
 
-Add entities, fields, IDs, and backend-facing notes here as `.md` files.
+## Arena
+
+- id
+- slug
+- title
+- type
+- accentColor
+- createdAt
+
+## Media
+
+- id
+- arenaId
+- creatorId
+- type
+- src
+- thumbnail
+- title
+- rating
+- confidence
+- wins
+- losses
+- createdAt
+
+## Vote
+
+- id
+- winnerId
+- loserId
+- arenaId
+- voteTrust
+- userTrust
+- sessionId
+- createdAt
+
+## Session
+
+- id
+- trustScore
+- createdAt

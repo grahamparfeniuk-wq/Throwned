@@ -12,11 +12,12 @@ export function throwVector(side, portrait) {
 
 export function enterVector(side, portrait) {
   const v = throwVector(side, portrait);
+  const enterScale = 0.31;
   return {
-    x: v.x * 0.22,
-    y: v.y * 0.22,
-    opacity: 0.08,
-    rotate: portrait ? v.y / 340 : v.x / 380,
+    x: v.x * enterScale,
+    y: v.y * enterScale,
+    opacity: 0.06,
+    rotate: portrait ? v.y / 300 : v.x / 335,
   };
 }
 

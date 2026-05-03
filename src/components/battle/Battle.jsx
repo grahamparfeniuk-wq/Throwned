@@ -34,9 +34,11 @@ const THROW_BLEND_W_D = 0.37;
 const THROW_BLEND_W_V = 0.63;
 const CATEGORY_VELOCITY_PX_S = 820;
 const LABEL_MS = 1600;
-/** Faster follow-up after throw commit */
-const THROW_RESOLVE_MS = 165;
-const THROW_UNLOCK_MS = 232;
+/** Battle beat: impact → land pause → swap pair / challenger enter → unlock */
+const BEAT_IMPACT_MS = 118;
+const BEAT_LAND_PAUSE_MS = 82;
+const BEAT_SWAP_AT_MS = BEAT_IMPACT_MS + BEAT_LAND_PAUSE_MS;
+const THROW_UNLOCK_MS = 228;
 
 function throwBlendPasses(distMag, velMag) {
   const d = Math.min(Math.abs(distMag) / THROW_DISTANCE_SOFT, 1.35);
@@ -69,6 +71,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   const [enterState, setEnterState] = useState(null);
   const [transitioning, setTransitioning] = useState(false);
   const [pulse, setPulse] = useState(false);
+  const [impactPhase, setImpactPhase] = useState(false);
   const [unlockedAt, setUnlockedAt] = useState(Date.now());
   const [userTrust, setUserTrust] = useState(1);
   const [drag, setDrag] = useState({
@@ -108,6 +111,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     setEnterState(null);
     setLocked(false);
     setPulse(false);
+    setImpactPhase(false);
     setUnlockedAt(Date.now());
     setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
 
@@ -233,8 +237,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
     vibrateThrow();
     setLocked(true);
+    setImpactPhase(true);
     setPulse(true);
-    setTimeout(() => setPulse(false), 155);
+    setTimeout(() => setImpactPhase(false), BEAT_IMPACT_MS);
+    setTimeout(() => setPulse(false), BEAT_IMPACT_MS);
 
     const vector = throwVector(side, portrait);
     setThrowState({ side, vector });
@@ -335,7 +341,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         setEnterState(null);
         setLocked(false);
       }, THROW_UNLOCK_MS);
-    }, THROW_RESOLVE_MS);
+    }, BEAT_SWAP_AT_MS);
   }
 
   function thrownStyle(side) {
@@ -368,6 +374,19 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         if (arena.type === "video" && !detailsId && !champion && !sheetOpen) setPaused((p) => !p);
       }}
     >
+      <motion.div
+        aria-hidden
+        animate={{ opacity: impactPhase ? 0.34 : 0 }}
+        transition={{ duration: 0.11 }}
+        style={{
+          pointerEvents: "none",
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          background: `radial-gradient(ellipse 92% 58% at 50% 46%, ${arena.accent}18, transparent 56%)`,
+        }}
+      />
+
       <ArenaLabel arena={arena} visible={labelVisible} styles={styles} onClick={() => setArenaPickerOpen(true)} />
 
       <AnimatePresence>
@@ -418,7 +437,11 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       </AnimatePresence>
 
       <motion.div
-        style={{ ...styles.layout, ...(portrait ? styles.layoutPortrait : styles.layoutLandscape) }}
+        style={{
+          ...styles.layout,
+          ...(portrait ? styles.layoutPortrait : styles.layoutLandscape),
+          zIndex: 2,
+        }}
         animate={{ opacity: transitioning ? 0.86 : 1, scale: transitioning ? 0.985 : 1 }}
         transition={{ duration: 0.16 }}
       >
@@ -463,8 +486,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         />
       </motion.div>
 
-      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} dragging={dragging} styles={styles} />
-      <VSBadge accent={arena.accent} styles={styles} />
+      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} impactHit={impactPhase} dragging={dragging} styles={styles} />
+      <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
       {renderDetails({ item: detailsItem, accent: arena.accent })}
       <ChampionBanner item={champion} accent={arena.accent} styles={styles} />
 
