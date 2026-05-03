@@ -16,11 +16,13 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
     if (!portrait) return;
     const el = sheetRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setClosedY(Math.max(el.offsetHeight - 44, 280));
-    });
+    const hideFully = () => {
+      const h = el.offsetHeight;
+      setClosedY(h > 0 ? h + 16 : 520);
+    };
+    const ro = new ResizeObserver(hideFully);
     ro.observe(el);
-    setClosedY(Math.max(el.offsetHeight - 44, 280));
+    hideFully();
     return () => ro.disconnect();
   }, [portrait, ranked.length, open, arena.id]);
 
@@ -96,7 +98,7 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
       initial={false}
       animate={{ x: open ? 0 : closedX }}
       transition={{ type: "spring", stiffness: 300, damping: 34 }}
-      style={styles.lbSheetLandscape}
+      style={{ ...styles.lbSheetLandscape, pointerEvents: open ? "auto" : "none" }}
     >
       {header}
       {list}
