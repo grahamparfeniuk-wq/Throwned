@@ -44,18 +44,21 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
             style={{
               ...styles.arenaLabel,
               background: [
-                `linear-gradient(180deg, transparent calc(50% - 0.5px), ${arena.accent}45 50%, transparent calc(50% + 0.5px))`,
-                "linear-gradient(180deg, rgba(10,12,18,.72) 0%, rgba(7,8,13,.82) 48%, rgba(5,6,10,.86) 100%)",
+                "linear-gradient(128deg, rgba(255,255,255,.082) 0%, transparent 54%)",
+                "linear-gradient(308deg, rgba(0,0,0,.22) 0%, transparent 56%)",
+                `linear-gradient(180deg, transparent calc(50% - 0.5px), ${arena.accent}52 50%, transparent calc(50% + 0.5px))`,
+                "linear-gradient(180deg, rgba(10,12,18,.74) 0%, rgba(7,8,13,.84) 48%, rgba(5,6,10,.88) 100%)",
               ].join(", "),
               pointerEvents: onClick ? "auto" : "none",
               cursor: onClick ? "pointer" : "default",
               boxShadow: [
-                "0 2px 12px rgba(0,0,0,.30)",
-                "0 6px 22px rgba(0,0,0,.18)",
-                "inset 0 1px 0 rgba(255,255,255,.06)",
-                "inset 0 -1px 0 rgba(0,0,0,.42)",
-                `0 0 1px ${arena.accent}3a`,
-                `0 0 16px ${arena.accent}1a`,
+                "0 2px 11px rgba(0,0,0,.34)",
+                "0 5px 18px rgba(0,0,0,.2)",
+                "inset 0 1px 0 rgba(255,255,255,.065)",
+                "inset 0 -1px 0 rgba(0,0,0,.44)",
+                `inset 0 0 0 1px rgba(255,255,255,.028)`,
+                `0 0 1px ${arena.accent}42`,
+                `0 0 14px ${arena.accent}22`,
               ].join(", "),
             }}
           >

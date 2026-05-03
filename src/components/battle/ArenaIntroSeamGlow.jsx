@@ -7,29 +7,12 @@ import {
 } from "../../constants/arenaIntroMotion";
 
 /**
- * Arena-intro-only illumination along the battle divide (horizontal in portrait, vertical in landscape).
- * Parent suppresses default Seam during intro; this layer energizes the midline from the title seal.
+ * Intro-only: seam energy converges on the arena seal, then falls off along the divide.
  */
 export function ArenaIntroSeamGlow({ portrait, accent, styles }) {
-  const mid = `${accent}e6`;
-  const edge = `${accent}5a`;
-  const halo = `${accent}2a`;
-
-  const portraitGlow = [
-    `0 0 12px ${halo}`,
-    `0 0 32px ${accent}24`,
-    `56px 0 48px ${accent}16`,
-    `-56px 0 48px ${accent}16`,
-    `0 1px 0 rgba(255,255,255,.08)`,
-  ].join(", ");
-
-  const landscapeGlow = [
-    `0 0 12px ${halo}`,
-    `0 0 32px ${accent}24`,
-    `0 56px 48px ${accent}16`,
-    `0 -56px 48px ${accent}16`,
-    `1px 0 0 rgba(255,255,255,.07)`,
-  ].join(", ");
+  const core = `${accent}ed`;
+  const band = `${accent}64`;
+  const soft = `${accent}2c`;
 
   return (
     <motion.div
@@ -43,19 +26,41 @@ export function ArenaIntroSeamGlow({ portrait, accent, styles }) {
       transition={{
         opacity: { duration: ARENA_INTRO_ENTER_S, ease: ARENA_INTRO_ENTER_EASE },
       }}
-      style={
-        portrait
-          ? {
-              ...styles.arenaIntroSeamGlowPortrait,
-              background: `linear-gradient(90deg, transparent 0%, ${edge} 14%, ${mid} 50%, ${edge} 86%, transparent 100%)`,
-              boxShadow: portraitGlow,
-            }
-          : {
-              ...styles.arenaIntroSeamGlowLandscape,
-              background: `linear-gradient(180deg, transparent 0%, ${edge} 14%, ${mid} 50%, ${edge} 86%, transparent 100%)`,
-              boxShadow: landscapeGlow,
-            }
-      }
-    />
+      style={styles.arenaIntroSeamGlowWrap}
+    >
+      {portrait ? (
+        <>
+          <div
+            style={{
+              ...styles.arenaIntroSeamConvergePortrait,
+              background: `radial-gradient(ellipse min(86vw, 380px) 48px at 50% 50%, ${accent}50 0%, ${soft} 42%, transparent 72%)`,
+            }}
+          />
+          <div
+            style={{
+              ...styles.arenaIntroSeamCorePortrait,
+              background: `linear-gradient(90deg, transparent 0%, transparent 32%, ${band} 44%, ${core} 50%, ${band} 56%, transparent 68%, transparent 100%)`,
+              boxShadow: `0 0 14px ${accent}30, 0 0 32px ${accent}16, 0 1px 0 rgba(255,255,255,.1)`,
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <div
+            style={{
+              ...styles.arenaIntroSeamConvergeLandscape,
+              background: `radial-gradient(ellipse 52px min(88vh, 620px) at 50% 50%, ${accent}50 0%, ${soft} 42%, transparent 72%)`,
+            }}
+          />
+          <div
+            style={{
+              ...styles.arenaIntroSeamCoreLandscape,
+              background: `linear-gradient(180deg, transparent 0%, transparent 32%, ${band} 44%, ${core} 50%, ${band} 56%, transparent 68%, transparent 100%)`,
+              boxShadow: `0 0 14px ${accent}30, 0 0 32px ${accent}16, 1px 0 0 rgba(255,255,255,.09)`,
+            }}
+          />
+        </>
+      )}
+    </motion.div>
   );
 }
