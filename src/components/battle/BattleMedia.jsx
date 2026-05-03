@@ -1,9 +1,11 @@
-export function BattleMedia({ item, refProp, onError, styles }) {
+export function BattleMedia({ item, refProp, priority, onError, styles }) {
   const mediaStyle = {
     ...styles.mediaFill,
     objectFit: "cover",
     objectPosition: item?.position || "center center",
   };
+
+  const fetchPriority = priority ? "high" : "low";
 
   if (item.type === "video") {
     return (
@@ -12,6 +14,7 @@ export function BattleMedia({ item, refProp, onError, styles }) {
         src={item.src}
         playsInline
         preload="auto"
+        fetchPriority={fetchPriority}
         style={mediaStyle}
         onError={onError}
       />
@@ -23,6 +26,8 @@ export function BattleMedia({ item, refProp, onError, styles }) {
       src={item.src}
       alt={item.title}
       draggable={false}
+      decoding="async"
+      fetchPriority={fetchPriority}
       style={mediaStyle}
       onError={onError}
     />

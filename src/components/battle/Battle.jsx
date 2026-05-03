@@ -13,6 +13,7 @@ import {
   voteTrust,
 } from "../../utils/ranking";
 import { safeDuration, throwVector } from "../../utils/media";
+import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
 import { vibrateThrow } from "../../utils/haptics";
 import { VSBadge } from "./VSBadge";
 import { Seam } from "./Seam";
@@ -90,6 +91,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   useEffect(() => {
     poolRef.current = pool;
   }, [pool]);
+
+  useEffect(() => {
+    return attachBattleMediaPreloads(items, pair);
+  }, [items, pair.first?.id, pair.second?.id]);
 
   function showLabel() {
     setLabelVisible(true);

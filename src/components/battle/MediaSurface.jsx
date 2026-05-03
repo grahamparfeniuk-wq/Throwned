@@ -93,7 +93,13 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, onH
         }}
       >
         {!failed ? (
-          <BattleMedia item={item} refProp={ref} onError={() => setFailed(true)} styles={styles} />
+          <BattleMedia
+            item={item}
+            refProp={ref}
+            priority={active}
+            onError={() => setFailed(true)}
+            styles={styles}
+          />
         ) : (
           <div style={{ ...styles.fallback, background: `linear-gradient(180deg, ${accent}22, rgba(0,0,0,.86))` }}>
             <div style={styles.fallbackArena}>{arenaById(item.arenaId).label}</div>
