@@ -7,6 +7,52 @@ import {
 } from "./creatorStats";
 import { arenaItems, sortRank } from "./ranking";
 
+/** Uppercase broadcast tag — one emotional anchor (intro graphic), not doctrine copy */
+export function selectBroadcastEyebrow({ item, pool, arena }) {
+  if (!item || !arena) return "CONTENDER";
+  if (isArenaDefender(pool, arena, item)) return "DEFENDING";
+  if (item.localFavorite || item.localContender) return "LOCAL FAVORITE";
+  if (isRisingContender(pool, arena, item)) return "RISING";
+  const wins = item.wins ?? 0;
+  const losses = item.losses ?? 0;
+  const total = wins + losses;
+  if (total >= 3 && wins / Math.max(1, total) >= 0.78) return "FAST CLIMBER";
+  if (item.country && String(item.country).trim()) {
+    return String(item.country)
+      .trim()
+      .toUpperCase()
+      .slice(0, 20);
+  }
+  if (item.hometown && String(item.hometown).trim()) {
+    return String(item.hometown)
+      .trim()
+      .split(/[\s,]+/)[0]
+      .toUpperCase()
+      .slice(0, 14);
+  }
+  const first = arena.label?.trim().split(/\s+/)[0];
+  if (first) return first.toUpperCase().slice(0, 16);
+  return "CONTENDER";
+}
+
+/** Human momentum — avoids “Rating #### • Royalty” database tone */
+export function momentumHumanPhrase(item) {
+  const c = item.confidence ?? 0.55;
+  if (c >= 0.86) return "Elite tier — trust is earned";
+  if (c >= 0.73) return "Rising fast";
+  if (c >= 0.58) return "Building steam";
+  return "Outsider lane — proof over hype";
+}
+
+/** Single broadcast-style status line (where they stand) */
+export function buildStatusSnapshot({ item, arena }) {
+  if (!item || !arena) return "";
+  const field = arena.label?.trim() || "this arena";
+  const shortField = field.split(/\s+/).length > 3 ? `${field.split(/\s+/).slice(0, 2).join(" ")}…` : field;
+  const rankPart = item.rank != null ? `#${item.rank} in ${shortField}` : "Still carving a lane";
+  return `${rankPart} · ${momentumHumanPhrase(item)}`;
+}
+
 function shortArenaLabel(arena) {
   if (!arena?.label) return "this arena";
   const words = arena.label.trim().split(/\s+/);
@@ -36,7 +82,7 @@ export function selectNarrativeLines({ item, pool, arena }) {
   const candidates = [];
 
   if (isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 96, text: `Defending #1 in ${shortLabel}` });
+    candidates.push({ w: 96, text: `Defending the throne in ${shortLabel}` });
   }
 
   if (wins > 0 && losses === 0) {
@@ -44,17 +90,17 @@ export function selectNarrativeLines({ item, pool, arena }) {
   }
 
   if (total >= 6 && wins >= 5) {
-    candidates.push({ w: 88, text: `Won ${wins} of the last ${total} on record` });
+    candidates.push({ w: 88, text: `Won ${wins} of the last ${total}` });
   } else if (total >= 4 && wins >= 3 && wins / total >= 0.75) {
-    candidates.push({ w: 84, text: `Winning the nights that matter — ${wins}–${losses}` });
+    candidates.push({ w: 84, text: `On a heater — ${wins}–${losses} when it counts` });
   }
 
   if (isTopCompetitorInAnyArena(pool, handle, 0.25) && !isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 82, text: `Proven against top fields across the circuit` });
+    candidates.push({ w: 82, text: `Has beaten top fields before — not a fluke name` });
   }
 
   if (isRisingContender(pool, arena, item)) {
-    candidates.push({ w: 80, text: `Closing on the title picture in ${shortLabel}` });
+    candidates.push({ w: 80, text: `Fast climber — hunting the title picture in ${shortLabel}` });
   }
 
   if (item.country) {
@@ -62,25 +108,25 @@ export function selectNarrativeLines({ item, pool, arena }) {
   }
 
   if (item.localFavorite || item.localContender) {
-    candidates.push({ w: 78, text: `Local favorite — hometown noise behind them` });
+    candidates.push({ w: 78, text: `Local favorite — this crowd rides with them` });
   } else if (item.hometown || item.locale) {
-    candidates.push({ w: 72, text: `Carrying ${item.hometown || item.locale} into the arena` });
+    candidates.push({ w: 72, text: `${item.hometown || item.locale} walks in with them` });
   }
 
   if (arenasEntered >= 3) {
-    candidates.push({ w: 74, text: `Battle-tested across ${arenasEntered} competitions` });
+    candidates.push({ w: 74, text: `Battle-tested across ${arenasEntered} wars` });
   }
 
   if (item.uploaded && total <= 2) {
-    candidates.push({ w: 68, text: `New walkout — still earning their story here` });
+    candidates.push({ w: 68, text: `First reps under these lights — story still writing` });
   }
 
   if (item.confidence != null && item.confidence >= 0.44 && item.confidence <= 0.56 && n >= 4) {
-    candidates.push({ w: 64, text: `Crowd split — every round counts with this one` });
+    candidates.push({ w: 64, text: `Fans split — no easy read on this one` });
   }
 
   if (item.rank != null && n >= 6 && item.rank > 1 && item.rank <= Math.max(2, Math.ceil(n * 0.12))) {
-    candidates.push({ w: 79, text: `Upside play — knocking on the elite door` });
+    candidates.push({ w: 79, text: `Upset the sheet — knocking on the elite door` });
   }
 
   candidates.sort((a, b) => b.w - a.w);

@@ -1,35 +1,58 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { confidenceLabel } from "../../utils/ranking";
 import {
   arenaCountForCreator,
-  isArenaDefender,
-  isRisingContender,
   locationLine,
   normalizeCreatorHandle,
 } from "../../utils/creatorStats";
-import { selectNarrativeLines } from "../../utils/contenderNarratives";
+import {
+  buildStatusSnapshot,
+  selectBroadcastEyebrow,
+  selectNarrativeLines,
+} from "../../utils/contenderNarratives";
 
 export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles, onClose }) {
   const handle = normalizeCreatorHandle(item);
 
-  const narrativeLines = useMemo(
-    () => selectNarrativeLines({ item, pool, arena }),
+  const broadcastTag = useMemo(
+    () => (item && pool && arena ? selectBroadcastEyebrow({ item, pool, arena }) : "CONTENDER"),
     [item, pool, arena]
   );
 
-  const hooks = useMemo(() => {
-    if (!item || !pool || !arena) {
-      return { arenaCount: 0, defender: false, rising: false };
-    }
-    return {
-      arenaCount: arenaCountForCreator(pool, handle),
-      defender: isArenaDefender(pool, arena, item),
-      rising: isRisingContender(pool, arena, item),
-    };
-  }, [handle, item, pool, arena]);
+  const narrativeLines = useMemo(
+    () => (item && pool && arena ? selectNarrativeLines({ item, pool, arena }) : []),
+    [item, pool, arena]
+  );
 
-  if (!item) return null;
+  const statusSnapshot = useMemo(
+    () => (item && arena ? buildStatusSnapshot({ item, arena }) : ""),
+    [item, arena]
+  );
+
+  const arenasEntered = useMemo(() => {
+    if (!item || !pool) return 0;
+    return arenaCountForCreator(pool, handle);
+  }, [handle, item, pool]);
+
+  const affiliationLine = useMemo(() => {
+    if (!item) return "";
+    const parts = [];
+    const loc = locationLine(item);
+    if (loc) parts.push(loc);
+    if (arenasEntered === 1) parts.push("One circuit entered");
+    else if (arenasEntered > 1) parts.push(`${arenasEntered} circuits`);
+    if (typeof item.supporters === "number") {
+      parts.push(`${item.supporters.toLocaleString()} in this corner`);
+    } else {
+      parts.push("Corner fills when you follow");
+    }
+    return parts.join(" · ");
+  }, [item, arenasEntered]);
+
+  const record =
+    item?.wins != null || item?.losses != null
+      ? `${item.wins ?? 0}–${item.losses ?? 0}`
+      : null;
 
   const anchor =
     portrait && side === "first"
@@ -40,34 +63,24 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
           ? styles.peekAnchorFirstLandscape
           : styles.peekAnchorSecondLandscape;
 
-  const record =
-    item.wins != null || item.losses != null
-      ? `${item.wins ?? 0}–${item.losses ?? 0}`
-      : null;
-
-  const loc = locationLine(item);
-
-  const supporterLine =
-    typeof item.supporters === "number"
-      ? `${item.supporters.toLocaleString()} people in this corner`
-      : "Supporters — connect to join";
+  if (!item) return null;
 
   return (
     <div style={{ ...styles.peekWrap, ...anchor }}>
       <motion.div
         role="dialog"
         aria-modal="false"
-        aria-label="Contender formation"
+        aria-label="Contender intro"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        style={{ ...styles.peekCard, borderColor: `${accent}38` }}
+        style={{ ...styles.peekCard, borderColor: `${accent}28` }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          aria-label="Close contender focus"
+          aria-label="Close contender intro"
           style={styles.peekClose}
           onClick={(e) => {
             e.stopPropagation();
@@ -77,8 +90,7 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
           ×
         </button>
 
-        <div style={styles.peekFormationLabel}>Attachment formation</div>
-        <div style={styles.peekEyebrow}>Contender</div>
+        <div style={{ ...styles.peekBroadcastEyebrow, color: accent }}>{broadcastTag}</div>
 
         <div style={styles.peekAthlete}>{item.creator}</div>
         <div style={styles.peekClipTitle}>{item.title}</div>
@@ -90,7 +102,7 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
                 key={line}
                 style={{
                   ...styles.peekNarrativeLine,
-                  marginBottom: i === narrativeLines.length - 1 ? 0 : 10,
+                  marginBottom: i === narrativeLines.length - 1 ? 0 : 12,
                 }}
               >
                 {line}
@@ -99,56 +111,27 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
           </div>
         ) : null}
 
-        {loc ? <div style={styles.peekLocationTop}>{loc}</div> : null}
+        <div style={styles.peekDividerSoft} />
 
-        {hooks.defender || hooks.rising || item.localFavorite || item.localContender || item.country ? (
-          <div style={styles.peekHookRow}>
-            {hooks.defender ? <span style={styles.peekHook}>Defending</span> : null}
-            {hooks.rising ? <span style={styles.peekHook}>Rising</span> : null}
-            {item.localFavorite || item.localContender ? <span style={styles.peekHook}>Local contender</span> : null}
-            {item.country ? <span style={styles.peekHookMuted}>{item.country}</span> : null}
-          </div>
-        ) : null}
+        <div style={styles.peekStatusSnapshot}>{statusSnapshot}</div>
 
-        <div style={styles.peekDivider} />
+        {record ? <div style={styles.peekRecordQuiet}>{record} record</div> : null}
 
-        <div style={styles.peekStatBlock}>
-          <div style={styles.peekStatLine}>
-            {record != null ? <span style={styles.peekStatEm}>{record}</span> : <span style={styles.peekStatMuted}>—</span>}
-            <span style={styles.peekStatSep}>·</span>
-            <span>{item.rank != null ? `#${item.rank}` : "Unranked"}</span>
-            {item.rank != null ? (
-              <span style={styles.peekStatMuted}> · {arena?.label ? shortArena(arena.label) : "arena"}</span>
-            ) : null}
-          </div>
-          <div style={styles.peekStatLineMuted}>
-            Rating {item.rating} · {confidenceLabel(item.confidence)}
-          </div>
-          <div style={styles.peekStatLineMuted}>
-            {hooks.arenaCount === 0
-              ? "Competitions entered —"
-              : hooks.arenaCount === 1
-                ? "1 competition entered"
-                : `${hooks.arenaCount} competitions entered`}
-          </div>
-          <div style={styles.peekSupportersLine}>{supporterLine}</div>
-        </div>
+        <div style={styles.peekRatingFootnote}>Rating {item.rating}</div>
+
+        <div style={styles.peekAffiliation}>{affiliationLine}</div>
 
         <button
           type="button"
-          style={{ ...styles.peekFollowBtn, borderColor: `${accent}33` }}
+          style={{ ...styles.peekFollowBtn, borderColor: `${accent}26` }}
           onClick={(e) => {
             e.stopPropagation();
           }}
         >
           Follow
         </button>
+        <div style={styles.peekFollowHint}>Back their corner — show up for the next bell</div>
       </motion.div>
     </div>
   );
-}
-
-function shortArena(label) {
-  const w = label.trim().split(/\s+/);
-  return w.length > 2 ? `${w[0]} ${w[1]}…` : label;
 }
