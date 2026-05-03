@@ -12,16 +12,18 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
       {visible && (
         <motion.div
           style={styles.arenaLabelWrap}
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.97, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: -8 }}
           exit={{
             opacity: 0,
             scale: 0.99,
+            y: -8,
             transition: { duration: ARENA_INTRO_EXIT_S, ease: ARENA_INTRO_EXIT_EASE },
           }}
           transition={{
             opacity: { duration: ARENA_INTRO_ENTER_S, ease: ARENA_INTRO_ENTER_EASE },
             scale: { duration: 0.52, ease: [0.18, 1, 0.32, 1] },
+            y: { duration: 0 },
           }}
         >
           <div
@@ -48,12 +50,12 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
               pointerEvents: onClick ? "auto" : "none",
               cursor: onClick ? "pointer" : "default",
               boxShadow: [
-                "0 2px 14px rgba(0,0,0,.34)",
-                "0 8px 28px rgba(0,0,0,.22)",
-                "inset 0 1px 0 rgba(255,255,255,.07)",
-                "inset 0 -1px 0 rgba(0,0,0,.45)",
-                `0 0 1px ${arena.accent}44`,
-                `0 0 20px ${arena.accent}22`,
+                "0 2px 12px rgba(0,0,0,.30)",
+                "0 6px 22px rgba(0,0,0,.18)",
+                "inset 0 1px 0 rgba(255,255,255,.06)",
+                "inset 0 -1px 0 rgba(0,0,0,.42)",
+                `0 0 1px ${arena.accent}3a`,
+                `0 0 16px ${arena.accent}1a`,
               ].join(", "),
             }}
           >
