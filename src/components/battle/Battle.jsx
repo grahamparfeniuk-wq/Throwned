@@ -525,6 +525,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         arena,
         styles,
         portrait,
+        battlePairIds:
+          pair?.first?.id != null && pair?.second?.id != null
+            ? { first: pair.first.id, second: pair.second.id }
+            : null,
         open: sheetOpen,
         setOpen: setSheetOpen,
         onUpload: (e) => {

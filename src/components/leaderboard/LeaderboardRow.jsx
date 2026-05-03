@@ -1,13 +1,33 @@
 import { confidenceLabel } from "../../utils/ranking";
 import { LeaderboardThumb } from "./LeaderboardThumb";
 
-export function LeaderboardRow({ item, index, accent, styles }) {
+export function LeaderboardRow({ item, index, accent, styles, isContender }) {
   const rank = index + 1;
   const top = index === 0;
+  const podium = index === 0 ? styles.lbPodium1 : index === 1 ? styles.lbPodium2 : index === 2 ? styles.lbPodium3 : null;
+
+  const rowSurface = {
+    ...styles.lbRow,
+    ...(podium || {}),
+    ...(isContender
+      ? {
+          ...styles.lbRowContender,
+          boxShadow: `inset 3px 0 0 ${accent}55`,
+          borderColor: "rgba(255,255,255,.11)",
+        }
+      : {}),
+  };
 
   return (
-    <div style={styles.lbRow}>
-      <div style={{ ...styles.lbRank, color: top ? accent : "rgba(255,255,255,.55)" }}>#{rank}</div>
+    <div style={rowSurface}>
+      <div
+        style={{
+          ...styles.lbRank,
+          color: top ? accent : index < 3 ? "rgba(255,255,255,.68)" : "rgba(255,255,255,.52)",
+        }}
+      >
+        #{rank}
+      </div>
       <LeaderboardThumb item={item} styles={styles} />
       <div style={styles.lbRowMain}>
         <div style={styles.lbRowTop}>

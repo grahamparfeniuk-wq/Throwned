@@ -11,7 +11,7 @@ const LB_Z_CLOSED = 12;
  * Single Leaderboard: `portrait` comes from Battle (same source as layout/orientation).
  * Landscape + closed: render null — no full-screen invisible nodes that intercept bottom gestures.
  */
-export function Leaderboard({ items, arena, open, setOpen, onUpload, styles, portrait }) {
+export function Leaderboard({ items, arena, open, setOpen, onUpload, styles, portrait, battlePairIds }) {
   const ranked = useMemo(() => sortRank(items), [items]);
 
   if (!portrait && !open) {
@@ -24,7 +24,16 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles, por
   };
 
   const rows = ranked.map((item, i) => (
-    <LeaderboardRow key={item.id} item={item} index={i} accent={arena.accent} styles={styles} />
+    <LeaderboardRow
+      key={item.id}
+      item={item}
+      index={i}
+      accent={arena.accent}
+      styles={styles}
+      isContender={
+        !!battlePairIds && (item.id === battlePairIds.first || item.id === battlePairIds.second)
+      }
+    />
   ));
 
   const header = (

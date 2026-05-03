@@ -5,12 +5,12 @@ export function VSBadge({ accent, styles, impactHit }) {
       <div
         style={{
           ...styles.vsDiamond,
-          borderColor: `${accent}aa`,
+          borderColor: `${accent}77`,
           boxShadow: hit
-            ? `0 0 0 1px rgba(0,0,0,.95), 0 0 34px ${accent}44`
-            : `0 0 0 1px rgba(0,0,0,.95), 0 0 26px ${accent}28`,
-          transform: hit ? "rotate(45deg) scale(1.05)" : styles.vsDiamond.transform,
-          transition: "transform 90ms ease-out, box-shadow 90ms ease-out",
+            ? `0 0 0 1px rgba(0,0,0,.94), 0 0 22px ${accent}38, inset 0 1px 0 rgba(255,255,255,.07)`
+            : `0 0 0 1px rgba(0,0,0,.94), 0 0 18px ${accent}22, inset 0 1px 0 rgba(255,255,255,.05)`,
+          transform: hit ? "rotate(45deg) scale(1.03)" : styles.vsDiamond.transform,
+          transition: "transform 95ms ease-out, box-shadow 95ms ease-out, border-color 95ms ease-out",
         }}
       >
         <div style={styles.vsInner}>VS</div>

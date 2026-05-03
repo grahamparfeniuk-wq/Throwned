@@ -12,8 +12,16 @@ export function Seam({ portrait, accent, pulse, impactHit, entranceHint, draggin
       transition={{ duration: hit ? 0.09 : entrance ? 0.26 : 0.16 }}
       style={
         portrait
-          ? { ...styles.seamPortrait, background: `linear-gradient(90deg, transparent, ${accent}f0, transparent)` }
-          : { ...styles.seamLandscape, background: `linear-gradient(180deg, transparent, ${accent}f0, transparent)` }
+          ? {
+              ...styles.seamPortrait,
+              background: `linear-gradient(90deg, transparent 0%, ${accent}55 22%, ${accent}cc 50%, ${accent}55 78%, transparent 100%)`,
+              boxShadow: `0 0 14px ${accent}28, 0 0 36px ${accent}14, 0 1px 0 rgba(255,255,255,.06)`,
+            }
+          : {
+              ...styles.seamLandscape,
+              background: `linear-gradient(180deg, transparent 0%, ${accent}55 22%, ${accent}cc 50%, ${accent}55 78%, transparent 100%)`,
+              boxShadow: `0 0 14px ${accent}28, 0 0 36px ${accent}14, 1px 0 0 rgba(255,255,255,.05)`,
+            }
       }
     />
   );
