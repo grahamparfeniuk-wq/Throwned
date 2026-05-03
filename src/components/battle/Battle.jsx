@@ -520,6 +520,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       {renderLeaderboard({
         items,
         arena,
+        styles,
         open: sheetOpen,
         setOpen: setSheetOpen,
         onUpload: (e) => {
