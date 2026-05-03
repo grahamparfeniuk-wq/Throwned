@@ -7,6 +7,8 @@ export function GestureLayer({
   side,
   clipId,
   disabled,
+  /** When true, hold-to-open contender card still works; throws / rubber-band are suppressed */
+  freezeBattleGestures,
   onMove,
   onDone,
   onHoldPointerDown,
@@ -81,6 +83,7 @@ export function GestureLayer({
       onPointerMove={(e) => {
         if (disabled) return;
         onHoldPointerMove?.(e.clientX, e.clientY);
+        if (freezeBattleGestures) return;
         const pressed = e.pointerType === "mouse" ? e.buttons === 1 : true;
         if (!pressed) return;
         move(e.clientX, e.clientY);

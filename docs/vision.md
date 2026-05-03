@@ -41,3 +41,5 @@ The ranking engine could eventually apply to:
 - subjective evaluation systems
 
 The long-term vision is a universal competitive ranking engine for subjective media.
+
+For **why users emotionally attach** — and how that constrains product, UI, ranking, and growth — see [emotional-engine.md](./emotional-engine.md).

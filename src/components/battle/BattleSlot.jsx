@@ -56,6 +56,7 @@ export function BattleSlot({
   onHoldPointerDown,
   onHoldPointerMove,
   onHoldPointerUp,
+  freezeBattleGestures,
   styles,
 }) {
   const peer = !!incumbentDuringEntry;
@@ -96,6 +97,7 @@ export function BattleSlot({
         side={side}
         clipId={clipId}
         disabled={locked}
+        freezeBattleGestures={freezeBattleGestures}
         onMove={onMove}
         onDone={onDone}
         onHoldPointerDown={onHoldPointerDown}

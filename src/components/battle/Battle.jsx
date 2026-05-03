@@ -19,7 +19,7 @@ import { VSBadge } from "./VSBadge";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
 import { BattleSlot } from "./BattleSlot";
-import { DetailsPeek } from "./DetailsPeek";
+import { DetailsPeek } from "../overlays/DetailsPeek";
 
 const PEEK_HOLD_MS = 450;
 const PEEK_HOLD_MOVE_PX = 18;
@@ -60,7 +60,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   const [pair, setPair] = useState(() => pickPair(items));
   const [activeSide, setActiveSide] = useState("second");
   const [paused, setPaused] = useState(false);
-  const [heldClipId, setHeldClipId] = useState(null);
+  const [activeDetailsClipId, setActiveDetailsClipId] = useState(null);
   const [labelVisible, setLabelVisible] = useState(true);
   const [arenaPickerOpen, setArenaPickerOpen] = useState(false);
   const [arenaQuery, setArenaQuery] = useState("");
@@ -82,7 +82,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     second: { x: 0, y: 0, rotate: 0 },
   });
 
-  const heldItem = useMemo(() => (heldClipId ? items.find((x) => x.id === heldClipId) : null), [items, heldClipId]);
+  const activeDetailsItem = useMemo(
+    () => (activeDetailsClipId ? items.find((x) => x.id === activeDetailsClipId) : null),
+    [items, activeDetailsClipId]
+  );
   const filteredArenas = useMemo(() => {
     const q = arenaQuery.trim().toLowerCase();
     if (!q) return ARENAS;
@@ -108,7 +111,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     showLabel();
     setSheetOpen(false);
     clearTimeout(holdTimer.current);
-    setHeldClipId(null);
+    setActiveDetailsClipId(null);
     setPaused(false);
     setWinnerId(null);
     setStreak(0);
@@ -140,7 +143,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
   useEffect(() => {
     if (arena.type === "image") return;
-    if (!pair?.first || !pair?.second || paused || heldClipId || locked || streakHoldActive || transitioning) return;
+    if (!pair?.first || !pair?.second || paused || activeDetailsClipId || locked || streakHoldActive || transitioning) return;
 
     const active = activeSide === "first" ? pair.first : pair.second;
     const t = setTimeout(() => {
@@ -148,7 +151,13 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     }, safeDuration(active));
 
     return () => clearTimeout(t);
-  }, [arena.type, pair, activeSide, paused, heldClipId, locked, streakHoldActive, transitioning]);
+  }, [arena.type, pair, activeSide, paused, activeDetailsClipId, locked, streakHoldActive, transitioning]);
+
+  useEffect(() => {
+    if (!activeDetailsClipId || !pair?.first || !pair?.second) return;
+    const inPair = pair.first.id === activeDetailsClipId || pair.second.id === activeDetailsClipId;
+    if (!inPair) setActiveDetailsClipId(null);
+  }, [pair?.first?.id, pair?.second?.id, activeDetailsClipId]);
 
   function holdPointerDown(id, x, y) {
     if (streakHoldActive || locked) return;
@@ -156,33 +165,27 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     holdPointerStart.current = { x, y };
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
-      setHeldClipId(id);
+      setActiveDetailsClipId(id);
     }, PEEK_HOLD_MS);
   }
 
   function holdPointerMove(x, y) {
+    if (!holdTimer.current) return;
     const { x: sx, y: sy } = holdPointerStart.current;
     const dist = Math.hypot(x - sx, y - sy);
-    if (holdTimer.current) {
-      if (dist > PEEK_HOLD_MOVE_PX) {
-        clearTimeout(holdTimer.current);
-        holdTimer.current = null;
-      }
-      return;
-    }
-    if (heldClipId != null && dist > PEEK_HOLD_MOVE_PX) {
-      setHeldClipId(null);
+    if (dist > PEEK_HOLD_MOVE_PX) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
     }
   }
 
   function holdPointerUp() {
     clearTimeout(holdTimer.current);
     holdTimer.current = null;
-    setHeldClipId(null);
   }
 
   function onMove(side, dx, dy) {
-    if (locked || streakHoldActive || transitioning) return;
+    if (locked || streakHoldActive || transitioning || activeDetailsClipId) return;
 
     const raw = portrait ? dy : dx;
     const outwardDirection = side === "first" ? -1 : 1;
@@ -241,7 +244,11 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   }
 
   function resolve(side, dx, dy, vx, vy) {
-    if (locked || !pair?.first || !pair?.second || heldClipId || streakHoldActive || transitioning) return;
+    if (locked || !pair?.first || !pair?.second || streakHoldActive || transitioning) return;
+    if (activeDetailsClipId) {
+      setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
+      return;
+    }
 
     const result = outcome(side, dx, dy, vx, vy);
     setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
@@ -389,12 +396,13 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   }
 
   const isImageArena = arena.type === "image";
+  const contenderAttachmentOpen = !!activeDetailsClipId;
 
   return (
     <div
       style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
       onClick={() => {
-        if (arena.type === "video" && !heldClipId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
+        if (arena.type === "video" && !activeDetailsClipId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
       }}
     >
       <motion.div
@@ -462,11 +470,13 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         style={{
           ...styles.layout,
           ...(portrait ? styles.layoutPortrait : styles.layoutLandscape),
-          zIndex: 2,
+          zIndex: contenderAttachmentOpen ? 11 : 2,
         }}
         animate={{ opacity: transitioning ? 0.86 : 1, scale: transitioning ? 0.985 : 1 }}
         transition={{ duration: 0.16 }}
       >
+        {contenderAttachmentOpen ? <div style={styles.attachmentDim} aria-hidden /> : null}
+
         <BattleSlot
           side="first"
           clipId={pair.first.id}
@@ -474,8 +484,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           portrait={portrait}
           accent={arena.accent}
           active={isImageArena || activeSide === "first"}
-          paused={paused}
-          dimmed={false}
+          paused={paused || contenderAttachmentOpen}
+          dimmed={contenderAttachmentOpen}
           winner={winnerId === pair.first.id}
           locked={locked || transitioning || streakHoldActive}
           entering={enterState?.side === "first" && enterState?.id === pair.first.id}
@@ -487,6 +497,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           onHoldPointerDown={holdPointerDown}
           onHoldPointerMove={holdPointerMove}
           onHoldPointerUp={holdPointerUp}
+          freezeBattleGestures={contenderAttachmentOpen}
           styles={styles}
         />
 
@@ -497,8 +508,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           portrait={portrait}
           accent={arena.accent}
           active={isImageArena || activeSide === "second"}
-          paused={paused}
-          dimmed={false}
+          paused={paused || contenderAttachmentOpen}
+          dimmed={contenderAttachmentOpen}
           winner={winnerId === pair.second.id}
           locked={locked || transitioning || streakHoldActive}
           entering={enterState?.side === "second" && enterState?.id === pair.second.id}
@@ -510,16 +521,20 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           onHoldPointerDown={holdPointerDown}
           onHoldPointerMove={holdPointerMove}
           onHoldPointerUp={holdPointerUp}
+          freezeBattleGestures={contenderAttachmentOpen}
           styles={styles}
         />
 
-        {heldItem && (
+        {activeDetailsItem && (
           <DetailsPeek
-            item={heldItem}
+            item={activeDetailsItem}
+            pool={pool}
+            arena={arena}
             accent={arena.accent}
-            side={pair.first.id === heldClipId ? "first" : "second"}
+            side={pair.first.id === activeDetailsClipId ? "first" : "second"}
             portrait={portrait}
             styles={styles}
+            onClose={() => setActiveDetailsClipId(null)}
           />
         )}
       </motion.div>
