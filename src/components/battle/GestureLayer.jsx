@@ -3,7 +3,17 @@ import { useRef } from "react";
 const VELOCITY_WINDOW_MS = 72;
 const MAX_SAMPLES = 10;
 
-export function GestureLayer({ side, disabled, onMove, onDone, styles }) {
+export function GestureLayer({
+  side,
+  clipId,
+  disabled,
+  onMove,
+  onDone,
+  onHoldPointerDown,
+  onHoldPointerMove,
+  onHoldPointerUp,
+  styles,
+}) {
   const start = useRef({ x: 0, y: 0 });
   const samples = useRef([]);
 
@@ -50,36 +60,52 @@ export function GestureLayer({ side, disabled, onMove, onDone, styles }) {
   return (
     <div
       style={styles.gestureLayer}
-      onTouchStart={(e) => {
+      onPointerDown={(e) => {
         if (disabled) return;
-        const t = e.touches?.[0];
-        if (t) {
-          start.current = { x: t.clientX, y: t.clientY };
-          samples.current = [{ x: t.clientX, y: t.clientY, t: typeof performance !== "undefined" ? performance.now() : Date.now() }];
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        start.current = { x: e.clientX, y: e.clientY };
+        samples.current = [
+          {
+            x: e.clientX,
+            y: e.clientY,
+            t: typeof performance !== "undefined" ? performance.now() : Date.now(),
+          },
+        ];
+        onHoldPointerDown?.(clipId, e.clientX, e.clientY);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
         }
       }}
-      onTouchMove={(e) => {
+      onPointerMove={(e) => {
         if (disabled) return;
-        const t = e.touches?.[0];
-        if (t) move(t.clientX, t.clientY);
-      }}
-      onTouchEnd={(e) => {
-        if (disabled) return;
-        const t = e.changedTouches?.[0];
-        if (t) done(t.clientX, t.clientY);
-      }}
-      onMouseDown={(e) => {
-        if (disabled) return;
-        start.current = { x: e.clientX, y: e.clientY };
-        samples.current = [{ x: e.clientX, y: e.clientY, t: typeof performance !== "undefined" ? performance.now() : Date.now() }];
-      }}
-      onMouseMove={(e) => {
-        if (disabled || e.buttons !== 1) return;
+        onHoldPointerMove?.(e.clientX, e.clientY);
+        const pressed = e.pointerType === "mouse" ? e.buttons === 1 : true;
+        if (!pressed) return;
         move(e.clientX, e.clientY);
       }}
-      onMouseUp={(e) => {
+      onPointerUp={(e) => {
         if (disabled) return;
+        onHoldPointerUp?.();
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
         done(e.clientX, e.clientY);
+      }}
+      onPointerCancel={(e) => {
+        if (disabled) return;
+        onHoldPointerUp?.();
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
+        samples.current = [];
+        onMove(side, 0, 0);
+        onDone(side, 0, 0, 0, 0);
       }}
     />
   );

@@ -1,39 +1,12 @@
 import React, { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ARENAS } from "./data/arenas";
 import { START_MEDIA } from "./data/startMedia";
-import { arenaById, confidenceLabel, sortRank } from "./utils/ranking";
+import { sortRank } from "./utils/ranking";
 import { normalizeUpload } from "./utils/media";
 import { Battle } from "./components/battle/Battle";
 import { Leaderboard } from "./components/leaderboard/Leaderboard";
 import { UploadSheet } from "./components/upload/UploadSheet";
 import { styles } from "./styles/appStyles";
-
-function Details({ item, accent }) {
-  if (!item) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div style={styles.detailsWrap} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.div
-          style={{ ...styles.detailsCard, borderColor: `${accent}55` }}
-          initial={{ opacity: 0, y: 12, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.985 }}
-        >
-          <div style={styles.detailsTitle}>{item.title}</div>
-          <div style={styles.detailsCreator}>{item.creator}</div>
-          <div style={styles.pillRow}>
-            <div style={styles.pill}>Rating {item.rating}</div>
-            <div style={styles.pill}>{confidenceLabel(item.confidence)}</div>
-            <div style={styles.pill}>{item.type === "video" ? "Video" : "Photo"}</div>
-          </div>
-          <div style={{ ...styles.detailsArena, color: accent }}>{arenaById(item.arenaId).label}</div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
 
 export default function App() {
   const [pool, setPool] = useState(() => sortRank([...START_MEDIA]));
@@ -73,7 +46,6 @@ export default function App() {
         jumpToArena={jumpToArena}
         openUpload={() => setUploadOpen(true)}
         styles={styles}
-        renderDetails={(props) => <Details {...props} />}
         renderLeaderboard={(props) => <Leaderboard {...props} />}
       />
 

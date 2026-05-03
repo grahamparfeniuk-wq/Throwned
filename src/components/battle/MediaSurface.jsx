@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { arenaById } from "../../utils/ranking";
 import { BattleMedia } from "./BattleMedia";
 
-export function MediaSurface({ item, active, paused, dimmed, winner, accent, entranceEmphasis, onHoldStart, onHoldEnd, styles }) {
+export function MediaSurface({ item, active, paused, dimmed, winner, accent, entranceEmphasis, styles }) {
   const ref = useRef(null);
   const [failed, setFailed] = useState(false);
   const prevItemId = useRef(null);
@@ -103,15 +103,7 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, ent
         : baseFilter;
 
   return (
-    <div
-      style={{ ...styles.surface, boxShadow: winner ? `inset 0 0 58px ${accent}2a` : "none" }}
-      onMouseDown={() => onHoldStart(item.id)}
-      onMouseUp={onHoldEnd}
-      onMouseLeave={onHoldEnd}
-      onTouchStart={() => onHoldStart(item.id)}
-      onTouchEnd={onHoldEnd}
-      onTouchCancel={onHoldEnd}
-    >
+    <div style={{ ...styles.surface, boxShadow: winner ? `inset 0 0 58px ${accent}2a` : "none" }}>
       <div
         style={{
           ...styles.mediaWrap,

@@ -50,10 +50,12 @@ export function BattleSlot({
   incumbentDuringEntry,
   thrown,
   drag,
+  clipId,
   onMove,
   onDone,
-  onHoldStart,
-  onHoldEnd,
+  onHoldPointerDown,
+  onHoldPointerMove,
+  onHoldPointerUp,
   styles,
 }) {
   const peer = !!incumbentDuringEntry;
@@ -88,11 +90,19 @@ export function BattleSlot({
         winner={winner}
         accent={accent}
         entranceEmphasis={!!entering}
-        onHoldStart={onHoldStart}
-        onHoldEnd={onHoldEnd}
         styles={styles}
       />
-      <GestureLayer side={side} disabled={locked} onMove={onMove} onDone={onDone} styles={styles} />
+      <GestureLayer
+        side={side}
+        clipId={clipId}
+        disabled={locked}
+        onMove={onMove}
+        onDone={onDone}
+        onHoldPointerDown={onHoldPointerDown}
+        onHoldPointerMove={onHoldPointerMove}
+        onHoldPointerUp={onHoldPointerUp}
+        styles={styles}
+      />
     </motion.div>
   );
 }

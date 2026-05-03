@@ -19,8 +19,10 @@ import { VSBadge } from "./VSBadge";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
 import { BattleSlot } from "./BattleSlot";
+import { DetailsPeek } from "./DetailsPeek";
 
-const HOLD_MS = 260;
+const PEEK_HOLD_MS = 450;
+const PEEK_HOLD_MOVE_PX = 18;
 /** Slower deliberate swipe: full travel still commits without needing flick speed */
 const THROW_DISTANCE_HARD = 88;
 /** Blend scale for distance term (slightly less travel than first-pass 92px) */
@@ -46,19 +48,19 @@ function throwBlendPasses(distMag, velMag) {
   return THROW_BLEND_W_D * d + THROW_BLEND_W_V * v >= 1;
 }
 
-export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpload, styles, renderDetails, renderLeaderboard }) {
+export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpload, styles, renderLeaderboard }) {
   const portrait = useIsPortrait();
   const items = useMemo(() => sortRank(arenaItems(pool, arena)), [pool, arena]);
   const poolRef = useRef(pool);
   const labelTimer = useRef(null);
   const holdTimer = useRef(null);
-  const holdTriggered = useRef(false);
+  const holdPointerStart = useRef({ x: 0, y: 0 });
   const history = useRef([]);
 
   const [pair, setPair] = useState(() => pickPair(items));
   const [activeSide, setActiveSide] = useState("second");
   const [paused, setPaused] = useState(false);
-  const [detailsId, setDetailsId] = useState(null);
+  const [heldClipId, setHeldClipId] = useState(null);
   const [labelVisible, setLabelVisible] = useState(true);
   const [arenaPickerOpen, setArenaPickerOpen] = useState(false);
   const [arenaQuery, setArenaQuery] = useState("");
@@ -80,7 +82,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     second: { x: 0, y: 0, rotate: 0 },
   });
 
-  const detailsItem = useMemo(() => items.find((x) => x.id === detailsId), [items, detailsId]);
+  const heldItem = useMemo(() => (heldClipId ? items.find((x) => x.id === heldClipId) : null), [items, heldClipId]);
   const filteredArenas = useMemo(() => {
     const q = arenaQuery.trim().toLowerCase();
     if (!q) return ARENAS;
@@ -105,7 +107,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   useEffect(() => {
     showLabel();
     setSheetOpen(false);
-    setDetailsId(null);
+    clearTimeout(holdTimer.current);
+    setHeldClipId(null);
     setPaused(false);
     setWinnerId(null);
     setStreak(0);
@@ -137,7 +140,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
   useEffect(() => {
     if (arena.type === "image") return;
-    if (!pair?.first || !pair?.second || paused || detailsId || locked || streakHoldActive || transitioning) return;
+    if (!pair?.first || !pair?.second || paused || heldClipId || locked || streakHoldActive || transitioning) return;
 
     const active = activeSide === "first" ? pair.first : pair.second;
     const t = setTimeout(() => {
@@ -145,30 +148,41 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     }, safeDuration(active));
 
     return () => clearTimeout(t);
-  }, [arena.type, pair, activeSide, paused, detailsId, locked, streakHoldActive, transitioning]);
+  }, [arena.type, pair, activeSide, paused, heldClipId, locked, streakHoldActive, transitioning]);
 
-  function startHold(id) {
-    if (streakHoldActive) return;
-    holdTriggered.current = false;
+  function holdPointerDown(id, x, y) {
+    if (streakHoldActive || locked) return;
     clearTimeout(holdTimer.current);
+    holdPointerStart.current = { x, y };
     holdTimer.current = setTimeout(() => {
-      holdTriggered.current = true;
-      setDetailsId(id);
-      setPaused(true);
-    }, HOLD_MS);
+      holdTimer.current = null;
+      setHeldClipId(id);
+    }, PEEK_HOLD_MS);
   }
 
-  function endHold() {
-    clearTimeout(holdTimer.current);
-    if (holdTriggered.current) {
-      holdTriggered.current = false;
-      setDetailsId(null);
-      setPaused(false);
+  function holdPointerMove(x, y) {
+    const { x: sx, y: sy } = holdPointerStart.current;
+    const dist = Math.hypot(x - sx, y - sy);
+    if (holdTimer.current) {
+      if (dist > PEEK_HOLD_MOVE_PX) {
+        clearTimeout(holdTimer.current);
+        holdTimer.current = null;
+      }
+      return;
+    }
+    if (heldClipId != null && dist > PEEK_HOLD_MOVE_PX) {
+      setHeldClipId(null);
     }
   }
 
+  function holdPointerUp() {
+    clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    setHeldClipId(null);
+  }
+
   function onMove(side, dx, dy) {
-    if (locked || detailsId || streakHoldActive || transitioning) return;
+    if (locked || streakHoldActive || transitioning) return;
 
     const raw = portrait ? dy : dx;
     const outwardDirection = side === "first" ? -1 : 1;
@@ -227,7 +241,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   }
 
   function resolve(side, dx, dy, vx, vy) {
-    if (locked || !pair?.first || !pair?.second || detailsId || streakHoldActive || transitioning) return;
+    if (locked || !pair?.first || !pair?.second || heldClipId || streakHoldActive || transitioning) return;
 
     const result = outcome(side, dx, dy, vx, vy);
     setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
@@ -380,7 +394,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     <div
       style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
       onClick={() => {
-        if (arena.type === "video" && !detailsId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
+        if (arena.type === "video" && !heldClipId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
       }}
     >
       <motion.div
@@ -455,6 +469,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       >
         <BattleSlot
           side="first"
+          clipId={pair.first.id}
           item={pair.first}
           portrait={portrait}
           accent={arena.accent}
@@ -469,13 +484,15 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           drag={drag.first}
           onMove={onMove}
           onDone={resolve}
-          onHoldStart={startHold}
-          onHoldEnd={endHold}
+          onHoldPointerDown={holdPointerDown}
+          onHoldPointerMove={holdPointerMove}
+          onHoldPointerUp={holdPointerUp}
           styles={styles}
         />
 
         <BattleSlot
           side="second"
+          clipId={pair.second.id}
           item={pair.second}
           portrait={portrait}
           accent={arena.accent}
@@ -490,15 +507,25 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           drag={drag.second}
           onMove={onMove}
           onDone={resolve}
-          onHoldStart={startHold}
-          onHoldEnd={endHold}
+          onHoldPointerDown={holdPointerDown}
+          onHoldPointerMove={holdPointerMove}
+          onHoldPointerUp={holdPointerUp}
           styles={styles}
         />
+
+        {heldItem && (
+          <DetailsPeek
+            item={heldItem}
+            accent={arena.accent}
+            side={pair.first.id === heldClipId ? "first" : "second"}
+            portrait={portrait}
+            styles={styles}
+          />
+        )}
       </motion.div>
 
       <Seam portrait={portrait} accent={arena.accent} pulse={pulse} impactHit={impactPhase} entranceHint={!!enterState} dragging={dragging} styles={styles} />
       <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
-      {renderDetails({ item: detailsItem, accent: arena.accent })}
 
       {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}
       <div
