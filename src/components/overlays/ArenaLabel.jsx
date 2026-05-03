@@ -35,11 +35,24 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
               ...styles.arenaLabel,
               pointerEvents: onClick ? "auto" : "none",
               cursor: onClick ? "pointer" : "default",
-              borderBottom: `2px solid ${arena.accent}55`,
-              boxShadow: `0 10px 36px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05)`,
+              boxShadow: [
+                "0 2px 14px rgba(0,0,0,.34)",
+                "0 8px 28px rgba(0,0,0,.22)",
+                "inset 0 1px 0 rgba(255,255,255,.07)",
+                "inset 0 -1px 0 rgba(0,0,0,.45)",
+                `0 0 1px ${arena.accent}44`,
+                `0 0 20px ${arena.accent}22`,
+              ].join(", "),
             }}
           >
-            <span style={{ ...styles.arenaLabelTitle, color: arena.accent }}>{arena.label}</span>
+            <span
+              style={{
+                ...styles.arenaLabelTitle,
+                color: arena.accent,
+              }}
+            >
+              {arena.label}
+            </span>
           </div>
         </motion.div>
       )}
