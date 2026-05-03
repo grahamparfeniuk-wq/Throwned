@@ -332,7 +332,7 @@ export const styles = {
     bottom: 0,
     height: 84,
     background: "transparent",
-    touchAction: "pan-y",
+    touchAction: "none",
   },
   /** Leaderboard — portrait bottom sheet */
   lbSheetPortrait: {
@@ -371,12 +371,12 @@ export const styles = {
     backdropFilter: "blur(12px)",
     WebkitBackdropFilter: "blur(12px)",
   },
-  /** Centered standings card (landscape) */
+  /** Centered standings card (landscape overlay) */
   lbCardLandscape: {
     position: "relative",
-    width: "min(520px, calc(100vw - 28px))",
-    maxWidth: 520,
-    maxHeight: "min(85vh, 720px)",
+    width: "min(560px, 86vw)",
+    maxWidth: 560,
+    maxHeight: "80vh",
     borderRadius: 24,
     background: "linear-gradient(198deg, rgba(22,24,32,.98) 0%, rgba(12,14,20,.96) 55%, rgba(8,10,14,.94) 100%)",
     backdropFilter: "blur(22px)",

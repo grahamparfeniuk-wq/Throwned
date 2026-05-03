@@ -500,10 +500,31 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
       {renderDetails({ item: detailsItem, accent: arena.accent })}
 
+      {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}
+      <div
+        style={{
+          ...styles.swipeZone,
+          zIndex: sheetOpen ? 8 : 26,
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          e.currentTarget.dataset.lbSwipeY = String(e.clientY);
+        }}
+        onPointerUp={(e) => {
+          const startY = Number(e.currentTarget.dataset.lbSwipeY || 0);
+          if (!startY) return;
+          const dy = startY - e.clientY;
+          if (dy > 70) setSheetOpen(true);
+          if (dy < -70) setSheetOpen(false);
+        }}
+      />
+
       {renderLeaderboard({
         items,
         arena,
         styles,
+        portrait,
         open: sheetOpen,
         setOpen: setSheetOpen,
         onUpload: (e) => {
@@ -511,27 +532,6 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           openUpload();
         },
       })}
-
-      <div
-        style={{
-          ...styles.swipeZone,
-          /* Closed: above leaderboard so bottom swipe opens in portrait + landscape; open: under sheet for drag */
-          zIndex: sheetOpen ? 10 : 24,
-        }}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => {
-          const t = e.touches?.[0];
-          if (!t) return;
-          e.currentTarget.dataset.startY = String(t.clientY);
-        }}
-        onTouchEnd={(e) => {
-          const t = e.changedTouches?.[0];
-          const startY = Number(e.currentTarget.dataset.startY || 0);
-          if (!t || !startY) return;
-          if (startY - t.clientY > 70) setSheetOpen(true);
-          if (t.clientY - startY > 70) setSheetOpen(false);
-        }}
-      />
     </div>
   );
 }

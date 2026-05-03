@@ -1,16 +1,22 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { sortRank } from "../../utils/ranking";
-import { useIsPortrait } from "../../hooks/useIsPortrait";
 import { LeaderboardRow } from "./LeaderboardRow";
 
-/** When closed: lower z-index than swipe zone so bottom-edge gestures hit Battle swipe strip */
+/** Closed: stay under Battle swipe strip; open: above swipe strip for drag/backdrop */
 const LB_Z_OPEN = 22;
 const LB_Z_CLOSED = 12;
 
-export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
-  const portrait = useIsPortrait();
+/**
+ * Single Leaderboard: `portrait` comes from Battle (same source as layout/orientation).
+ * Landscape + closed: render null — no full-screen invisible nodes that intercept bottom gestures.
+ */
+export function Leaderboard({ items, arena, open, setOpen, onUpload, styles, portrait }) {
   const ranked = useMemo(() => sortRank(items), [items]);
+
+  if (!portrait && !open) {
+    return null;
+  }
 
   const sheetSurface = {
     pointerEvents: open ? "auto" : "none",
@@ -59,7 +65,6 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
     );
   }
 
-  /** Landscape: gesture-only reveal from bottom (same `open` as portrait); centered overlay, no side rail */
   return (
     <motion.div
       style={{ ...styles.lbLandOverlay, ...sheetSurface }}
