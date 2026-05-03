@@ -1,14 +1,11 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ARENAS } from "./data/arenas";
 import { START_MEDIA } from "./data/startMedia";
-import {
-  arenaById,
-  confidenceLabel,
-  sortRank,
-} from "./utils/ranking";
+import { arenaById, confidenceLabel } from "./utils/ranking";
 import { normalizeUpload } from "./utils/media";
 import { Battle } from "./components/battle/Battle";
+import { Leaderboard } from "./components/leaderboard/Leaderboard";
 import { UploadSheet } from "./components/upload/UploadSheet";
 import { styles } from "./styles/appStyles";
 
@@ -35,53 +32,6 @@ function Details({ item, accent }) {
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  );
-}
-
-function Leaderboard({ items, arena, open, setOpen, onUpload }) {
-  const ranked = useMemo(() => sortRank(items), [items]);
-
-  return (
-    <motion.div
-      drag="y"
-      dragElastic={0.05}
-      dragConstraints={{ top: 0, bottom: 520 }}
-      onDragEnd={(_, info) => {
-        if (info.offset.y > 80) setOpen(false);
-        if (info.offset.y < -80) setOpen(true);
-      }}
-      animate={{ y: open ? 0 : 514 }}
-      transition={{ type: "spring", stiffness: 280, damping: 34 }}
-      style={styles.sheet}
-    >
-      <div style={styles.sheetHandleTap} onClick={() => setOpen((v) => !v)}>
-        <div style={styles.sheetHandle} />
-      </div>
-
-      <div style={styles.sheetHeader}>
-        <div>
-          <div style={styles.sheetEyebrow}>Live Ranking</div>
-          <div style={{ ...styles.sheetTitle, color: arena.accent }}>{arena.label}</div>
-        </div>
-        <button style={styles.sheetUpload} onClick={onUpload}>+</button>
-      </div>
-
-      <div style={styles.sheetList}>
-        {ranked.map((item, i) => (
-          <div key={item.id} style={styles.sheetRow}>
-            <div style={{ ...styles.sheetRank, color: i === 0 ? arena.accent : "rgba(255,255,255,.78)" }}>#{i + 1}</div>
-            <div style={styles.sheetText}>
-              <div style={styles.sheetItemTitle}>{item.title}</div>
-              <div style={styles.sheetItemCreator}>{item.creator}</div>
-            </div>
-            <div style={styles.sheetRight}>
-              <div style={styles.sheetRating}>{item.rating}</div>
-              <div style={styles.sheetConfidence}>{confidenceLabel(item.confidence)}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
   );
 }
 
