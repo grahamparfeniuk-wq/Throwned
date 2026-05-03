@@ -500,8 +500,24 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
       {renderDetails({ item: detailsItem, accent: arena.accent })}
 
+      {renderLeaderboard({
+        items,
+        arena,
+        styles,
+        open: sheetOpen,
+        setOpen: setSheetOpen,
+        onUpload: (e) => {
+          e?.stopPropagation?.();
+          openUpload();
+        },
+      })}
+
       <div
-        style={styles.swipeZone}
+        style={{
+          ...styles.swipeZone,
+          /* Closed: above leaderboard so bottom swipe opens in portrait + landscape; open: under sheet for drag */
+          zIndex: sheetOpen ? 10 : 24,
+        }}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => {
           const t = e.touches?.[0];
@@ -516,18 +532,6 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           if (t.clientY - startY > 70) setSheetOpen(false);
         }}
       />
-
-      {renderLeaderboard({
-        items,
-        arena,
-        styles,
-        open: sheetOpen,
-        setOpen: setSheetOpen,
-        onUpload: (e) => {
-          e?.stopPropagation?.();
-          openUpload();
-        },
-      })}
     </div>
   );
 }

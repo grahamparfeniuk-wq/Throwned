@@ -4,27 +4,15 @@ import { sortRank } from "../../utils/ranking";
 import { useIsPortrait } from "../../hooks/useIsPortrait";
 import { LeaderboardRow } from "./LeaderboardRow";
 
+/** When closed: lower z-index than swipe zone so bottom-edge gestures always hit Battle swipe strip */
+const LB_Z_OPEN = 22;
+const LB_Z_CLOSED = 12;
+
 export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
   const portrait = useIsPortrait();
   const ranked = useMemo(() => sortRank(items), [items]);
-  const sheetRef = useRef(null);
   const landRef = useRef(null);
-  const [closedY, setClosedY] = useState(400);
   const [closedX, setClosedX] = useState(420);
-
-  useLayoutEffect(() => {
-    if (!portrait) return;
-    const el = sheetRef.current;
-    if (!el) return;
-    const hideFully = () => {
-      const h = el.offsetHeight;
-      setClosedY(h > 0 ? h + 16 : 520);
-    };
-    const ro = new ResizeObserver(hideFully);
-    ro.observe(el);
-    hideFully();
-    return () => ro.disconnect();
-  }, [portrait, ranked.length, open, arena.id]);
 
   useLayoutEffect(() => {
     if (portrait) return;
@@ -37,6 +25,11 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
     setClosedX(el.offsetWidth + 32);
     return () => ro.disconnect();
   }, [portrait, ranked.length, open, arena.id]);
+
+  const sheetSurface = {
+    pointerEvents: open ? "auto" : "none",
+    zIndex: open ? LB_Z_OPEN : LB_Z_CLOSED,
+  };
 
   const header = (
     <>
@@ -66,18 +59,17 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
   if (portrait) {
     return (
       <motion.div
-        ref={sheetRef}
-        drag="y"
+        drag={open ? "y" : false}
         dragElastic={0.07}
         dragConstraints={{ top: -120, bottom: open ? 80 : 0 }}
         onDragEnd={(_, info) => {
           if (info.offset.y > 56) setOpen(false);
           if (info.offset.y < -56) setOpen(true);
         }}
-        initial={false}
-        animate={{ y: open ? 0 : closedY }}
+        initial={{ y: "100%" }}
+        animate={{ y: open ? 0 : "100%" }}
         transition={{ type: "spring", stiffness: 290, damping: 34 }}
-        style={styles.lbSheetPortrait}
+        style={{ ...styles.lbSheetPortrait, ...sheetSurface }}
       >
         {header}
         {list}
@@ -88,7 +80,7 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
   return (
     <motion.div
       ref={landRef}
-      drag="x"
+      drag={open ? "x" : false}
       dragElastic={0.06}
       dragConstraints={{ left: -80, right: 0 }}
       onDragEnd={(_, info) => {
@@ -98,7 +90,7 @@ export function Leaderboard({ items, arena, open, setOpen, onUpload, styles }) {
       initial={false}
       animate={{ x: open ? 0 : closedX }}
       transition={{ type: "spring", stiffness: 300, damping: 34 }}
-      style={{ ...styles.lbSheetLandscape, pointerEvents: open ? "auto" : "none" }}
+      style={{ ...styles.lbSheetLandscape, ...sheetSurface }}
     >
       {header}
       {list}

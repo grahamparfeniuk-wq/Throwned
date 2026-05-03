@@ -331,8 +331,8 @@ export const styles = {
     right: 0,
     bottom: 0,
     height: 84,
-    zIndex: 9,
     background: "transparent",
+    touchAction: "pan-y",
   },
   /** Leaderboard — portrait bottom sheet */
   lbSheetPortrait: {
@@ -341,7 +341,6 @@ export const styles = {
     right: "max(10px, env(safe-area-inset-right))",
     bottom: -2,
     maxHeight: "min(560px, calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 56px))",
-    zIndex: 16,
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     background: "linear-gradient(168deg, rgba(18,20,28,.94) 0%, rgba(8,10,14,.9) 42%, rgba(6,8,12,.92) 100%)",
@@ -363,7 +362,6 @@ export const styles = {
     minWidth: 280,
     maxWidth: 440,
     maxHeight: "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)",
-    zIndex: 16,
     borderRadius: 22,
     background: "linear-gradient(200deg, rgba(20,22,30,.96) 0%, rgba(10,12,18,.94) 55%, rgba(6,8,12,.93) 100%)",
     backdropFilter: "blur(22px)",

@@ -15,7 +15,14 @@ export function LeaderboardRow({ item, index, accent, styles }) {
             <div style={styles.lbItemTitle}>{item.title}</div>
             <div style={styles.lbItemCreator}>{item.creator}</div>
           </div>
-          <button type="button" style={styles.lbFollow} disabled aria-disabled="true" title="Coming soon">
+          {/* Follow placeholder only — future: rank-move alerts for this creator, arenas they compete in, quick-jump; no notifications/profiles yet */}
+          <button
+            type="button"
+            style={styles.lbFollow}
+            disabled
+            aria-disabled="true"
+            title="Placeholder. Future: notifications when this creator moves up/down in rankings, which arenas they’re active in, and quick jump into those arenas."
+          >
             Follow
           </button>
         </div>
