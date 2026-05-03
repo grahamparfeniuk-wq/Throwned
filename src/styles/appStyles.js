@@ -305,6 +305,27 @@ export const styles = {
     pointerEvents: "none",
     transform: "translateX(-1px)",
   },
+  /** Intro-only: accent seam energy while arena seal is visible (below VS layer). */
+  arenaIntroSeamGlowPortrait: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "50%",
+    height: 2,
+    zIndex: 7,
+    pointerEvents: "none",
+    transform: "translateY(-1px)",
+  },
+  arenaIntroSeamGlowLandscape: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "50%",
+    width: 2,
+    zIndex: 7,
+    pointerEvents: "none",
+    transform: "translateX(-1px)",
+  },
   vsLayer: {
     position: "absolute",
     inset: 0,
@@ -343,15 +364,13 @@ export const styles = {
     pointerEvents: "none",
   },
   arenaLabel: {
-    padding: "5px 52px",
+    padding: "4px 46px",
     borderRadius: 9999,
-    minWidth: "min(91vw, 360px)",
-    maxWidth: "min(97vw, 540px)",
+    minWidth: "min(86vw, 280px)",
+    maxWidth: "min(93vw, 400px)",
     margin: "0 auto",
-    background: [
-      "linear-gradient(180deg, transparent calc(50% - 0.5px), rgba(255,255,255,.05) 50%, transparent calc(50% + 0.5px))",
+    background:
       "linear-gradient(180deg, rgba(10,12,18,.72) 0%, rgba(7,8,13,.82) 48%, rgba(5,6,10,.86) 100%)",
-    ].join(", "),
     backdropFilter: "blur(18px) saturate(1.15)",
     WebkitBackdropFilter: "blur(18px) saturate(1.15)",
     border: "1px solid rgba(255,255,255,.05)",

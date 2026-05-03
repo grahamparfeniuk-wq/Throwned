@@ -16,6 +16,7 @@ import { safeDuration, throwVector } from "../../utils/media";
 import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
 import { vibrateThrow } from "../../utils/haptics";
 import { VSBadge } from "./VSBadge";
+import { ArenaIntroSeamGlow } from "./ArenaIntroSeamGlow";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
 import { BattleSlot } from "./BattleSlot";
@@ -569,6 +570,12 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           />
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {labelVisible ? (
+          <ArenaIntroSeamGlow key="arena-intro-seam-glow" portrait={portrait} accent={arena.accent} styles={styles} />
+        ) : null}
+      </AnimatePresence>
 
       <Seam
         portrait={portrait}

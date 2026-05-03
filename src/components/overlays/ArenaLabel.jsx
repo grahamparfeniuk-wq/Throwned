@@ -1,4 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  ARENA_INTRO_ENTER_EASE,
+  ARENA_INTRO_ENTER_S,
+  ARENA_INTRO_EXIT_EASE,
+  ARENA_INTRO_EXIT_S,
+} from "../../constants/arenaIntroMotion";
 
 export function ArenaLabel({ arena, visible, styles, onClick }) {
   return (
@@ -6,14 +12,16 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
       {visible && (
         <motion.div
           style={styles.arenaLabelWrap}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{
             opacity: 0,
-            transition: { duration: 0.62, ease: [0.38, 0, 0.22, 1] },
+            scale: 0.99,
+            transition: { duration: ARENA_INTRO_EXIT_S, ease: ARENA_INTRO_EXIT_EASE },
           }}
           transition={{
-            opacity: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+            opacity: { duration: ARENA_INTRO_ENTER_S, ease: ARENA_INTRO_ENTER_EASE },
+            scale: { duration: 0.52, ease: [0.18, 1, 0.32, 1] },
           }}
         >
           <div
@@ -33,6 +41,10 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
             }}
             style={{
               ...styles.arenaLabel,
+              background: [
+                `linear-gradient(180deg, transparent calc(50% - 0.5px), ${arena.accent}45 50%, transparent calc(50% + 0.5px))`,
+                "linear-gradient(180deg, rgba(10,12,18,.72) 0%, rgba(7,8,13,.82) 48%, rgba(5,6,10,.86) 100%)",
+              ].join(", "),
               pointerEvents: onClick ? "auto" : "none",
               cursor: onClick ? "pointer" : "default",
               boxShadow: [
