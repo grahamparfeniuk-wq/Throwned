@@ -36,11 +36,13 @@ const THROW_BLEND_W_D = 0.37;
 const THROW_BLEND_W_V = 0.63;
 const CATEGORY_VELOCITY_PX_S = 820;
 const LABEL_MS = 1600;
-/** Battle beat: impact → land pause → swap pair / challenger enter → unlock */
-const BEAT_IMPACT_MS = 118;
-const BEAT_LAND_PAUSE_MS = 82;
-const BEAT_SWAP_AT_MS = BEAT_IMPACT_MS + BEAT_LAND_PAUSE_MS;
-const THROW_UNLOCK_MS = 228;
+/** Impact flash — judgment lands */
+const BEAT_IMPACT_MS = 124;
+/** Breathing room before pair swap (broadcast beat — lets elimination land emotionally) */
+const BEAT_VICTORY_PAUSE_MS = 218;
+/** Extra pause when lower-rated side wins (upset — restrained, no carnival) */
+const BEAT_UPSET_EXTRA_MS = 78;
+const THROW_UNLOCK_MS = 276;
 
 function throwBlendPasses(distMag, velMag) {
   const d = Math.min(Math.abs(distMag) / THROW_DISTANCE_SOFT, 1.35);
@@ -75,6 +77,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   const [transitioning, setTransitioning] = useState(false);
   const [pulse, setPulse] = useState(false);
   const [impactPhase, setImpactPhase] = useState(false);
+  /** Seam / pacing: upset weight + which side survived (subtle bias, not celebration) */
+  const [throwVerdict, setThrowVerdict] = useState(null);
   const [unlockedAt, setUnlockedAt] = useState(Date.now());
   const [userTrust, setUserTrust] = useState(1);
   const [drag, setDrag] = useState({
@@ -264,16 +268,26 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
     vibrateThrow();
     setLocked(true);
-    setImpactPhase(true);
-    setPulse(true);
-    setTimeout(() => setImpactPhase(false), BEAT_IMPACT_MS);
-    setTimeout(() => setPulse(false), BEAT_IMPACT_MS);
-
-    const vector = throwVector(side, portrait);
-    setThrowState({ side, vector });
 
     const loser = side === "first" ? pair.first : pair.second;
     const winner = side === "first" ? pair.second : pair.first;
+
+    const upset = winner.rating < loser.rating;
+    const upsetIntensity = upset ? clamp((loser.rating - winner.rating) / 420, 0.12, 1) : 0;
+    const survivorSide = side === "first" ? "second" : "first";
+    setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide });
+    setTimeout(() => setThrowVerdict(null), 620);
+
+    const impactOutMs = upset ? BEAT_IMPACT_MS + Math.round(48 + 40 * upsetIntensity) : BEAT_IMPACT_MS;
+    const pulseOutMs = upset ? BEAT_IMPACT_MS + 115 + Math.round(35 * upsetIntensity) : BEAT_IMPACT_MS + 22;
+
+    setImpactPhase(true);
+    setPulse(true);
+    setTimeout(() => setImpactPhase(false), impactOutMs);
+    setTimeout(() => setPulse(false), pulseOutMs);
+
+    const vector = throwVector(side, portrait);
+    setThrowState({ side, vector });
 
     const ms = Date.now() - unlockedAt;
     const rushed = ms < 850;
@@ -311,6 +325,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     setWinnerId(updatedWinner.id);
     setStreak(nextStreak);
     history.current.push(updatedWinner.id, updatedLoser.id);
+
+    const victoryPauseMs =
+      BEAT_VICTORY_PAUSE_MS + (upset ? BEAT_UPSET_EXTRA_MS + Math.round(42 * upsetIntensity) : 0);
+    const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
 
     setTimeout(() => {
       const fresh = sortRank(
@@ -371,17 +389,18 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         setEnterState(null);
         setLocked(false);
       }, THROW_UNLOCK_MS);
-    }, BEAT_SWAP_AT_MS);
+    }, swapDelayMs);
   }
 
   function thrownStyle(side) {
     if (!throwState || throwState.side !== side) return null;
+    const rotDiv = portrait ? 94 : 104;
     return {
       x: throwState.vector.x,
       y: throwState.vector.y,
       opacity: 0,
-      scale: 0.96,
-      rotate: portrait ? throwState.vector.y / 76 : throwState.vector.x / 86,
+      scale: 0.931,
+      rotate: portrait ? throwState.vector.y / rotDiv : throwState.vector.x / rotDiv,
     };
   }
 
@@ -539,8 +558,17 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         )}
       </motion.div>
 
-      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} impactHit={impactPhase} entranceHint={!!enterState} dragging={dragging} styles={styles} />
-      <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
+      <Seam
+        portrait={portrait}
+        accent={arena.accent}
+        pulse={pulse}
+        impactHit={impactPhase}
+        entranceHint={!!enterState}
+        dragging={dragging}
+        verdict={throwVerdict}
+        styles={styles}
+      />
+      <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} arenaLabelVisible={labelVisible} />
 
       {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}
       <div

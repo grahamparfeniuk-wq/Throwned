@@ -1,26 +1,49 @@
 import { motion } from "framer-motion";
 
-export function Seam({ portrait, accent, pulse, impactHit, entranceHint, dragging, styles }) {
+/**
+ * Symbolic conflict line — decisive throws get tension + arena-colored compression (no arcade VFX).
+ */
+export function Seam({ portrait, accent, pulse, impactHit, entranceHint, dragging, verdict, styles }) {
   const hit = !!impactHit;
   const entrance = !!entranceHint && !hit;
+  const upset = !!verdict?.upset;
+  const vi = verdict?.intensity ?? 0;
+  const survivor = verdict?.survivorSide;
+
+  const midHex = upset ? `${accent}ee` : `${accent}cc`;
+  const edgeHex = upset ? `${accent}66` : `${accent}55`;
+
+  const scaleHit = hit ? (upset ? 1.075 + vi * 0.065 : 1.058) : pulse ? 1.042 : entrance ? 1.026 : dragging ? 1.014 : 1;
+
+  const yNudge = hit && survivor && portrait ? (survivor === "first" ? -2.2 : 2.2) : 0;
+  const xNudge = hit && survivor && !portrait ? (survivor === "first" ? -2 : 2) : 0;
+
+  const glowCore = upset ? 26 + Math.round(18 * vi) : 18;
+  const glowHalo = upset ? 22 + Math.round(12 * vi) : 14;
+
   return (
     <motion.div
       animate={{
-        opacity: hit ? 1 : pulse ? 1 : entrance ? 0.74 : dragging ? 0.85 : 0.52,
-        scale: hit ? 1.09 : pulse ? 1.05 : entrance ? 1.028 : dragging ? 1.02 : 1,
+        opacity: hit ? 1 : pulse ? 1 : entrance ? 0.72 : dragging ? 0.84 : 0.5,
+        scale: scaleHit,
+        x: xNudge,
+        y: yNudge,
       }}
-      transition={{ duration: hit ? 0.09 : entrance ? 0.26 : 0.16 }}
+      transition={{
+        duration: hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
+        ease: hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
+      }}
       style={
         portrait
           ? {
               ...styles.seamPortrait,
-              background: `linear-gradient(90deg, transparent 0%, ${accent}55 22%, ${accent}cc 50%, ${accent}55 78%, transparent 100%)`,
-              boxShadow: `0 0 14px ${accent}28, 0 0 36px ${accent}14, 0 1px 0 rgba(255,255,255,.06)`,
+              background: `linear-gradient(90deg, transparent 0%, ${edgeHex} 22%, ${midHex} 50%, ${edgeHex} 78%, transparent 100%)`,
+              boxShadow: `0 0 ${glowCore}px ${accent}44, 0 0 ${glowHalo + 28}px ${accent}1a, 0 1px 0 rgba(255,255,255,.07)`,
             }
           : {
               ...styles.seamLandscape,
-              background: `linear-gradient(180deg, transparent 0%, ${accent}55 22%, ${accent}cc 50%, ${accent}55 78%, transparent 100%)`,
-              boxShadow: `0 0 14px ${accent}28, 0 0 36px ${accent}14, 1px 0 0 rgba(255,255,255,.05)`,
+              background: `linear-gradient(180deg, transparent 0%, ${edgeHex} 22%, ${midHex} 50%, ${edgeHex} 78%, transparent 100%)`,
+              boxShadow: `0 0 ${glowCore}px ${accent}44, 0 0 ${glowHalo + 28}px ${accent}1a, 1px 0 0 rgba(255,255,255,.06)`,
             }
       }
     />

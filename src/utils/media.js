@@ -12,14 +12,14 @@ export function throwVector(side, portrait) {
 
 export function enterVector(side, portrait) {
   const v = throwVector(side, portrait);
-  /** Directional offset from outside frame; scale opacity settle reads as stepping in */
-  const enterScale = 0.36;
+  /** Directional offset from outside frame; challenger steps into contention */
+  const enterScale = 0.38;
   return {
     x: v.x * enterScale,
     y: v.y * enterScale,
-    opacity: 0.11,
-    scale: 0.93,
-    rotate: portrait ? v.y / 285 : v.x / 305,
+    opacity: 0.1,
+    scale: 0.905,
+    rotate: portrait ? v.y / 298 : v.x / 312,
   };
 }
 

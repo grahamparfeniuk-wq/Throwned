@@ -3,21 +3,22 @@ import { enterVector } from "../../utils/media";
 import { GestureLayer } from "./GestureLayer";
 import { MediaSurface } from "./MediaSurface";
 
-/** Challenger path: directional glide + opacity ramp + scale settle (keeps total motion ~under unlock window) */
+/** Challenger path — inevitable entry into contention (smooth, not a feed swap) */
 const ENTER_TRANSITION = {
   type: "spring",
-  stiffness: 238,
-  damping: 30,
-  mass: 0.64,
-  opacity: { duration: 0.22, ease: [0.28, 0.95, 0.38, 1] },
+  stiffness: 208,
+  damping: 31,
+  mass: 0.74,
+  opacity: { duration: 0.27, ease: [0.22, 1, 0.36, 1] },
 };
 
-/** Defending slot yields space slightly during challenger arrival */
-const PEER_TRANSITION = {
+/** Survivor stabilizes after a win — damped, confident hold (not celebratory) */
+const SURVIVOR_SETTLE_TRANSITION = {
   type: "spring",
-  stiffness: 265,
-  damping: 34,
-  mass: 0.8,
+  stiffness: 292,
+  damping: 41,
+  mass: 0.9,
+  opacity: { duration: 0.14 },
 };
 
 const DRAG_TRANSITION = {
@@ -28,12 +29,11 @@ const DRAG_TRANSITION = {
   opacity: { duration: 0.1 },
 };
 
+/** Elimination vector — decisive tween (acceleration + commitment, no arcade spin) */
 const THROW_TRANSITION = {
-  type: "spring",
-  stiffness: 520,
-  damping: 31,
-  mass: 0.62,
-  opacity: { duration: 0.1 },
+  type: "tween",
+  duration: 0.44,
+  ease: [0.18, 0.9, 0.22, 1],
 };
 
 export function BattleSlot({
@@ -73,7 +73,13 @@ export function BattleSlot({
           scale: peer ? 0.987 : 1,
         });
 
-  const transition = thrown ? THROW_TRANSITION : entering ? ENTER_TRANSITION : peer ? PEER_TRANSITION : DRAG_TRANSITION;
+  const transition = thrown
+    ? THROW_TRANSITION
+    : entering
+      ? ENTER_TRANSITION
+      : peer
+        ? SURVIVOR_SETTLE_TRANSITION
+        : DRAG_TRANSITION;
 
   return (
     <motion.div
