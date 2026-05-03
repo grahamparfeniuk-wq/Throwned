@@ -3,12 +3,13 @@ import { motion } from "framer-motion";
 /**
  * Symbolic conflict line — decisive throws get tension + arena-colored compression (no arcade VFX).
  */
-export function Seam({ portrait, accent, pulse, impactHit, entranceHint, dragging, verdict, styles }) {
+export function Seam({ portrait, accent, pulse, impactHit, entranceHint, dragging, verdict, introSuppressed, styles }) {
   const hit = !!impactHit;
   const entrance = !!entranceHint && !hit;
   const upset = !!verdict?.upset;
   const vi = verdict?.intensity ?? 0;
   const survivor = verdict?.survivorSide;
+  const hideCenterLine = !!introSuppressed;
 
   const midHex = upset ? `${accent}ee` : `${accent}cc`;
   const edgeHex = upset ? `${accent}66` : `${accent}55`;
@@ -21,17 +22,19 @@ export function Seam({ portrait, accent, pulse, impactHit, entranceHint, draggin
   const glowCore = upset ? 26 + Math.round(18 * vi) : 18;
   const glowHalo = upset ? 22 + Math.round(12 * vi) : 14;
 
+  const baseOpacity = hideCenterLine ? 0 : hit ? 1 : pulse ? 1 : entrance ? 0.72 : dragging ? 0.84 : 0.5;
+
   return (
     <motion.div
       animate={{
-        opacity: hit ? 1 : pulse ? 1 : entrance ? 0.72 : dragging ? 0.84 : 0.5,
-        scale: scaleHit,
-        x: xNudge,
-        y: yNudge,
+        opacity: baseOpacity,
+        scale: hideCenterLine ? 1 : scaleHit,
+        x: hideCenterLine ? 0 : xNudge,
+        y: hideCenterLine ? 0 : yNudge,
       }}
       transition={{
-        duration: hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
-        ease: hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
+        duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
+        ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
       }}
       style={
         portrait

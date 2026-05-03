@@ -64,6 +64,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   const [paused, setPaused] = useState(false);
   const [activeDetailsClipId, setActiveDetailsClipId] = useState(null);
   const [labelVisible, setLabelVisible] = useState(true);
+  /** VS + seam battle chrome only after arena title card has fully exited */
+  const [vsBattleReady, setVsBattleReady] = useState(false);
   const [arenaPickerOpen, setArenaPickerOpen] = useState(false);
   const [arenaQuery, setArenaQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -100,6 +102,16 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   useEffect(() => {
     poolRef.current = pool;
   }, [pool]);
+
+  useEffect(() => {
+    if (labelVisible) {
+      setVsBattleReady(false);
+      return;
+    }
+    const revealVsMs = 680;
+    const id = setTimeout(() => setVsBattleReady(true), revealVsMs);
+    return () => clearTimeout(id);
+  }, [labelVisible]);
 
   useEffect(() => {
     return attachBattleMediaPreloads(items, pair);
@@ -566,9 +578,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         entranceHint={!!enterState}
         dragging={dragging}
         verdict={throwVerdict}
+        introSuppressed={!vsBattleReady}
         styles={styles}
       />
-      <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} arenaLabelVisible={labelVisible} />
+      {vsBattleReady ? <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} /> : null}
 
       {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}
       <div

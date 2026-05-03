@@ -6,16 +6,14 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
       {visible && (
         <motion.div
           style={styles.arenaLabelWrap}
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            scale: 0.97,
-            transition: { opacity: { duration: 0.62, ease: [0.4, 0, 0.2, 1] }, scale: { duration: 0.52 } },
+            transition: { duration: 0.62, ease: [0.38, 0, 0.22, 1] },
           }}
           transition={{
-            opacity: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-            scale: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+            opacity: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
           }}
         >
           <div
@@ -33,9 +31,15 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
                 onClick();
               }
             }}
-            style={{ ...styles.arenaLabel, borderColor: `${arena.accent}44`, pointerEvents: onClick ? "auto" : "none", cursor: onClick ? "pointer" : "default" }}
+            style={{
+              ...styles.arenaLabel,
+              pointerEvents: onClick ? "auto" : "none",
+              cursor: onClick ? "pointer" : "default",
+              borderBottom: `2px solid ${arena.accent}55`,
+              boxShadow: `0 10px 36px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05)`,
+            }}
           >
-            <span style={{ color: arena.accent }}>{arena.label}</span>
+            <span style={{ ...styles.arenaLabelTitle, color: arena.accent }}>{arena.label}</span>
           </div>
         </motion.div>
       )}
