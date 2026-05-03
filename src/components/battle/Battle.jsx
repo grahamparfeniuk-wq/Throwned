@@ -18,7 +18,6 @@ import { vibrateThrow } from "../../utils/haptics";
 import { VSBadge } from "./VSBadge";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
-import { ChampionBanner } from "../overlays/ChampionBanner";
 import { BattleSlot } from "./BattleSlot";
 
 const HOLD_MS = 260;
@@ -67,7 +66,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   const [locked, setLocked] = useState(false);
   const [winnerId, setWinnerId] = useState(null);
   const [streak, setStreak] = useState(0);
-  const [champion, setChampion] = useState(null);
+  /** 3-streak rotation holds interaction until fresh pair loads (no banner UI) */
+  const [streakHoldActive, setStreakHoldActive] = useState(false);
   const [throwState, setThrowState] = useState(null);
   const [enterState, setEnterState] = useState(null);
   const [transitioning, setTransitioning] = useState(false);
@@ -109,7 +109,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     setPaused(false);
     setWinnerId(null);
     setStreak(0);
-    setChampion(null);
+    setStreakHoldActive(false);
     setArenaPickerOpen(false);
     setArenaQuery("");
     setThrowState(null);
@@ -137,7 +137,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
   useEffect(() => {
     if (arena.type === "image") return;
-    if (!pair?.first || !pair?.second || paused || detailsId || locked || champion || transitioning) return;
+    if (!pair?.first || !pair?.second || paused || detailsId || locked || streakHoldActive || transitioning) return;
 
     const active = activeSide === "first" ? pair.first : pair.second;
     const t = setTimeout(() => {
@@ -145,9 +145,10 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     }, safeDuration(active));
 
     return () => clearTimeout(t);
-  }, [arena.type, pair, activeSide, paused, detailsId, locked, champion, transitioning]);
+  }, [arena.type, pair, activeSide, paused, detailsId, locked, streakHoldActive, transitioning]);
 
   function startHold(id) {
+    if (streakHoldActive) return;
     holdTriggered.current = false;
     clearTimeout(holdTimer.current);
     holdTimer.current = setTimeout(() => {
@@ -167,7 +168,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   }
 
   function onMove(side, dx, dy) {
-    if (locked || detailsId || champion || transitioning) return;
+    if (locked || detailsId || streakHoldActive || transitioning) return;
 
     const raw = portrait ? dy : dx;
     const outwardDirection = side === "first" ? -1 : 1;
@@ -226,7 +227,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
   }
 
   function resolve(side, dx, dy, vx, vy) {
-    if (locked || !pair?.first || !pair?.second || detailsId || champion || transitioning) return;
+    if (locked || !pair?.first || !pair?.second || detailsId || streakHoldActive || transitioning) return;
 
     const result = outcome(side, dx, dy, vx, vy);
     setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
@@ -303,7 +304,9 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
       );
 
       if (nextStreak >= 3) {
-        setChampion(updatedWinner);
+        setStreakHoldActive(true);
+        setPulse(true);
+        setTimeout(() => setPulse(false), 280);
 
         setTimeout(() => {
           const cleared = fresh.filter((x) => x.id !== updatedWinner.id && x.id !== updatedLoser.id);
@@ -312,7 +315,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           setActiveSide(arena.type === "image" ? "both" : next?.second ? "second" : "first");
           setWinnerId(null);
           setStreak(0);
-          setChampion(null);
+          setStreakHoldActive(false);
           setThrowState(null);
           setEnterState(null);
           setLocked(false);
@@ -337,7 +340,8 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
       setPair(next);
       setEnterState({ side, id: challenger.id });
-      setActiveSide(arena.type === "image" ? "both" : side === "first" ? "second" : "first");
+      /* Incoming challenger occupies loser's slot (`side`) — they become the active video */
+      setActiveSide(arena.type === "image" ? "both" : side);
       setThrowState(null);
       setPaused(false);
       setUnlockedAt(Date.now());
@@ -376,7 +380,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
     <div
       style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
       onClick={() => {
-        if (arena.type === "video" && !detailsId && !champion && !sheetOpen) setPaused((p) => !p);
+        if (arena.type === "video" && !detailsId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
       }}
     >
       <motion.div
@@ -418,7 +422,6 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
                 onChange={(e) => setArenaQuery(e.target.value)}
                 placeholder="Search arenas"
                 style={styles.arenaPickerInput}
-                autoFocus
               />
               <div style={styles.arenaPickerList}>
                 {filteredArenas.map((a) => (
@@ -459,8 +462,9 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           paused={paused}
           dimmed={false}
           winner={winnerId === pair.first.id}
-          locked={locked || transitioning}
+          locked={locked || transitioning || streakHoldActive}
           entering={enterState?.side === "first" && enterState?.id === pair.first.id}
+          incumbentDuringEntry={!!enterState && enterState.side !== "first"}
           thrown={thrownStyle("first")}
           drag={drag.first}
           onMove={onMove}
@@ -479,8 +483,9 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           paused={paused}
           dimmed={false}
           winner={winnerId === pair.second.id}
-          locked={locked || transitioning}
+          locked={locked || transitioning || streakHoldActive}
           entering={enterState?.side === "second" && enterState?.id === pair.second.id}
+          incumbentDuringEntry={!!enterState && enterState.side !== "second"}
           thrown={thrownStyle("second")}
           drag={drag.second}
           onMove={onMove}
@@ -491,10 +496,9 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
         />
       </motion.div>
 
-      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} impactHit={impactPhase} dragging={dragging} styles={styles} />
+      <Seam portrait={portrait} accent={arena.accent} pulse={pulse} impactHit={impactPhase} entranceHint={!!enterState} dragging={dragging} styles={styles} />
       <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} />
       {renderDetails({ item: detailsItem, accent: arena.accent })}
-      <ChampionBanner item={champion} accent={arena.accent} styles={styles} />
 
       <div
         style={styles.swipeZone}

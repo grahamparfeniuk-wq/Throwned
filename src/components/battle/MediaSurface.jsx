@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { arenaById } from "../../utils/ranking";
 import { BattleMedia } from "./BattleMedia";
 
-export function MediaSurface({ item, active, paused, dimmed, winner, accent, onHoldStart, onHoldEnd, styles }) {
+export function MediaSurface({ item, active, paused, dimmed, winner, accent, entranceEmphasis, onHoldStart, onHoldEnd, styles }) {
   const ref = useRef(null);
   const [failed, setFailed] = useState(false);
   const prevItemId = useRef(null);
@@ -20,8 +20,16 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, onH
     const start = Number(item.trimStart || 0);
     const itemChanged = prevItemId.current !== item.id;
     const becameActive = !prevActive.current && active;
+    const becameInactive = prevActive.current && !active;
 
     if (itemChanged || becameActive) {
+      try {
+        video.currentTime = start;
+      } catch {}
+    }
+
+    // Park defender at trimStart when not the active slot so the next turn starts clean
+    if (becameInactive) {
       try {
         video.currentTime = start;
       } catch {}
@@ -76,6 +84,24 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, onH
 
   const isImage = item.type === "image";
 
+  const baseFilter = isImage
+    ? "brightness(1.03)"
+    : winner
+      ? "brightness(1.13)"
+      : active && !paused
+        ? "brightness(1.06)"
+        : "brightness(0.92)";
+  const filter =
+    entranceEmphasis && isImage
+      ? "brightness(1.09)"
+      : entranceEmphasis && !isImage
+        ? winner
+          ? "brightness(1.16)"
+          : active && !paused
+            ? "brightness(1.1)"
+            : "brightness(0.96)"
+        : baseFilter;
+
   return (
     <div
       style={{ ...styles.surface, boxShadow: winner ? `inset 0 0 58px ${accent}2a` : "none" }}
@@ -89,7 +115,8 @@ export function MediaSurface({ item, active, paused, dimmed, winner, accent, onH
       <div
         style={{
           ...styles.mediaWrap,
-          filter: isImage ? "brightness(1.03)" : winner ? "brightness(1.13)" : active && !paused ? "brightness(1.06)" : "brightness(0.92)",
+          filter,
+          transition: entranceEmphasis ? "filter 0.22s ease-out" : undefined,
         }}
       >
         {!failed ? (

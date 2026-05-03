@@ -12,12 +12,14 @@ export function throwVector(side, portrait) {
 
 export function enterVector(side, portrait) {
   const v = throwVector(side, portrait);
-  const enterScale = 0.31;
+  /** Directional offset from outside frame; scale opacity settle reads as stepping in */
+  const enterScale = 0.36;
   return {
     x: v.x * enterScale,
     y: v.y * enterScale,
-    opacity: 0.06,
-    rotate: portrait ? v.y / 300 : v.x / 335,
+    opacity: 0.11,
+    scale: 0.93,
+    rotate: portrait ? v.y / 285 : v.x / 305,
   };
 }
 
