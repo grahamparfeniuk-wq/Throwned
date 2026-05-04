@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 /** VS diamond — parent mounts this only after arena intro title has fully exited */
 export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
   const hit = !!impactHit;
-  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.55, auraMul) : 1;
+  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.68, auraMul) : 1;
 
-  const borderStrong = `${accent}92`;
-  const borderIdle = a >= 1.18 ? `${accent}92` : a >= 1.06 ? `${accent}82` : `${accent}72`;
-  const shadowIdle = `0 0 0 1px rgba(0,0,0,.93), 0 0 ${Math.round(24 * a)}px ${accent}32, 0 0 ${Math.round(56 * a)}px ${accent}1a, inset 0 1px 0 rgba(255,255,255,.08)`;
-  const shadowHit = `0 0 0 1px rgba(0,0,0,.93), 0 0 ${Math.round(26 * a)}px ${accent}3e, inset 0 1px 0 rgba(255,255,255,.09)`;
+  const borderStrong = `${accent}98`;
+  const borderIdle = a >= 1.2 ? `${accent}96` : a >= 1.08 ? `${accent}86` : `${accent}76`;
+  const shadowIdle = `0 0 0 1px rgba(0,0,0,.94), 0 0 0 0.5px ${accent}14, 0 0 ${Math.round(28 * a)}px ${accent}36, 0 0 ${Math.round(62 * a)}px ${accent}1e, inset 0 1px 0 rgba(255,255,255,.09)`;
+  const shadowHit = `0 0 0 1px rgba(0,0,0,.94), 0 0 ${Math.round(28 * a)}px ${accent}42, inset 0 1px 0 rgba(255,255,255,.095)`;
 
   return (
     <motion.div
@@ -38,9 +38,9 @@ export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
               width: 112,
               height: 112,
               borderRadius: "50%",
-              background: `radial-gradient(circle, ${accent}18 0%, transparent 72%)`,
-              filter: "blur(16px)",
-              opacity: 0.9 * Math.min(1.18, a),
+              background: `radial-gradient(circle, ${accent}1e 0%, transparent 70%)`,
+              filter: "blur(17px)",
+              opacity: 0.92 * Math.min(1.22, a),
               pointerEvents: "none",
             }}
           />
@@ -59,7 +59,7 @@ export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
           <div
             style={{
               ...styles.vsInner,
-              textShadow: hit ? `0 0 15px ${accent}48` : `0 0 12px ${accent}32`,
+              textShadow: hit ? `0 0 16px ${accent}4c` : `0 0 13px ${accent}38`,
             }}
           >
             VS

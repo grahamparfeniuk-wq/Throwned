@@ -24,7 +24,8 @@ import { ArenaLabel } from "../overlays/ArenaLabel";
 import { BattleSlot } from "./BattleSlot";
 import { DetailsPeek } from "../overlays/DetailsPeek";
 
-const PEEK_HOLD_MS = 450;
+/** Deliberate beat before contender narrative opens — broadcast-style commitment */
+const PEEK_HOLD_MS = 510;
 const PEEK_HOLD_MOVE_PX = 18;
 /** Slower deliberate swipe: full travel still commits without needing flick speed */
 const THROW_DISTANCE_HARD = 88;
@@ -42,9 +43,9 @@ const LABEL_MS = 1600;
 /** Impact flash — judgment lands */
 const BEAT_IMPACT_MS = 124;
 /** Breathing room before pair swap (broadcast beat — lets elimination land emotionally) */
-const BEAT_VICTORY_PAUSE_MS = 228;
+const BEAT_VICTORY_PAUSE_MS = 236;
 /** Extra pause when lower-rated side wins (upset — restrained, no carnival) */
-const BEAT_UPSET_EXTRA_MS = 88;
+const BEAT_UPSET_EXTRA_MS = 96;
 const THROW_UNLOCK_MS = 276;
 
 function throwBlendPasses(distMag, velMag) {
@@ -326,24 +327,24 @@ export function Battle({
 
     setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier, streakBreak, majorStreakBreak });
     const verdictClearMs =
-      658 +
-      (hierarchyTier === 2 ? 340 : hierarchyTier === 1 ? 208 : 0) +
-      (majorStreakBreak ? 148 : streakBreak ? 92 : 0);
+      688 +
+      (hierarchyTier === 2 ? 392 : hierarchyTier === 1 ? 242 : 0) +
+      (majorStreakBreak ? 168 : streakBreak ? 108 : 0);
     setTimeout(() => setThrowVerdict(null), verdictClearMs);
 
     const impactOutMs =
       BEAT_IMPACT_MS +
       (upset
-        ? Math.round(58 + 56 * upsetIntensity) +
-          (hierarchyTier === 2 ? 86 : hierarchyTier === 1 ? 48 : 0) +
-          (majorStreakBreak ? 36 : streakBreak ? 18 : 0)
+        ? Math.round(62 + 58 * upsetIntensity) +
+          (hierarchyTier === 2 ? 102 : hierarchyTier === 1 ? 56 : 0) +
+          (majorStreakBreak ? 42 : streakBreak ? 22 : 0)
         : 0);
     const pulseOutMs = upset
       ? BEAT_IMPACT_MS +
-        138 +
-        Math.round(46 * upsetIntensity) +
-        (hierarchyTier === 2 ? 72 : hierarchyTier === 1 ? 42 : 0) +
-        (majorStreakBreak ? 32 : streakBreak ? 16 : 0)
+        152 +
+        Math.round(48 * upsetIntensity) +
+        (hierarchyTier === 2 ? 84 : hierarchyTier === 1 ? 50 : 0) +
+        (majorStreakBreak ? 38 : streakBreak ? 20 : 0)
       : BEAT_IMPACT_MS + 22;
 
     setImpactPhase(true);
@@ -398,10 +399,10 @@ export function Battle({
     const victoryPauseMs =
       BEAT_VICTORY_PAUSE_MS +
       battleProfile.victoryPauseDeltaMs +
-      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(62 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
-      (hierarchyTier === 2 ? 124 : hierarchyTier === 1 ? 74 : 0) +
-      (majorStreakBreak ? 92 : streakBreak ? 58 : 0) +
-      (upset && upsetIntensity > 0.55 ? Math.round(38 * (upsetIntensity - 0.55)) : 0);
+      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(68 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
+      (hierarchyTier === 2 ? 148 : hierarchyTier === 1 ? 88 : 0) +
+      (majorStreakBreak ? 108 : streakBreak ? 68 : 0) +
+      (upset && upsetIntensity > 0.55 ? Math.round(44 * (upsetIntensity - 0.55)) : 0);
     const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
 
     setTimeout(() => {
@@ -473,8 +474,8 @@ export function Battle({
         setLocked(false);
       }, Math.round(
         THROW_UNLOCK_MS * battleProfile.pacingMultiplier +
-          (hierarchyTier === 2 ? 64 : hierarchyTier === 1 ? 38 : 0) +
-          (majorStreakBreak ? 52 : streakBreak ? 30 : 0)
+          (hierarchyTier === 2 ? 76 : hierarchyTier === 1 ? 46 : 0) +
+          (majorStreakBreak ? 60 : streakBreak ? 36 : 0)
       ));
     }, swapDelayMs);
   }
@@ -508,7 +509,7 @@ export function Battle({
     <div
       style={{
         ...styles.battle,
-        background: `radial-gradient(circle at 50% 50%, ${arena.accent}1a, transparent 38%), #050608`,
+        background: `radial-gradient(circle at 50% 50%, ${arena.accent}1e, transparent 40%), #050608`,
       }}
       onClick={() => {
         if (interactionLocked) return;
@@ -524,7 +525,7 @@ export function Battle({
           position: "absolute",
           inset: 0,
           zIndex: 1,
-          background: `radial-gradient(ellipse 92% 58% at 50% 46%, ${arena.accent}1c, transparent 58%)`,
+          background: `radial-gradient(ellipse 88% 56% at 50% 46%, ${arena.accent}20, transparent 60%)`,
         }}
       />
 
@@ -679,8 +680,8 @@ export function Battle({
           portrait={portrait}
           accent={arena.accent}
           auraMul={Math.min(
-            1.58,
-            battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.9 * 1.05
+            1.68,
+            battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.9 * 1.08
           )}
           styles={styles}
         />
@@ -690,7 +691,7 @@ export function Battle({
           accent={arena.accent}
           styles={styles}
           impactHit={impactPhase}
-          auraMul={Math.min(1.52, ((battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2) * 1.07)}
+          auraMul={Math.min(1.62, ((battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2) * 1.1)}
         />
       ) : null}
 

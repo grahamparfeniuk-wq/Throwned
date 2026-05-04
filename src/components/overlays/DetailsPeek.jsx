@@ -73,7 +73,7 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
         aria-label="Contender intro"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         style={{ ...styles.peekCard, borderColor: `${accent}28` }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -99,10 +99,11 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
           <div style={styles.peekNarrativeBlock}>
             {narrativeLines.map((line, i) => (
               <p
-                key={line}
+                key={`${i}-${line}`}
                 style={{
                   ...styles.peekNarrativeLine,
-                  marginBottom: i === narrativeLines.length - 1 ? 0 : 12,
+                  ...(i === 0 ? styles.peekNarrativeLead : styles.peekNarrativeSecondary),
+                  marginBottom: i === narrativeLines.length - 1 ? 0 : 14,
                 }}
               >
                 {line}

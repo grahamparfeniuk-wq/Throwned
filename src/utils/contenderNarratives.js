@@ -142,15 +142,15 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   const candidates = [];
 
   if (arenaWinStreak >= 5) {
-    candidates.push({ w: 100, text: `${arenaWinStreak} straight — defense holds in ${shortLabel}` });
+    candidates.push({ w: 102, text: `${arenaWinStreak} straight — defense holds in ${shortLabel}` });
   } else if (arenaWinStreak >= 3) {
-    candidates.push({ w: 98, text: `Defending run: ${arenaWinStreak} in a row here` });
+    candidates.push({ w: 100, text: `Defending run: ${arenaWinStreak} in a row here` });
   } else if (arenaWinStreak >= 2) {
-    candidates.push({ w: 94, text: `Heating up — ${arenaWinStreak} straight in ${shortLabel}` });
+    candidates.push({ w: 96, text: `Heating up — ${arenaWinStreak} straight in ${shortLabel}` });
   }
 
   if (isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 100, text: `Throne defense — every throw tests them in ${shortLabel}` });
+    candidates.push({ w: 102, text: `Throne defense — every throw tests them in ${shortLabel}` });
   }
 
   if (wins > 0 && losses === 0) {
@@ -165,12 +165,16 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
     candidates.push({ w: 89, text: `On a run — ${wins}–${losses} when it counts` });
   }
 
+  if (item.rank != null && item.rank <= 3 && n >= 4) {
+    candidates.push({ w: 99, text: "Top 3 on the sheet — the room can feel it" });
+  }
+
   if (item.rank != null && item.rank <= 10) {
-    candidates.push({ w: 96, text: `Ranked #${item.rank} — every matchup carries weight` });
+    candidates.push({ w: 98, text: `Ranked #${item.rank} — every matchup carries weight` });
   }
 
   if (item.rank != null && n >= 6 && item.rank > 1 && item.rank <= Math.max(2, Math.ceil(n * 0.12))) {
-    candidates.push({ w: 88, text: "Breathing on the title door" });
+    candidates.push({ w: 90, text: "Breathing on the title door" });
   }
 
   if (
@@ -179,15 +183,23 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
     (item.rating ?? 0) < (opponent.rating ?? 0) &&
     wins > losses
   ) {
-    candidates.push({ w: 90, text: "Upset favorite — took the measure of a ranked sheet" });
+    candidates.push({ w: 96, text: "Upset favorite — took the measure of a ranked sheet" });
+  }
+
+  if (
+    opponent &&
+    isTopNRanked(opponent, 3) &&
+    (item.rating ?? 0) < (opponent.rating ?? 0)
+  ) {
+    candidates.push({ w: 91, text: "Title-line pressure in this corner" });
   }
 
   if (isTopCompetitorInAnyArena(pool, handle, 0.25) && !isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 82, text: `Proven in deep fields — not a one-hit story` });
+    candidates.push({ w: 84, text: `Proven in deep fields — not a one-hit story` });
   }
 
   if (isRisingContender(pool, arena, item)) {
-    candidates.push({ w: 92, text: `Fast climb — hunting the front row in ${shortLabel}` });
+    candidates.push({ w: 95, text: `Fast climb — hunting the front row in ${shortLabel}` });
   }
 
   if (item.country) {
@@ -198,7 +210,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   if (cityLine) {
     candidates.push({ w: 79, text: cityLine });
   } else if (item.localFavorite || item.localContender) {
-    candidates.push({ w: 78, text: `Local favorite — this crowd rides with them` });
+    candidates.push({ w: 83, text: `Local favorite — this crowd rides with them` });
   } else if (item.hometown || item.locale) {
     candidates.push({ w: 72, text: `${(item.hometown || item.locale).split(/[·,]/)[0].trim()} walks in with them` });
   }
@@ -233,10 +245,10 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   if (split) candidates.push({ w: 78, text: split });
 
   const underdog = underdogPairingLine(item, opponent);
-  if (underdog) candidates.push({ w: 86, text: underdog });
+  if (underdog) candidates.push({ w: 92, text: underdog });
 
   const pressure = pressureTop10Line(item, opponent);
-  if (pressure) candidates.push({ w: 84, text: pressure });
+  if (pressure) candidates.push({ w: 90, text: pressure });
 
   if (item.confidence != null && item.confidence >= 0.44 && item.confidence <= 0.56 && n >= 4 && !split) {
     candidates.push({ w: 64, text: "Fans split — no easy read on this one" });
@@ -258,7 +270,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   }
 
   const rot = narrativeRotationOffset(item, arena);
-  const window = ordered.slice(0, Math.min(ordered.length, 10));
+  const window = ordered.slice(0, Math.min(ordered.length, 12));
   if (window.length <= 2) return window.map((c) => c.text);
 
   const r = rot % window.length;
