@@ -13,6 +13,9 @@ import { arenaItems, sortRank } from "./ranking";
 export function selectBroadcastEyebrow({ item, pool, arena }) {
   if (!item || !arena) return "CONTENDER";
   if (isArenaDefender(pool, arena, item)) return "DEFENDING";
+  const aws = Math.floor(item.arenaWinStreak ?? 0);
+  if (aws >= 5) return "ON FIRE";
+  if (aws >= 3) return "ON A HEATER";
   if (item.localFavorite || item.localContender) return "LOCAL FAVORITE";
   if (isRisingContender(pool, arena, item)) return "RISING";
   const wins = item.wins ?? 0;
@@ -40,9 +43,12 @@ export function selectBroadcastEyebrow({ item, pool, arena }) {
 /** Human momentum — avoids “Rating #### • Royalty” database tone */
 export function momentumHumanPhrase(item) {
   const c = item.confidence ?? 0.55;
+  const r = item.rank;
+  if (r === 1) return "Sitting on the throne — every battle targets them";
+  if (r != null && r <= 3) return "In the title picture — momentum matters";
   if (c >= 0.86) return "Elite tier — trust is earned";
-  if (c >= 0.73) return "Rising fast";
-  if (c >= 0.58) return "Building steam";
+  if (c >= 0.73) return "Rising fast — the standings are moving";
+  if (c >= 0.58) return "Building steam — climbing with intent";
   return "Outsider lane — proof over hype";
 }
 
@@ -66,9 +72,10 @@ function shortArenaLabel(arena) {
 
 function narrativeRotationOffset(item, arena) {
   let h = 0;
-  const s = `${item?.id ?? ""}:${arena?.id ?? ""}:${item?.wins ?? 0}:${item?.losses ?? 0}:${item?.rank ?? 0}`;
+  const cadence = typeof performance !== "undefined" ? Math.floor(performance.now() / 35000) % 8 : 0;
+  const s = `${item?.id ?? ""}:${arena?.id ?? ""}:${item?.wins ?? 0}:${item?.losses ?? 0}:${item?.rank ?? 0}:${cadence}`;
   for (let i = 0; i < s.length; i++) h = ((h * 31 + s.charCodeAt(i)) >>> 0) % 1_000_000_007;
-  return h % 7;
+  return h % 11;
 }
 
 function isLateNight() {
@@ -135,35 +142,35 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   const candidates = [];
 
   if (arenaWinStreak >= 5) {
-    candidates.push({ w: 97, text: `Defending streak: ${arenaWinStreak}` });
+    candidates.push({ w: 99, text: `${arenaWinStreak} straight — defense holds in ${shortLabel}` });
   } else if (arenaWinStreak >= 3) {
-    candidates.push({ w: 93, text: `Defending streak: ${arenaWinStreak}` });
+    candidates.push({ w: 96, text: `Defending run: ${arenaWinStreak} in a row here` });
   } else if (arenaWinStreak >= 2) {
-    candidates.push({ w: 88, text: `Heater: ${arenaWinStreak} straight in ${shortLabel}` });
+    candidates.push({ w: 92, text: `Heating up — ${arenaWinStreak} straight in ${shortLabel}` });
   }
 
   if (isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 96, text: `Holding the throne in ${shortLabel}` });
+    candidates.push({ w: 98, text: `Throne defense — every throw tests them in ${shortLabel}` });
   }
 
   if (wins > 0 && losses === 0) {
-    candidates.push({ w: 91, text: `Undefeated in ${shortLabel}` });
+    candidates.push({ w: 94, text: `Still unblemished in ${shortLabel}` });
   }
 
   if (total >= 8 && wins >= 7) {
-    candidates.push({ w: 94, text: `Won ${wins} of the last ${total}` });
+    candidates.push({ w: 97, text: `Won ${wins} of the last ${total} — the sheet respects it` });
   } else if (total >= 6 && wins >= 5) {
-    candidates.push({ w: 90, text: `Won ${wins} of the last ${total}` });
+    candidates.push({ w: 94, text: `Won ${wins} of the last ${total}` });
   } else if (total >= 4 && wins >= 3 && wins / total >= 0.75) {
-    candidates.push({ w: 85, text: `On a run — ${wins}–${losses} when it counts` });
+    candidates.push({ w: 89, text: `On a run — ${wins}–${losses} when it counts` });
   }
 
   if (item.rank != null && item.rank <= 10) {
-    candidates.push({ w: 89, text: `Top ${item.rank} pressure — no easy outs` });
+    candidates.push({ w: 93, text: `Ranked #${item.rank} — every matchup carries weight` });
   }
 
   if (item.rank != null && n >= 6 && item.rank > 1 && item.rank <= Math.max(2, Math.ceil(n * 0.12))) {
-    candidates.push({ w: 83, text: "Knocking on the title door" });
+    candidates.push({ w: 88, text: "Breathing on the title door" });
   }
 
   if (
@@ -180,7 +187,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   }
 
   if (isRisingContender(pool, arena, item)) {
-    candidates.push({ w: 81, text: `Fastest climber in ${shortLabel} right now` });
+    candidates.push({ w: 92, text: `Fast climb — hunting the front row in ${shortLabel}` });
   }
 
   if (item.country) {
@@ -251,7 +258,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   }
 
   const rot = narrativeRotationOffset(item, arena);
-  const window = ordered.slice(0, Math.min(ordered.length, 8));
+  const window = ordered.slice(0, Math.min(ordered.length, 10));
   if (window.length <= 2) return window.map((c) => c.text);
 
   const r = rot % window.length;

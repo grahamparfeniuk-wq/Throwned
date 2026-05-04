@@ -17,6 +17,7 @@ import { safeDuration, throwVector } from "../../utils/media";
 import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
 import { vibrateThrow } from "../../utils/haptics";
 import { VSBadge } from "./VSBadge";
+import { BattleSeamAura } from "./BattleSeamAura";
 import { ArenaIntroSeamGlow } from "./ArenaIntroSeamGlow";
 import { Seam } from "./Seam";
 import { ArenaLabel } from "../overlays/ArenaLabel";
@@ -319,15 +320,30 @@ export function Battle({
       if (loser.rank <= 3) hierarchyTier = 2;
       else if (loser.rank <= 10) hierarchyTier = 1;
     }
-    setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier });
-    const verdictClearMs = 620 + (hierarchyTier === 2 ? 200 : hierarchyTier === 1 ? 110 : 0);
+    const loserStreak = loser.arenaWinStreak ?? 0;
+    const streakBreak = loserStreak >= 2;
+    const majorStreakBreak = loserStreak >= 5;
+
+    setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier, streakBreak, majorStreakBreak });
+    const verdictClearMs =
+      620 +
+      (hierarchyTier === 2 ? 280 : hierarchyTier === 1 ? 165 : 0) +
+      (majorStreakBreak ? 120 : streakBreak ? 75 : 0);
     setTimeout(() => setThrowVerdict(null), verdictClearMs);
 
     const impactOutMs =
       BEAT_IMPACT_MS +
-      (upset ? Math.round(48 + 40 * upsetIntensity) + (hierarchyTier === 2 ? 44 : hierarchyTier === 1 ? 24 : 0) : 0);
+      (upset
+        ? Math.round(52 + 52 * upsetIntensity) +
+          (hierarchyTier === 2 ? 68 : hierarchyTier === 1 ? 38 : 0) +
+          (majorStreakBreak ? 28 : streakBreak ? 14 : 0)
+        : 0);
     const pulseOutMs = upset
-      ? BEAT_IMPACT_MS + 115 + Math.round(35 * upsetIntensity) + (hierarchyTier === 2 ? 42 : hierarchyTier === 1 ? 22 : 0)
+      ? BEAT_IMPACT_MS +
+        125 +
+        Math.round(42 * upsetIntensity) +
+        (hierarchyTier === 2 ? 58 : hierarchyTier === 1 ? 34 : 0) +
+        (majorStreakBreak ? 24 : streakBreak ? 12 : 0)
       : BEAT_IMPACT_MS + 22;
 
     setImpactPhase(true);
@@ -382,8 +398,10 @@ export function Battle({
     const victoryPauseMs =
       BEAT_VICTORY_PAUSE_MS +
       battleProfile.victoryPauseDeltaMs +
-      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(42 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
-      (hierarchyTier === 2 ? 52 : hierarchyTier === 1 ? 30 : 0);
+      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(56 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
+      (hierarchyTier === 2 ? 96 : hierarchyTier === 1 ? 56 : 0) +
+      (majorStreakBreak ? 72 : streakBreak ? 48 : 0) +
+      (upset && upsetIntensity > 0.55 ? Math.round(32 * (upsetIntensity - 0.55)) : 0);
     const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
 
     setTimeout(() => {
@@ -453,7 +471,11 @@ export function Battle({
       setTimeout(() => {
         setEnterState(null);
         setLocked(false);
-      }, Math.round(THROW_UNLOCK_MS * battleProfile.pacingMultiplier));
+      }, Math.round(
+        THROW_UNLOCK_MS * battleProfile.pacingMultiplier +
+          (hierarchyTier === 2 ? 48 : hierarchyTier === 1 ? 28 : 0) +
+          (majorStreakBreak ? 40 : streakBreak ? 22 : 0)
+      ));
     }, swapDelayMs);
   }
 
@@ -484,7 +506,10 @@ export function Battle({
 
   return (
     <div
-      style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
+      style={{
+        ...styles.battle,
+        background: `radial-gradient(circle at 50% 50%, ${arena.accent}14, transparent 34%), #050608`,
+      }}
       onClick={() => {
         if (interactionLocked) return;
         if (arena.type === "video" && !activeDetailsClipId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
@@ -649,7 +674,22 @@ export function Battle({
         arenaEnergyMul={battleProfile.seamEnergyMul}
         styles={styles}
       />
-      {vsBattleReady ? <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} /> : null}
+      {vsBattleReady ? (
+        <BattleSeamAura
+          portrait={portrait}
+          accent={arena.accent}
+          auraMul={Math.min(1.42, battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.88)}
+          styles={styles}
+        />
+      ) : null}
+      {vsBattleReady ? (
+        <VSBadge
+          accent={arena.accent}
+          styles={styles}
+          impactHit={impactPhase}
+          auraMul={Math.min(1.38, (battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2)}
+        />
+      ) : null}
 
       {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}
       <div

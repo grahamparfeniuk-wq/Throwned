@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 
 /**
  * Symbolic conflict line — decisive throws get tension + arena-colored compression (no arcade VFX).
+ * Idle battle: slightly richer line + slow breathing so the seam stays emotionally present.
  */
 export function Seam({
   portrait,
@@ -22,14 +23,21 @@ export function Seam({
   const survivor = verdict?.survivorSide;
   const hideCenterLine = !!introSuppressed;
   const tier = verdict?.hierarchyTier ?? 0;
-  const energy = (typeof arenaEnergyMul === "number" && arenaEnergyMul > 0 ? arenaEnergyMul : 1) * (1 + tier * 0.055);
+  const streakBreak = !!verdict?.streakBreak;
+  const majorStreakBreak = !!verdict?.majorStreakBreak;
+  const energy =
+    (typeof arenaEnergyMul === "number" && arenaEnergyMul > 0 ? arenaEnergyMul : 1) *
+    (1 + tier * 0.082) *
+    (streakBreak ? 1.072 : 1) *
+    (majorStreakBreak ? 1.045 : 1);
 
-  const midHex = upset ? `${accent}ee` : `${accent}cc`;
-  const edgeHex = upset ? `${accent}66` : `${accent}55`;
+  const midHex = upset ? `${accent}ee` : `${accent}d8`;
+  const edgeHex = upset ? `${accent}66` : `${accent}5c`;
 
   const scaleHit = hit
     ? upset
-      ? (1.075 + vi * 0.065 + tier * 0.022) * Math.min(1.045, 0.02 + energy * 0.98)
+      ? (1.082 + vi * 0.088 + tier * 0.032 + (streakBreak ? 0.014 : 0)) *
+        Math.min(1.055, 0.02 + energy * 0.985)
       : 1.058
     : pulse
       ? 1.042
@@ -42,34 +50,64 @@ export function Seam({
   const yNudge = hit && survivor && portrait ? (survivor === "first" ? -2.2 : 2.2) : 0;
   const xNudge = hit && survivor && !portrait ? (survivor === "first" ? -2 : 2) : 0;
 
-  const glowCore = Math.round((upset ? 26 + Math.round(18 * vi) : 18) * energy);
-  const glowHalo = Math.round((upset ? 22 + Math.round(12 * vi) : 14) * energy);
+  const idleLineBoost = !upset && !hit ? 4 : 0;
+  const glowCore = Math.round(
+    (upset ? 28 + Math.round(22 * vi) + tier * 4 + (streakBreak ? 6 : 0) : 22 + idleLineBoost) * energy
+  );
+  const glowHalo = Math.round(
+    (upset ? 24 + Math.round(14 * vi) + tier * 3 + (streakBreak ? 5 : 0) : 18 + idleLineBoost) * energy
+  );
 
-  const baseOpacity = hideCenterLine ? 0 : hit ? 1 : pulse ? 1 : entrance ? 0.72 : dragging ? 0.84 : 0.5;
+  const breathingIdle =
+    !hideCenterLine && !hit && !pulse && !entrance && !dragging;
+
+  let opacityAnim = 0;
+  if (hideCenterLine) opacityAnim = 0;
+  else if (hit || pulse) opacityAnim = 1;
+  else if (entrance) opacityAnim = 0.76;
+  else if (dragging) opacityAnim = 0.88;
+  else if (breathingIdle) opacityAnim = [0.64, 0.78, 0.64];
+  else opacityAnim = 0.68;
+
+  const opacityTransition = breathingIdle
+    ? { opacity: { duration: 6.2, repeat: Infinity, ease: "easeInOut" } }
+    : {
+        opacity: {
+          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.2,
+          ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
+        },
+      };
+
+  const accentGlow = `${accent}48`;
 
   return (
     <motion.div
       animate={{
-        opacity: baseOpacity,
+        opacity: opacityAnim,
         scale: hideCenterLine ? 1 : scaleHit,
         x: hideCenterLine ? 0 : xNudge,
         y: hideCenterLine ? 0 : yNudge,
       }}
       transition={{
-        duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
-        ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
+        ...opacityTransition,
+        scale: {
+          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
+          ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
+        },
+        x: { duration: 0.12, ease: [0.22, 1, 0.36, 1] },
+        y: { duration: 0.12, ease: [0.22, 1, 0.36, 1] },
       }}
       style={
         portrait
           ? {
               ...styles.seamPortrait,
               background: `linear-gradient(90deg, transparent 0%, ${edgeHex} 22%, ${midHex} 50%, ${edgeHex} 78%, transparent 100%)`,
-              boxShadow: `0 0 ${glowCore}px ${accent}44, 0 0 ${glowHalo + 28}px ${accent}1a, 0 1px 0 rgba(255,255,255,.07)`,
+              boxShadow: `0 0 ${glowCore}px ${accentGlow}, 0 0 ${glowHalo + 32}px ${accent}22, 0 1px 0 rgba(255,255,255,.08)`,
             }
           : {
               ...styles.seamLandscape,
               background: `linear-gradient(180deg, transparent 0%, ${edgeHex} 22%, ${midHex} 50%, ${edgeHex} 78%, transparent 100%)`,
-              boxShadow: `0 0 ${glowCore}px ${accent}44, 0 0 ${glowHalo + 28}px ${accent}1a, 1px 0 0 rgba(255,255,255,.06)`,
+              boxShadow: `0 0 ${glowCore}px ${accentGlow}, 0 0 ${glowHalo + 32}px ${accent}22, 1px 0 0 rgba(255,255,255,.07)`,
             }
       }
     />

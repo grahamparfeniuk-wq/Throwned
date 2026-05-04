@@ -200,11 +200,11 @@ export const styles = {
   peekNarrativeLine: {
     margin: 0,
     padding: 0,
-    fontSize: 15,
-    fontWeight: 700,
-    letterSpacing: "-0.025em",
-    lineHeight: 1.38,
-    opacity: 0.94,
+    fontSize: 16,
+    fontWeight: 800,
+    letterSpacing: "-0.028em",
+    lineHeight: 1.36,
+    opacity: 0.96,
     fontStyle: "normal",
   },
   peekDividerSoft: {
@@ -346,6 +346,25 @@ export const styles = {
     width: 2,
     transform: "translateX(-50%)",
     pointerEvents: "none",
+  },
+  /** Persistent soft arena tint on the divide — below VS, above seam line */
+  battleSeamAura: {
+    position: "absolute",
+    pointerEvents: "none",
+    zIndex: 7,
+    filter: "saturate(1.06)",
+  },
+  battleSeamAuraPortrait: {
+    left: "14%",
+    right: "14%",
+    top: "42%",
+    bottom: "42%",
+  },
+  battleSeamAuraLandscape: {
+    left: "42%",
+    right: "42%",
+    top: "14%",
+    bottom: "14%",
   },
   vsLayer: {
     position: "absolute",
