@@ -218,7 +218,7 @@ export const styles = {
     fontWeight: 600,
     letterSpacing: "-0.015em",
     lineHeight: 1.45,
-    opacity: 0.72,
+    opacity: 0.78,
     marginBottom: 6,
   },
   peekRecordQuiet: {
@@ -352,7 +352,7 @@ export const styles = {
     position: "absolute",
     pointerEvents: "none",
     zIndex: 7,
-    filter: "saturate(1.06)",
+    filter: "saturate(1.08)",
   },
   battleSeamAuraPortrait: {
     left: "14%",

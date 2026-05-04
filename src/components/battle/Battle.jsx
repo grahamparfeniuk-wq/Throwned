@@ -42,9 +42,9 @@ const LABEL_MS = 1600;
 /** Impact flash — judgment lands */
 const BEAT_IMPACT_MS = 124;
 /** Breathing room before pair swap (broadcast beat — lets elimination land emotionally) */
-const BEAT_VICTORY_PAUSE_MS = 218;
+const BEAT_VICTORY_PAUSE_MS = 228;
 /** Extra pause when lower-rated side wins (upset — restrained, no carnival) */
-const BEAT_UPSET_EXTRA_MS = 78;
+const BEAT_UPSET_EXTRA_MS = 88;
 const THROW_UNLOCK_MS = 276;
 
 function throwBlendPasses(distMag, velMag) {
@@ -326,24 +326,24 @@ export function Battle({
 
     setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier, streakBreak, majorStreakBreak });
     const verdictClearMs =
-      620 +
-      (hierarchyTier === 2 ? 280 : hierarchyTier === 1 ? 165 : 0) +
-      (majorStreakBreak ? 120 : streakBreak ? 75 : 0);
+      658 +
+      (hierarchyTier === 2 ? 340 : hierarchyTier === 1 ? 208 : 0) +
+      (majorStreakBreak ? 148 : streakBreak ? 92 : 0);
     setTimeout(() => setThrowVerdict(null), verdictClearMs);
 
     const impactOutMs =
       BEAT_IMPACT_MS +
       (upset
-        ? Math.round(52 + 52 * upsetIntensity) +
-          (hierarchyTier === 2 ? 68 : hierarchyTier === 1 ? 38 : 0) +
-          (majorStreakBreak ? 28 : streakBreak ? 14 : 0)
+        ? Math.round(58 + 56 * upsetIntensity) +
+          (hierarchyTier === 2 ? 86 : hierarchyTier === 1 ? 48 : 0) +
+          (majorStreakBreak ? 36 : streakBreak ? 18 : 0)
         : 0);
     const pulseOutMs = upset
       ? BEAT_IMPACT_MS +
-        125 +
-        Math.round(42 * upsetIntensity) +
-        (hierarchyTier === 2 ? 58 : hierarchyTier === 1 ? 34 : 0) +
-        (majorStreakBreak ? 24 : streakBreak ? 12 : 0)
+        138 +
+        Math.round(46 * upsetIntensity) +
+        (hierarchyTier === 2 ? 72 : hierarchyTier === 1 ? 42 : 0) +
+        (majorStreakBreak ? 32 : streakBreak ? 16 : 0)
       : BEAT_IMPACT_MS + 22;
 
     setImpactPhase(true);
@@ -398,10 +398,10 @@ export function Battle({
     const victoryPauseMs =
       BEAT_VICTORY_PAUSE_MS +
       battleProfile.victoryPauseDeltaMs +
-      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(56 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
-      (hierarchyTier === 2 ? 96 : hierarchyTier === 1 ? 56 : 0) +
-      (majorStreakBreak ? 72 : streakBreak ? 48 : 0) +
-      (upset && upsetIntensity > 0.55 ? Math.round(32 * (upsetIntensity - 0.55)) : 0);
+      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(62 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
+      (hierarchyTier === 2 ? 124 : hierarchyTier === 1 ? 74 : 0) +
+      (majorStreakBreak ? 92 : streakBreak ? 58 : 0) +
+      (upset && upsetIntensity > 0.55 ? Math.round(38 * (upsetIntensity - 0.55)) : 0);
     const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
 
     setTimeout(() => {
@@ -473,8 +473,8 @@ export function Battle({
         setLocked(false);
       }, Math.round(
         THROW_UNLOCK_MS * battleProfile.pacingMultiplier +
-          (hierarchyTier === 2 ? 48 : hierarchyTier === 1 ? 28 : 0) +
-          (majorStreakBreak ? 40 : streakBreak ? 22 : 0)
+          (hierarchyTier === 2 ? 64 : hierarchyTier === 1 ? 38 : 0) +
+          (majorStreakBreak ? 52 : streakBreak ? 30 : 0)
       ));
     }, swapDelayMs);
   }
@@ -508,7 +508,7 @@ export function Battle({
     <div
       style={{
         ...styles.battle,
-        background: `radial-gradient(circle at 50% 50%, ${arena.accent}14, transparent 34%), #050608`,
+        background: `radial-gradient(circle at 50% 50%, ${arena.accent}1a, transparent 38%), #050608`,
       }}
       onClick={() => {
         if (interactionLocked) return;
@@ -524,7 +524,7 @@ export function Battle({
           position: "absolute",
           inset: 0,
           zIndex: 1,
-          background: `radial-gradient(ellipse 92% 58% at 50% 46%, ${arena.accent}18, transparent 56%)`,
+          background: `radial-gradient(ellipse 92% 58% at 50% 46%, ${arena.accent}1c, transparent 58%)`,
         }}
       />
 
@@ -678,7 +678,10 @@ export function Battle({
         <BattleSeamAura
           portrait={portrait}
           accent={arena.accent}
-          auraMul={Math.min(1.42, battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.88)}
+          auraMul={Math.min(
+            1.58,
+            battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.9 * 1.05
+          )}
           styles={styles}
         />
       ) : null}
@@ -687,7 +690,7 @@ export function Battle({
           accent={arena.accent}
           styles={styles}
           impactHit={impactPhase}
-          auraMul={Math.min(1.38, (battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2)}
+          auraMul={Math.min(1.52, ((battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2) * 1.07)}
         />
       ) : null}
 

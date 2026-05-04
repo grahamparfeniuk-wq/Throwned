@@ -45,7 +45,7 @@ export function momentumHumanPhrase(item) {
   const c = item.confidence ?? 0.55;
   const r = item.rank;
   if (r === 1) return "Sitting on the throne — every battle targets them";
-  if (r != null && r <= 3) return "In the title picture — momentum matters";
+  if (r != null && r <= 3) return "In the title picture — every slot is earned";
   if (c >= 0.86) return "Elite tier — trust is earned";
   if (c >= 0.73) return "Rising fast — the standings are moving";
   if (c >= 0.58) return "Building steam — climbing with intent";
@@ -142,15 +142,15 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   const candidates = [];
 
   if (arenaWinStreak >= 5) {
-    candidates.push({ w: 99, text: `${arenaWinStreak} straight — defense holds in ${shortLabel}` });
+    candidates.push({ w: 100, text: `${arenaWinStreak} straight — defense holds in ${shortLabel}` });
   } else if (arenaWinStreak >= 3) {
-    candidates.push({ w: 96, text: `Defending run: ${arenaWinStreak} in a row here` });
+    candidates.push({ w: 98, text: `Defending run: ${arenaWinStreak} in a row here` });
   } else if (arenaWinStreak >= 2) {
-    candidates.push({ w: 92, text: `Heating up — ${arenaWinStreak} straight in ${shortLabel}` });
+    candidates.push({ w: 94, text: `Heating up — ${arenaWinStreak} straight in ${shortLabel}` });
   }
 
   if (isArenaDefender(pool, arena, item)) {
-    candidates.push({ w: 98, text: `Throne defense — every throw tests them in ${shortLabel}` });
+    candidates.push({ w: 100, text: `Throne defense — every throw tests them in ${shortLabel}` });
   }
 
   if (wins > 0 && losses === 0) {
@@ -166,7 +166,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   }
 
   if (item.rank != null && item.rank <= 10) {
-    candidates.push({ w: 93, text: `Ranked #${item.rank} — every matchup carries weight` });
+    candidates.push({ w: 96, text: `Ranked #${item.rank} — every matchup carries weight` });
   }
 
   if (item.rank != null && n >= 6 && item.rank > 1 && item.rank <= Math.max(2, Math.ceil(n * 0.12))) {
@@ -179,7 +179,7 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
     (item.rating ?? 0) < (opponent.rating ?? 0) &&
     wins > losses
   ) {
-    candidates.push({ w: 87, text: "Upset favorite — took the measure of a ranked sheet" });
+    candidates.push({ w: 90, text: "Upset favorite — took the measure of a ranked sheet" });
   }
 
   if (isTopCompetitorInAnyArena(pool, handle, 0.25) && !isArenaDefender(pool, arena, item)) {
@@ -204,15 +204,15 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   }
 
   if (arena.id === "sports" && item.rank != null && item.rank <= 5) {
-    candidates.push({ w: 80, text: "Holding strong in Sports" });
+    candidates.push({ w: 84, text: "Holding strong in Sports" });
   }
 
   if (arena.id === "comedy" && isRisingContender(pool, arena, item)) {
-    candidates.push({ w: 74, text: "Timing sharp — comedy under bright lights" });
+    candidates.push({ w: 78, text: "Timing sharp — comedy under bright lights" });
   }
 
   if (arena.id === "songs" && (item.confidence ?? 0) >= 0.72) {
-    candidates.push({ w: 72, text: "Letting the moment breathe — control reads elite" });
+    candidates.push({ w: 76, text: "Letting the moment breathe — control reads elite" });
   }
 
   if (arenasEntered >= 3) {
@@ -233,10 +233,10 @@ export function selectNarrativeLines({ item, pool, arena, opponent } = {}) {
   if (split) candidates.push({ w: 78, text: split });
 
   const underdog = underdogPairingLine(item, opponent);
-  if (underdog) candidates.push({ w: 83, text: underdog });
+  if (underdog) candidates.push({ w: 86, text: underdog });
 
   const pressure = pressureTop10Line(item, opponent);
-  if (pressure) candidates.push({ w: 81, text: pressure });
+  if (pressure) candidates.push({ w: 84, text: pressure });
 
   if (item.confidence != null && item.confidence >= 0.44 && item.confidence <= 0.56 && n >= 4 && !split) {
     candidates.push({ w: 64, text: "Fans split — no easy read on this one" });
