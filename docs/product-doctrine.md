@@ -247,3 +247,83 @@ Future work should improve:
 The north star:
 
 The user should feel like they are watching and influencing a live contest where status is at stake
+
+## Updated Core UX Laws (Canonical)
+
+Battle mode should feel:
+- cinematic
+- immersive
+- kinetic
+- gesture-first
+- minimal
+- emotionally tense
+
+No persistent dashboard UI.
+No heavy navigation.
+No clutter.
+
+Portrait:
+- top vs bottom
+
+Landscape:
+- left vs right
+
+The VS marker is a centered diamond on the seam with horizontal "VS" text only.
+
+Canonical gestures:
+- outward swipe = throw away loser
+- inward swipe = switch arena
+- long press = contender mode
+- swipe up = standings
+- tap = pause / battle interaction
+
+## Evolution Of Advertising Principle
+
+Advertising evolved through three stages:
+
+1. Talk at people
+- commercials
+- billboards
+- banner ads
+
+2. Talk with people
+- social media
+- influencers
+- conversational engagement
+
+3. Engage people through meaningful behavior
+- competition
+- participation
+- identity
+- aspiration
+- challenges
+- self-expression
+- hierarchy movement
+
+Throwned is built for the third era.
+
+Brands should not interrupt attention.
+Brands should sponsor meaningful competition, support aspiration, enable participation, and elevate contenders.
+
+Competition integrity always comes first.
+Brands should elevate competition, not dominate it.
+
+## Product North Star
+
+Throwned should feel:
+- emotionally alive
+- culturally meaningful
+- aspirational
+- cinematic
+- competitive
+- consequential
+
+The platform should create:
+- emotional attachment
+- meaningful hierarchy
+- competitive mythology
+- participatory fandom
+- aspirational competition ecosystems
+
+The product is not the content.
+The product is emotionally meaningful competitive participation.

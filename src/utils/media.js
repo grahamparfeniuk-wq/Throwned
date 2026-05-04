@@ -24,6 +24,7 @@ export function enterVector(side, portrait) {
 }
 
 export function normalizeUpload(data, id) {
+  const identity = data.identity || {};
   return {
     id,
     arenaId: data.arenaId,
@@ -40,6 +41,14 @@ export function normalizeUpload(data, id) {
     uploaded: true,
     fit: "cover",
     position: "center center",
+    hometown: identity.hometown || "",
+    country: identity.country || "",
+    identity: {
+      archetype: identity.archetype || "",
+      signals: Array.isArray(identity.signals) ? identity.signals.slice(0, 8) : [],
+      hometown: identity.hometown || "",
+      country: identity.country || "",
+    },
   };
 }
 

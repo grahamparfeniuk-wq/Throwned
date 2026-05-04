@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ARENAS } from "./data/arenas";
 import { START_MEDIA } from "./data/startMedia";
 import { sortRank } from "./utils/ranking";
@@ -7,14 +7,32 @@ import { Battle } from "./components/battle/Battle";
 import { Leaderboard } from "./components/leaderboard/Leaderboard";
 import { UploadSheet } from "./components/upload/UploadSheet";
 import { styles } from "./styles/appStyles";
+import { createArenaAffinityTracker } from "./utils/arenaAffinity";
+import { CHALLENGE_TYPES, createChallengeFoundation } from "./utils/challengeFoundation";
+import { createEventHookBus, deriveBattleEvents, EVENT_TYPES } from "./utils/eventHooks";
 
 export default function App() {
   const [pool, setPool] = useState(() => sortRank([...START_MEDIA]));
   const [arenaIndex, setArenaIndex] = useState(0);
   const [uploadOpen, setUploadOpen] = useState(false);
   const nextId = useRef(100000);
+  const affinityRef = useRef(createArenaAffinityTracker());
+  const challengeFoundationRef = useRef(createChallengeFoundation());
+  const eventHookBusRef = useRef(createEventHookBus());
 
   const arena = ARENAS[arenaIndex];
+
+  useEffect(() => {
+    affinityRef.current.recordArenaViewed(arena.id);
+  }, [arena.id]);
+
+  useEffect(() => {
+    eventHookBusRef.current.emit({
+      type: EVENT_TYPES.ARENA_LAUNCHED,
+      arenaId: arena.id,
+      title: `Arena launched: ${arena.label}`,
+    });
+  }, [arena.id, arena.label]);
 
   function changeArena(direction) {
     setArenaIndex((prev) => {
@@ -31,9 +49,27 @@ export default function App() {
   function saveUpload(data) {
     const contender = normalizeUpload(data, nextId.current++);
     setPool((prev) => sortRank([...prev, contender]));
+    challengeFoundationRef.current.stageChallengeSeed({
+      type: CHALLENGE_TYPES.CREATOR,
+      arenaId: data.arenaId,
+      contenderIds: [contender.id],
+    });
     const index = ARENAS.findIndex((a) => a.id === data.arenaId);
     if (index >= 0) setArenaIndex(index);
     setUploadOpen(false);
+  }
+
+  function onBattleResolved({ arenaId, winner, loser, oldWinnerRank, newWinnerRank }) {
+    affinityRef.current.recordVote(arenaId, winner?.id);
+
+    const events = deriveBattleEvents({
+      arena: { id: arenaId },
+      winner,
+      loser,
+      oldWinnerRank,
+      newWinnerRank,
+    });
+    events.forEach((event) => eventHookBusRef.current.emit(event));
   }
 
   return (
@@ -45,6 +81,7 @@ export default function App() {
         changeArena={changeArena}
         jumpToArena={jumpToArena}
         openUpload={() => setUploadOpen(true)}
+        onBattleResolved={onBattleResolved}
         styles={styles}
         renderLeaderboard={(props) => <Leaderboard {...props} />}
       />

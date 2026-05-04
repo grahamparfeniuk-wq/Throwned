@@ -51,7 +51,17 @@ function throwBlendPasses(distMag, velMag) {
   return THROW_BLEND_W_D * d + THROW_BLEND_W_V * v >= 1;
 }
 
-export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpload, styles, renderLeaderboard }) {
+export function Battle({
+  pool,
+  setPool,
+  arena,
+  changeArena,
+  jumpToArena,
+  openUpload,
+  onBattleResolved,
+  styles,
+  renderLeaderboard,
+}) {
   const portrait = useIsPortrait();
   const items = useMemo(() => sortRank(arenaItems(pool, arena)), [pool, arena]);
   const poolRef = useRef(pool);
@@ -284,6 +294,7 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
 
     const loser = side === "first" ? pair.first : pair.second;
     const winner = side === "first" ? pair.second : pair.first;
+    const oldWinnerRank = winner.rank ?? Number.MAX_SAFE_INTEGER;
 
     const upset = winner.rating < loser.rating;
     const upsetIntensity = upset ? clamp((loser.rating - winner.rating) / 420, 0.12, 1) : 0;
@@ -354,6 +365,15 @@ export function Battle({ pool, setPool, arena, changeArena, jumpToArena, openUpl
           arena
         )
       );
+      const freshWinner = fresh.find((x) => x.id === updatedWinner.id);
+      const newWinnerRank = freshWinner?.rank ?? oldWinnerRank;
+      onBattleResolved?.({
+        arenaId: arena.id,
+        winner: updatedWinner,
+        loser: updatedLoser,
+        oldWinnerRank,
+        newWinnerRank,
+      });
 
       if (nextStreak >= 3) {
         setStreakHoldActive(true);

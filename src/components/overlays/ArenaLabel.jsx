@@ -41,12 +41,12 @@ export function ArenaLabel({ arena, visible, styles, onClick }) {
       {visible && (
         <motion.div
           style={styles.arenaLabelWrap}
-          initial={{ opacity: 0, scale: 0.97, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: -8 }}
+          initial={{ opacity: 0, scale: 0.97, y: 0 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{
             opacity: 0,
             scale: 0.99,
-            y: -8,
+            y: 0,
             transition: { duration: ARENA_INTRO_EXIT_S, ease: ARENA_INTRO_EXIT_EASE },
           }}
           transition={{

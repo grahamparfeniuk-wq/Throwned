@@ -5,6 +5,7 @@ import {
   isTopCompetitorInAnyArena,
   normalizeCreatorHandle,
 } from "./creatorStats";
+import { topIdentitySignals } from "./contenderIdentity";
 import { arenaItems, sortRank } from "./ranking";
 
 /** Uppercase broadcast tag — one emotional anchor (intro graphic), not doctrine copy */
@@ -89,6 +90,10 @@ export function selectNarrativeLines({ item, pool, arena }) {
     candidates.push({ w: 90, text: `Undefeated in ${shortLabel}` });
   }
 
+  if (item.rank != null && item.rank <= 10) {
+    candidates.push({ w: 89, text: `Holding Top ${item.rank} under pressure` });
+  }
+
   if (total >= 6 && wins >= 5) {
     candidates.push({ w: 88, text: `Won ${wins} of the last ${total}` });
   } else if (total >= 4 && wins >= 3 && wins / total >= 0.75) {
@@ -118,7 +123,7 @@ export function selectNarrativeLines({ item, pool, arena }) {
   }
 
   if (item.uploaded && total <= 2) {
-    candidates.push({ w: 68, text: `First reps under these lights — story still writing` });
+    candidates.push({ w: 68, text: "New to the arena" });
   }
 
   if (item.confidence != null && item.confidence >= 0.44 && item.confidence <= 0.56 && n >= 4) {
@@ -126,7 +131,12 @@ export function selectNarrativeLines({ item, pool, arena }) {
   }
 
   if (item.rank != null && n >= 6 && item.rank > 1 && item.rank <= Math.max(2, Math.ceil(n * 0.12))) {
-    candidates.push({ w: 79, text: `Upset the sheet — knocking on the elite door` });
+    candidates.push({ w: 79, text: "Upset a Top 10 contender" });
+  }
+
+  const identitySignals = topIdentitySignals(item);
+  if (identitySignals.length > 0) {
+    candidates.push({ w: 67, text: identitySignals.slice(0, 2).join(" · ") });
   }
 
   candidates.sort((a, b) => b.w - a.w);

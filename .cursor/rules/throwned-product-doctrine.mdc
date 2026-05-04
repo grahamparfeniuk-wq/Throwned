@@ -1,0 +1,24 @@
+---
+description: Core product doctrine for Throwned decisions
+alwaysApply: true
+---
+
+# Throwned Product Doctrine
+
+Throwned is not a social media app. It is a competitive ranking arena for subjective content.
+
+## Non-Negotiables
+
+- Prioritize emotionally meaningful competition over passive consumption.
+- Optimize for attachment, affiliation, rivalry, and participation in ascension.
+- Preserve visible hierarchy movement and direct contender-vs-contender stakes.
+- Reject features that make the experience feel like generic feed browsing or dashboard software.
+- Protect competition integrity above growth, novelty, or monetization pressure.
+
+## Product Decision Filter
+
+- If a feature increases engagement but does not increase emotional investment in contenders, question or redesign it.
+- If a feature weakens consequence, rivalry, or hierarchy legibility, reject it.
+- If competition feels cruel, shallow, humiliating, or emotionally hollow, redesign the system.
+
+See `docs/product-doctrine.md` for full doctrine details and language.

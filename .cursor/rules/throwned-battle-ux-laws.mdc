@@ -1,0 +1,31 @@
+---
+description: Battle UX laws and interaction constraints
+alwaysApply: true
+---
+
+# Throwned Battle UX Laws
+
+Design battle mode to feel cinematic, immersive, kinetic, gesture-first, minimal, and emotionally tense.
+
+## Interaction Constraints
+
+- No persistent dashboard UI, heavy navigation, or clutter.
+- Portrait layout: top vs bottom.
+- Landscape layout: left vs right.
+- Keep a centered seam diamond with horizontal `VS` text only.
+
+## Canonical Gestures
+
+- Outward swipe: throw away loser.
+- Inward swipe: switch arena.
+- Long press: contender mode.
+- Swipe up: standings.
+- Tap: pause / battle interaction.
+
+## Implementation Bias
+
+- Prefer motion and consequence feedback over extra UI chrome.
+- Hide metadata by default; reveal only when interaction requires it.
+- Make elimination feel physical and meaningful, not like simple removal.
+
+See `docs/product-doctrine.md` and `docs/ux-direction.md` for canonical product language.
