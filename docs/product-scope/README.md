@@ -2,7 +2,7 @@
 
 ## Phase 2 Definition of Done
 
-Phase 2 is successful when Throwned has a stable, mobile-tested battle experience with clean architecture and a clear path to backend persistence.
+Phase 2 is successful when Throned has a stable, mobile-tested battle experience with clean architecture and a clear path to backend persistence.
 
 Phase 2 does not require full production backend yet.
 
@@ -17,6 +17,7 @@ Phase 2 must include:
 - modular frontend architecture
 - Vercel mobile testing workflow
 - clear data model docs for backend
+- first-run cinematic onboarding aligned to arena immersion
 
 ## Current Non-Goals
 
@@ -26,7 +27,7 @@ Do not build these yet:
 - comments
 - messaging
 - complex social graph
-- creator monetization
+- generic creator monetization
 - advanced moderation workflow
 - full recommendation engine
 - live streaming
@@ -43,7 +44,7 @@ Users should be able to:
 - participate in arenas
 
 Later, add accounts for:
-- creator profiles
+- contender profiles
 - upload ownership
 - leaderboard history
 - anti-cheat
@@ -52,7 +53,7 @@ Later, add accounts for:
 ## Upload Ownership
 
 Each uploaded media item should eventually have:
-- creator/session/user id
+- contender/session/user id
 - title
 - arena id
 - media type
@@ -68,7 +69,7 @@ Users should eventually be able to edit/delete their own uploads.
 
 ## Pairing Policy
 
-Match content primarily within the same arena.
+Match contenders primarily within the same arena.
 
 Avoid:
 - self-battles
@@ -89,7 +90,7 @@ Ratings are per-arena.
 A clip can become strong in one arena without implying global dominance.
 
 Future possibility:
-- global creator score
+- global contender score
 - cross-arena champion events
 - seasonal tournaments
 
@@ -100,7 +101,7 @@ If the same item wins 3 times in a row:
 - rotate both current contenders out
 - load two fresh contenders
 
-This keeps the feed fresh and reduces gaming.
+This keeps battle flow fresh and reduces gaming.
 
 ## Trust Logic
 
@@ -129,6 +130,11 @@ Future uploaded content will require:
 - copyright/music policy
 - age-sensitive handling
 - abuse prevention
+
+Moderation philosophy:
+- protect competitive legitimacy and participant safety
+- remove manipulation, harassment, and exploit loops that hollow the arena
+- enforce rules in ways that preserve earned hierarchy
 
 ## Analytics Events To Track Later
 

@@ -1,3 +1,10 @@
 # Phase 2
 
-Add your Phase 2 scope, definition of done, and checklists here as `.md` files.
+Use this folder for doctrine-aligned phase docs, checklists, and acceptance criteria.
+
+Each Phase 2 doc should reinforce:
+- battle sanctity
+- gesture-first interaction
+- cinematic restraint
+- hierarchy legitimacy
+- emotional investment over passive engagement

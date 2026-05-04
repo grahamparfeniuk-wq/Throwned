@@ -10,6 +10,7 @@ VS badge:
 - centered precisely on seam
 - sleek diamond styling
 - subtle glow/accent color
+- horizontal `VS` text only
 
 Metadata:
 - hidden by default
@@ -22,7 +23,7 @@ Arena labels:
 - clickable for arena search/jump
 
 Leaderboard:
-- draggable sheet
+- swipe-up standings sheet
 - hidden by default
 - should feel physical and native
 
@@ -31,6 +32,7 @@ Animations:
 - smooth
 - tactile
 - inertia-based when possible
+- restrained, never noisy
 
 The user should feel:
 - tension
@@ -39,3 +41,17 @@ The user should feel:
 - escalation
 
 The interface should disappear behind the experience.
+
+## Battle Sanctity Rules
+
+- No persistent dashboard UI.
+- No heavy navigation.
+- No tutorial chrome inside battle flow.
+- Overlay systems must read as arena graphics, not utility panels.
+
+## Onboarding Constraint
+
+First-run onboarding should:
+- keep battle visible in the background
+- teach gestures in one cinematic briefing scene
+- use one primary action to enter battle flow

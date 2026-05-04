@@ -13,7 +13,7 @@
 
 - id
 - arenaId
-- creatorId
+- contenderId
 - type
 - src
 - thumbnail
@@ -23,6 +23,15 @@
 - wins
 - losses
 - createdAt
+
+## Contender Identity
+
+- contenderId
+- hometown
+- country
+- archetype
+- identitySignals[]
+- affiliationTags[] (optional, doctrine-safe usage only)
 
 ## Vote
 
@@ -40,3 +49,38 @@
 - id
 - trustScore
 - createdAt
+
+## Arena Affinity
+
+- sessionId
+- arenaId
+- viewedCount
+- votedCount
+- revisitedCount
+- lastViewedAt
+
+## Contender Support
+
+- sessionId
+- contenderId
+- supportCount
+- lastSupportedAt
+
+## Challenge Seed (Foundation)
+
+- id
+- type (creator, friend, sponsored, regional_ladder, local_competition, championship)
+- arenaId
+- contenderIds[]
+- region (optional)
+- sponsor (optional)
+- createdAt
+
+## Event Hook (Foundation)
+
+- id (optional runtime)
+- type
+- arenaId
+- contenderId or contenderIds[]
+- title
+- at

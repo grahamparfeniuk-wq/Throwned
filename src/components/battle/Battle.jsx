@@ -59,6 +59,7 @@ export function Battle({
   jumpToArena,
   openUpload,
   onBattleResolved,
+  interactionLocked = false,
   styles,
   renderLeaderboard,
 }) {
@@ -170,7 +171,7 @@ export function Battle({
 
   useEffect(() => {
     if (arena.type === "image") return;
-    if (!pair?.first || !pair?.second || paused || activeDetailsClipId || locked || streakHoldActive || transitioning) return;
+    if (!pair?.first || !pair?.second || paused || activeDetailsClipId || locked || streakHoldActive || transitioning || interactionLocked) return;
 
     const active = activeSide === "first" ? pair.first : pair.second;
     const t = setTimeout(() => {
@@ -178,7 +179,7 @@ export function Battle({
     }, safeDuration(active));
 
     return () => clearTimeout(t);
-  }, [arena.type, pair, activeSide, paused, activeDetailsClipId, locked, streakHoldActive, transitioning]);
+  }, [arena.type, pair, activeSide, paused, activeDetailsClipId, locked, streakHoldActive, transitioning, interactionLocked]);
 
   useEffect(() => {
     if (!activeDetailsClipId || !pair?.first || !pair?.second) return;
@@ -187,7 +188,7 @@ export function Battle({
   }, [pair?.first?.id, pair?.second?.id, activeDetailsClipId]);
 
   function holdPointerDown(id, x, y) {
-    if (streakHoldActive || locked) return;
+    if (streakHoldActive || locked || interactionLocked) return;
     clearTimeout(holdTimer.current);
     holdPointerStart.current = { x, y };
     holdTimer.current = setTimeout(() => {
@@ -212,7 +213,7 @@ export function Battle({
   }
 
   function onMove(side, dx, dy) {
-    if (locked || streakHoldActive || transitioning || activeDetailsClipId) return;
+    if (locked || streakHoldActive || transitioning || activeDetailsClipId || interactionLocked) return;
 
     const raw = portrait ? dy : dx;
     const outwardDirection = side === "first" ? -1 : 1;
@@ -271,7 +272,7 @@ export function Battle({
   }
 
   function resolve(side, dx, dy, vx, vy) {
-    if (locked || !pair?.first || !pair?.second || streakHoldActive || transitioning) return;
+    if (locked || !pair?.first || !pair?.second || streakHoldActive || transitioning || interactionLocked) return;
     if (activeDetailsClipId) {
       setDrag({ first: { x: 0, y: 0, rotate: 0 }, second: { x: 0, y: 0, rotate: 0 } });
       return;
@@ -454,6 +455,7 @@ export function Battle({
     <div
       style={{ ...styles.battle, background: `radial-gradient(circle at 50% 50%, ${arena.accent}10, transparent 32%), #050608` }}
       onClick={() => {
+        if (interactionLocked) return;
         if (arena.type === "video" && !activeDetailsClipId && !streakHoldActive && !sheetOpen) setPaused((p) => !p);
       }}
     >
@@ -536,7 +538,7 @@ export function Battle({
           portrait={portrait}
           accent={arena.accent}
           active={isImageArena || activeSide === "first"}
-          paused={paused || contenderAttachmentOpen}
+          paused={paused || contenderAttachmentOpen || interactionLocked}
           dimmed={contenderAttachmentOpen}
           winner={winnerId === pair.first.id}
           locked={locked || transitioning || streakHoldActive}
@@ -560,7 +562,7 @@ export function Battle({
           portrait={portrait}
           accent={arena.accent}
           active={isImageArena || activeSide === "second"}
-          paused={paused || contenderAttachmentOpen}
+          paused={paused || contenderAttachmentOpen || interactionLocked}
           dimmed={contenderAttachmentOpen}
           winner={winnerId === pair.second.id}
           locked={locked || transitioning || streakHoldActive}
@@ -618,10 +620,12 @@ export function Battle({
         }}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
+          if (interactionLocked) return;
           if (e.pointerType === "mouse" && e.button !== 0) return;
           e.currentTarget.dataset.lbSwipeY = String(e.clientY);
         }}
         onPointerUp={(e) => {
+          if (interactionLocked) return;
           const startY = Number(e.currentTarget.dataset.lbSwipeY || 0);
           if (!startY) return;
           const dy = startY - e.clientY;

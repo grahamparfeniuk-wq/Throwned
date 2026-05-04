@@ -6,15 +6,26 @@ import { normalizeUpload } from "./utils/media";
 import { Battle } from "./components/battle/Battle";
 import { Leaderboard } from "./components/leaderboard/Leaderboard";
 import { UploadSheet } from "./components/upload/UploadSheet";
+import { GestureOnboarding } from "./components/overlays/GestureOnboarding";
 import { styles } from "./styles/appStyles";
 import { createArenaAffinityTracker } from "./utils/arenaAffinity";
 import { CHALLENGE_TYPES, createChallengeFoundation } from "./utils/challengeFoundation";
 import { createEventHookBus, deriveBattleEvents, EVENT_TYPES } from "./utils/eventHooks";
+import { AnimatePresence } from "framer-motion";
+
+const ONBOARDING_STORAGE_KEY = "throwned.onboarding.completed.v1";
 
 export default function App() {
   const [pool, setPool] = useState(() => sortRank([...START_MEDIA]));
   const [arenaIndex, setArenaIndex] = useState(0);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(() => {
+    try {
+      return localStorage.getItem(ONBOARDING_STORAGE_KEY) !== "1";
+    } catch {
+      return true;
+    }
+  });
   const nextId = useRef(100000);
   const affinityRef = useRef(createArenaAffinityTracker());
   const challengeFoundationRef = useRef(createChallengeFoundation());
@@ -72,6 +83,15 @@ export default function App() {
     events.forEach((event) => eventHookBusRef.current.emit(event));
   }
 
+  function completeOnboarding() {
+    try {
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+    } catch {
+      // Ignore storage failures; onboarding state remains session-local.
+    }
+    setOnboardingOpen(false);
+  }
+
   return (
     <div style={styles.app}>
       <Battle
@@ -82,9 +102,14 @@ export default function App() {
         jumpToArena={jumpToArena}
         openUpload={() => setUploadOpen(true)}
         onBattleResolved={onBattleResolved}
+        interactionLocked={onboardingOpen}
         styles={styles}
         renderLeaderboard={(props) => <Leaderboard {...props} />}
       />
+
+      <AnimatePresence>
+        {onboardingOpen ? <GestureOnboarding styles={styles} onBegin={completeOnboarding} /> : null}
+      </AnimatePresence>
 
       <UploadSheet
         open={uploadOpen}

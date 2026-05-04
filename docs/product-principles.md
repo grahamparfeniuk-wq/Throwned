@@ -1,7 +1,6 @@
 # Product Principles
 
-Users should feel like they are inside a live contest,
-not operating a UI.
+Users should feel like they are inside a live contest, not operating software.
 
 The app should feel:
 - modern
@@ -11,7 +10,7 @@ The app should feel:
 - native
 - minimal
 
-The videos should dominate the screen.
+Battle media should dominate the screen.
 
 UI chrome should be minimized aggressively.
 
@@ -23,8 +22,8 @@ Core gestures:
 - swipe outward = throw away loser
 - swipe inward = switch arena
 - tap = pause/resume
-- hold = reveal details
-- drag = leaderboard
+- long press = contender mode
+- swipe up = standings
 
 The experience should feel emotionally competitive.
 
@@ -40,4 +39,15 @@ The app should reward momentum and exploration.
 
 Nothing should feel corporate or dashboard-like.
 
-The app should feel alive.
+Throned should feel emotionally alive.
+
+## Ranking Legitimacy Principle
+
+- Hierarchy movement must feel earned.
+- Trust-weighted voting should protect legitimacy.
+- Anti-manipulation logic must stay active and visible in product behavior.
+
+## Distribution Principle
+
+- Distribution should follow competition outcomes, rivalry, and narrative relevance.
+- Do not optimize for passive volume at the expense of competitive meaning.

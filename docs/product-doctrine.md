@@ -1,176 +1,40 @@
-# Throwned Product Doctrine
+# THRONED — PRODUCT DOCTRINE
 
-Throwned is not a social media app.
+## CORE IDENTITY
 
-Throwned is a competitive arena for subjective content.
+Throned is NOT a social media app.
 
-The user should feel like they are inside a live contest, not operating software.
+It is a competitive ranking arena for subjective content.
 
-The emotional target is:
-- tension
-- anticipation
-- momentum
-- elimination
-- status
-- significance
+The platform is built around:
 
-The app should feel closer to:
-- playoff sports
-- UFC title fights
-- Olympic finals
-- Game 7 moments
+- competition
+- hierarchy
+- fandom
+- attachment
+- aspiration
+- identity
+- emotional investment
+- participatory culture
+- meaningful achievement
 
-## Core Identity
+The goal is not merely to show content.
 
-Users do not “like” content.
+The goal is to make users emotionally care who wins.
 
-Users throw away the loser.
+---
 
-The best content survives, climbs, and becomes Throwned.
+# CORE PRODUCT LOOP
 
-The product should create the feeling that every battle matters.
+Two contenders compete head-to-head.
 
-## Attachment Formation Principle
+The user throws away the loser.
 
-Throwned should create moments that, by design, **tend to produce emotional attachment** between users and contenders. This is not a side effect of “good content.” It is a product outcome we pursue on purpose, using patterns that are well understood in sports, fandom, and competition psychology.
+Winner survives.
 
-**The goal is not merely to show content.**  
-**The goal is to make users care who wins.**
+New challenger enters.
 
-### What we optimize
-
-Throwned does **not** optimize primarily for passive consumption, dwell time as an end in itself, or undifferentiated engagement.
-
-Throwned **does** optimize for **emotional investment in contenders** — the feeling that specific people (or specific entries) matter, rise, fall, and belong to *this* lane, *this* arena, *this* story.
-
-That investment shows up as:
-
-- **Affiliation** — “my contender,” “my lane,” “our arena.”  
-- **Identity** — taste, judgment, and who you back when something is on the line.  
-- **Rivalry** — history between names, not one-off clips in isolation.  
-- **Discovery ownership** — *I* saw them first; *I* staked a claim before the crowd.  
-- **Participation in ascension** — crowning, dethroning, and movement that the user helped happen.
-
-### Attachment drivers the product should reinforce
-
-Features, copy, motion, and data surfaces should **reinforce** (not replace) known drivers of attachment, including:
-
-- Tribal identity  
-- Underdog and comeback narratives  
-- **Discovery before popularity** — early signal, not only mass approval  
-- Participation in ascension (users affect outcomes)  
-- Competitive survival and elimination that read as *earned*  
-- Rivalry and repeat conflict  
-- Shared history across battles and seasons  
-- Status movement — climbing, defending, slipping  
-- Local / hometown / country hooks where authentic  
-- Streaks and momentum that stay legible, not noisy  
-- Redemption arcs  
-- **Early supporter identity** — “I was here when…”
-
-This list is not a feature checklist. It is a **design vocabulary**. Not every surface needs every hook; every surface should ask whether it strengthens **care about outcomes**.
-
-### Product decision filter
-
-- **If a feature increases activity but does not make users care more about who wins, it should be questioned.** Raw usage without stakes degrades the arena into noise.
-
-- **If a feature makes Throwned feel like generic social media, dashboard UI, or passive browsing, it should be rejected or redesigned** — unless it is stripped down until it serves contest psychology first.
-
-These filters override convenience and short-term metrics when they conflict with attachment and arena identity.
-
-### Contender Narrative Layer (infrastructure, not decoration)
-
-**The Contender Narrative Layer is not an ornament on top of the battle UI.** It is **attachment infrastructure** — the system (data, copy, moments, and presentation) that makes *who this is* and *what’s at stake* emotionally legible without turning the app into a feed of bios.
-
-Narrative should surface **meaningful, time-bounded, contest-native moments**, for example (illustrative, not an exhaustive roadmap):
-
-- Won 5 of last 6  
-- Defending streak: 3  
-- Fastest climber today  
-- Upset a Top 10 contender  
-- New to the arena  
-- Fans split on this contender  
-- Undefeated in Comedy  
-- Local favorite  
-- Rising in Canada  
-
-The point is not the exact string. The point is **legible story** in the language of **competition, place, and momentum** — so users have something to *attach to* beyond a thumbnail and a title.
-
-Ship this layer with the same rigor as ranking and media: if narrative is thin, attachment is thin.
-
-## Competitive Elevation Principle
-
-Throwned is not only about attachment, fandom, and ranking. It is also about **using visible competition to help people and culture improve.**
-
-### Core thesis
-
-**Visible competition accelerates human excellence.**
-
-Public clocks, rivalries, repeatable measurement, coaching pressure, and the desire to surpass what came before have historically lifted entire fields — not because humiliation is the product, but because **comparison makes improvement legible** and **progress contagious**.
-
-Example (not analogy worship — structural truth): the men’s 100m world record **did not fall once** because one genius appeared from nowhere. Over roughly a century, **measurement in public**, **rival generations**, **training evolution**, and **the chase** dragged the whole sprint ecosystem upward. No single person owns that arc. **Competition elevated the field.**
-
-Throwned is built on the belief that **healthy competitive ecosystems can elevate subjective performance too**, across arenas such as:
-
-- creativity  
-- comedy  
-- music  
-- storytelling  
-- athletic tricks  
-- visual taste  
-- design  
-- culture  
-
-### Distinction that governs tone
-
-**The goal is not humiliation.**  
-**The goal is elevation through competition.**
-
-Throwned should create environments where contenders:
-
-- improve  
-- experiment  
-- become more resilient  
-- aspire higher  
-- learn from comparison  
-- earn status through performance  
-- push each other forward  
-
-Humiliation-as-entertainment is a different product. Here, loss should feel **costly** without feeling **degrading** — because the narrative is **earn your climb**, not **lock someone in shame**.
-
-### Doctrine line
-
-**The throne is not permanent. Contenders rise by earning it.**
-
-### Product decision filter
-
-- **If a feature makes competition feel cruel, shallow, or humiliating, reject or redesign it.** Cruelty shortcuts attachment into spectacle rot.
-
-- **If a feature makes competition feel meaningful, aspirational, and earned, it likely supports the product DNA** — even when outcomes hurt.
-
-This filter sits alongside Attachment Formation: attachment asks *whether users care*; elevation asks *whether the arena makes anyone better*.
-
-## UX Laws
-
-Videos and images dominate the screen.
-
-The UI should disappear.
-
-No button-heavy interfaces.
-
-No dashboard feeling.
-
-No generic social media patterns unless they directly serve the arena experience.
-
-Motion and pacing matter more than features.
-
-The VS seam is sacred.
-
-The leaderboard should feel like standings being revealed, not a utility panel.
-
-Metadata stays hidden unless requested.
-
-## Interaction Model
+Hierarchy evolves through direct comparison.
 
 Portrait:
 - top vs bottom
@@ -178,152 +42,683 @@ Portrait:
 Landscape:
 - left vs right
 
-Gestures:
-- outward swipe = throw away loser
-- inward swipe = switch arena
-- long press = reveal details
-- tap = pause/resume
-- drag = reveal standings
+Centered VS diamond on seam.
 
-## Motion Doctrine
+Horizontal “VS” text only.
 
-Elimination should feel physical.
+---
 
-The losing clip should feel thrown away, not simply removed.
+# EMOTIONAL TARGET
 
-A new challenger should enter the arena, not just appear.
+Throned should emotionally feel like:
 
-Motion should feel:
-- fast
-- premium
-- cinematic
-- tactile
-- intentional
+- playoff sports
+- UFC title fights
+- Olympics
+- Game 7 tension
+- live competitive arenas
+- consequential hierarchy movement
 
-Avoid cheesy effects.
+The user should feel:
 
-Avoid arcade clutter.
+- inside a live contest
+- emotionally invested in contenders
+- like rankings matter
+- like hierarchy is changing
+- like they influence who rises
 
-The experience should feel modern and high-stakes.
+NOT:
 
-## Pacing Doctrine
+- browsing content
+- navigating interfaces
+- scrolling feeds
+- dashboard management
+- passive media consumption
 
-Do not make battles feel robotic.
+---
 
-Let eliminations land.
-
-Use brief emotional pauses when needed.
-
-Momentum should build as the user continues voting.
-
-Streaks should feel meaningful but not cluttered.
-
-## Sound Doctrine
-
-Prepare the architecture for sound hooks:
-- elimination impact
-- challenger arrival
-- streak intensity
-- arena ambience
-
-Sound should be subtle and premium.
-
-Never cheesy.
-
-## Build Principle
-
-Preserve the modular architecture.
-
-Do not collapse the app back into one giant file.
-
-Future work should improve:
-- battle transitions
-- gesture feel
-- media reliability
-- leaderboard presentation
-- arena identity
-- competitive intensity
-
-The north star:
-
-The user should feel like they are watching and influencing a live contest where status is at stake
-
-## Updated Core UX Laws (Canonical)
+# UX LAWS
 
 Battle mode should feel:
+
 - cinematic
 - immersive
 - kinetic
+- premium
+- emotionally charged
 - gesture-first
-- minimal
-- emotionally tense
+- video dominant
 
-No persistent dashboard UI.
-No heavy navigation.
-No clutter.
+Avoid:
 
-Portrait:
-- top vs bottom
+- dashboard feel
+- clutter
+- excessive buttons
+- feed-centric interaction patterns
+- noisy overlays
 
-Landscape:
-- left vs right
+Minimal chrome.
 
-The VS marker is a centered diamond on the seam with horizontal "VS" text only.
+Maximum emotional focus.
 
-Canonical gestures:
-- outward swipe = throw away loser
-- inward swipe = switch arena
-- long press = contender mode
-- swipe up = standings
-- tap = pause / battle interaction
+The battle is sacred.
+Everything else is secondary.
 
-## Evolution Of Advertising Principle
+---
 
-Advertising evolved through three stages:
+# BATTLE SANCTITY PRINCIPLE
+
+The battle experience is sacred.
+
+During active competition:
+
+- the contenders
+- the seam
+- the throw
+- the outcome
+- the emotional tension
+
+must remain the dominant focus.
+
+Avoid interrupting battles with:
+
+- intrusive monetization
+- noisy overlays
+- excessive notifications
+- social clutter
+- UI chrome
+- dashboard mechanics
+- engagement spam
+
+Everything should support:
+
+- tension
+- consequence
+- immersion
+- hierarchy movement
+
+Protect the emotional legitimacy of the battle aggressively.
+
+---
+
+# GESTURE MODEL
+
+Outward swipe:
+throw away loser
+
+Inward swipe:
+switch arena
+
+Long press:
+enter contender mode
+
+Swipe up:
+reveal standings
+
+Tap:
+pause / interaction
+
+Interactions should feel:
+
+- native
+- physical
+- emotionally consequential
+- premium
+
+---
+
+# CORE COMPETITIVE PHILOSOPHY
+
+Visible competition elevates performance.
+
+The evolution of the 100m sprint world record over the last century demonstrates how:
+
+- rivalry
+- aspiration
+- public comparison
+- visible hierarchy
+- meaningful competition
+
+can elevate human capability.
+
+Throned applies this principle to:
+
+- creativity
+- comedy
+- music
+- sports
+- storytelling
+- self-expression
+- culture
+- design
+- identity
+
+The goal is NOT humiliation.
+
+The goal is elevation through competition.
+
+The throne is not permanent.
+
+Contenders rise by earning it.
+
+If competition becomes:
+
+- shallow
+- cruel
+- emotionally hollow
+- humiliating
+- cynical
+
+redesign it.
+
+---
+
+# ATTACHMENT FORMATION PRINCIPLE
+
+Throned intentionally creates emotional attachment between users and contenders.
+
+Users should emotionally attach to contenders like:
+
+- sports teams
+- fighters
+- rising athletes
+- local heroes
+- underdogs
+
+Important attachment drivers:
+
+- tribal identity
+- hometown/country affiliation
+- rivalry
+- discovery ownership
+- underdog stories
+- aspiration
+- redemption arcs
+- streaks
+- status movement
+- participation in ascension
+- representation
+- early supporter identity
+
+Users should feel proud of discovering, supporting, and elevating contenders before the broader crowd recognizes them.
+
+The product should create:
+
+- emotional investment
+- meaningful hierarchy
+- participatory fandom
+- competitive mythology
+
+If a feature increases engagement but weakens emotional investment in contenders, question it.
+
+If a feature makes Throned feel like generic social media, passive browsing, or dashboard UI, reject or redesign it.
+
+---
+
+# COMPETITIVE ELEVATION PRINCIPLE
+
+Visible competition elevates performance.
+
+Like the evolution of the 100m sprint world record, meaningful competition can elevate:
+
+- creativity
+- comedy
+- music
+- sports
+- storytelling
+- culture
+- self-expression
+
+The goal is NOT humiliation.
+
+The goal is elevation through competition.
+
+The throne is not permanent.
+
+Contenders rise by earning it.
+
+---
+
+# EVOLUTION OF ADVERTISING PRINCIPLE
+
+Advertising evolved through stages:
 
 1. Talk at people
-- commercials
+
 - billboards
+- commercials
 - banner ads
 
 2. Talk with people
+
 - social media
 - influencers
 - conversational engagement
 
 3. Engage people through meaningful behavior
+
 - competition
 - participation
 - identity
 - aspiration
 - challenges
-- self-expression
 - hierarchy movement
+- self-expression
 
-Throwned is built for the third era.
+Throned is built for the third era.
 
 Brands should not interrupt attention.
-Brands should sponsor meaningful competition, support aspiration, enable participation, and elevate contenders.
+
+Brands should:
+
+- sponsor meaningful competition
+- support aspiration
+- enable participation
+- elevate contenders
+- create opportunity
+- become associated with meaningful achievement
+
+Brands should become associated with meaningful achievement, not attention interruption.
+
+Examples:
+
+- Vans “King of Kickflip”
+- Nike dunk competitions
+- creator championships
+- regional ladders
+- real-world advancement opportunities
+
+The emotional memory belongs to:
+
+- the competition
+- the contender
+- the achievement
+- the breakthrough moment
+
+People do not emotionally remember:
+“I saw an ad.”
+
+They remember:
+
+- the comeback
+- the upset
+- the rivalry
+- the breakthrough performance
+- the winning moment
+
+The future of advertising is not:
+“look at this.”
+
+The future is:
+“be part of this.”
+
+Brands should earn emotional association through enabling meaningful competition and human achievement.
 
 Competition integrity always comes first.
+
 Brands should elevate competition, not dominate it.
 
-## Product North Star
+---
 
-Throwned should feel:
+# COMPETITION-DRIVEN DISTRIBUTION PRINCIPLE
+
+The strongest growth systems emerge when participation itself creates distribution.
+
+People naturally recruit others into:
+
+- rivalry
+- identity
+- local pride
+- competition
+- aspiration
+- meaningful achievement
+
+Throned should enable ecosystems where:
+
+- brands
+- creators
+- schools
+- communities
+- local scenes
+- sports organizations
+- fan groups
+
+help grow the platform by creating meaningful competitive participation.
+
+This is stronger than:
+
+- paid interruption advertising
+- generic referral systems
+- growth hacks
+
+Meaningful competition itself becomes the distribution engine.
+
+---
+
+# PRODUCT PRINCIPLES
+
+Protect:
+
+- cinematic restraint
+- emotional consequence
+- hierarchy visibility
+- premium motion
+- battle dominance
+- arena immersion
+- competitive legitimacy
+
+Avoid:
+
+- dashboard feel
+- clutter
+- gamified spam
+- cheap effects
+- noisy overlays
+- excessive buttons
+- generic social media patterns
+
+The app should feel:
+
 - emotionally alive
 - culturally meaningful
 - aspirational
-- cinematic
-- competitive
+- premium
+- tense
 - consequential
 
-The platform should create:
-- emotional attachment
-- meaningful hierarchy
-- competitive mythology
+---
+
+# CURRENT IMPLEMENTATION STATUS
+
+Implemented:
+
+- kinetic battle choreography
+- upset-aware pacing
+- seam judgment effects
+- VS diamond system
+- arena intro seal
+- seam illumination
+- leaderboard overlay
+- contender mode
+- persistent long-press contender cards
+- contender narrative engine
+- narrative hierarchy
+- contender identity hooks
+- gesture-first architecture
+- preload system
+- image arenas
+- anti-cheat streak rotation
+- challenger replacement sequencing
+- arena seal tap affordance
+- arena picker foundation
+- premium onboarding foundation
+- identity foundation
+- narrative engine foundation
+- challenge/event infrastructure foundation
+- arena affinity tracking foundation
+
+---
+
+# DEVELOPMENT PREFERENCES
+
+User is non-technical.
+
+Prefer:
+
+- full rewrites when practical
+- explicit instructions
+- clear terminal commands
+- product reasoning
+- emotional/UX thinking
+
+Avoid:
+
+- partial patch complexity
+- over-engineering
+- generic app patterns
+
+Act like:
+
+- technical co-founder
+- product strategist
+- emotional systems designer
+
+Not:
+
+- generic coding tutor
+
+---
+
+# ARENA CULTURE PRINCIPLE
+
+Different arenas should eventually feel culturally distinct.
+
+Comedy should not emotionally feel identical to:
+
+- Sports
+- Music
+- Skateboarding
+- Epic Fails
+- Photography
+
+Arena differentiation should emerge through:
+
+- pacing
+- atmosphere
+- narrative framing
+- crowd energy
+- emotional tone
+- visual rhythm
+- motion personality
+
+NOT through clutter.
+
+Each arena should eventually feel like:
+
+- its own competitive culture
+- its own ecosystem
+- its own world
+
+---
+
+# MODERATION PHILOSOPHY
+
+Throned intentionally creates:
+
+- competition
+- hierarchy
+- emotional investment
+- winners and losers
+
+Competition must remain:
+
+- emotionally meaningful
+- aspirational
+- legitimate
+- culturally healthy
+
+Avoid:
+
+- humiliation systems
+- rage-bait
+- dunk culture
+- mob cruelty
+- cynical engagement farming
+
+Loss should feel:
+
+- consequential
+- motivating
+- emotionally real
+
+But not degrading.
+
+Competition should elevate people.
+
+Not emotionally destroy them.
+
+If emotional legitimacy is weakened, redesign the system.
+
+---
+
+# RANKING LEGITIMACY PRINCIPLE
+
+The hierarchy must feel earned.
+
+Users must believe:
+
+- rankings matter
+- victories matter
+- ascent is legitimate
+- manipulation is resisted
+
+Important principles:
+
+- trust-weighted voting
+- confidence-based ranking
+- anti-spam systems
+- anti-farming systems
+- anti-cheat protection
+- earned progression
+- meaningful movement
+
+If users stop trusting the hierarchy, the platform loses emotional legitimacy.
+
+Protect ranking integrity aggressively.
+
+---
+
+# USER IDENTITY PRINCIPLE
+
+Users are not passive viewers.
+
+They are:
+
+- judges
+- discoverers
+- supporters
+- rivals
+- tastemakers
+- participants in hierarchy creation
+
+Over time, users should develop identity through:
+
+- who they support
+- what arenas they participate in
+- what contenders they discover early
+- what styles they consistently elevate
+- how accurately they identify rising contenders
+
+This creates:
+
 - participatory fandom
-- aspirational competition ecosystems
+- identity through judgment
+- emotional ownership in hierarchy formation
+
+---
+
+# LIVE EVENT PRINCIPLE
+
+Throned should eventually evolve toward:
+
+- finals
+- championships
+- dethroning events
+- regional ladders
+- seasonal competition
+- live battles
+- live arena events
+
+The platform naturally wants:
+
+- consequential moments
+- audience participation
+- competitive mythology
+- cultural memory
+
+Live competition should feel:
+
+- earned
+- tense
+- meaningful
+- emotionally legitimate
+
+---
+
+# AI PHILOSOPHY
+
+AI systems inside Throned should amplify:
+
+- meaningful competition
+- emotional legitimacy
+- aspiration
+- discovery
+- identity
+- narrative
+- healthy rivalry
+
+AI should NOT optimize primarily for:
+
+- shallow engagement
+- outrage
+- rage-bait
+- addictive emptiness
+- low-quality virality
+
+AI should help:
+
+- surface meaningful contenders
+- detect rising narratives
+- strengthen arena integrity
+- improve recommendation quality
+- preserve competitive legitimacy
+- improve emotional coherence
+
+The goal is not maximum attention extraction.
+
+The goal is meaningful competitive participation.
+
+---
+
+# SOUND & ATMOSPHERE PRINCIPLE
+
+Eventually, sound and atmosphere should reinforce:
+
+- tension
+- anticipation
+- hierarchy
+- competition
+- arena energy
+- emotional consequence
+
+Avoid:
+
+- casino energy
+- mobile game sounds
+- noisy notifications
+- shallow dopamine mechanics
+
+The atmosphere should feel:
+
+- cinematic
+- restrained
+- premium
+- emotionally alive
+
+---
+
+# IMPORTANT NORTH STAR
+
+Throned is not merely a content platform.
+
+It is:
+
+- a competitive media system
+- an emotional hierarchy engine
+- a participatory fandom platform
+- a meaningful competition ecosystem
 
 The product is not the content.
-The product is emotionally meaningful competitive participation.
+
+The product is:
+emotionally meaningful competitive participation.
