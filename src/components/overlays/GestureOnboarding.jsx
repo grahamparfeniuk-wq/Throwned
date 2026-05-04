@@ -15,7 +15,7 @@ export function GestureOnboarding({ styles, onBegin }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.56, ease: [0.33, 0, 0.2, 1] }}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -26,10 +26,10 @@ export function GestureOnboarding({ styles, onBegin }) {
         aria-modal="true"
         aria-label="Throned first run briefing"
         style={styles.onboardingCard}
-        initial={{ opacity: 0, y: 10, scale: 0.982 }}
+        initial={{ opacity: 0, y: 14, scale: 0.978 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 8, scale: 0.987 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        exit={{ opacity: 0, y: 10, scale: 0.985 }}
+        transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
       >
         <div style={styles.onboardingEyebrow}>THRONED</div>
         <h1 style={styles.onboardingTitle}>Enter the Arena</h1>

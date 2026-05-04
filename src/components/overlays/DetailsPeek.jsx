@@ -11,7 +11,7 @@ import {
   selectNarrativeLines,
 } from "../../utils/contenderNarratives";
 
-export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles, onClose }) {
+export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles, onClose, opponent }) {
   const handle = normalizeCreatorHandle(item);
 
   const broadcastTag = useMemo(
@@ -20,8 +20,8 @@ export function DetailsPeek({ item, pool, arena, accent, side, portrait, styles,
   );
 
   const narrativeLines = useMemo(
-    () => (item && pool && arena ? selectNarrativeLines({ item, pool, arena }) : []),
-    [item, pool, arena]
+    () => (item && pool && arena ? selectNarrativeLines({ item, pool, arena, opponent }) : []),
+    [item, pool, arena, opponent]
   );
 
   const statusSnapshot = useMemo(

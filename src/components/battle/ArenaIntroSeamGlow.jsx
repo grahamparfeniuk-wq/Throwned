@@ -9,7 +9,8 @@ import {
 /**
  * Intro-only: seam energy converges on the arena seal, then falls off along the divide.
  */
-export function ArenaIntroSeamGlow({ portrait, accent, styles }) {
+export function ArenaIntroSeamGlow({ portrait, accent, styles, glowStrength = 1 }) {
+  const g = typeof glowStrength === "number" && glowStrength > 0 ? glowStrength : 1;
   const core = `${accent}ed`;
   const band = `${accent}64`;
   const soft = `${accent}2c`;
@@ -18,7 +19,7 @@ export function ArenaIntroSeamGlow({ portrait, accent, styles }) {
     <motion.div
       aria-hidden
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={{ opacity: g }}
       exit={{
         opacity: 0,
         transition: { duration: ARENA_INTRO_EXIT_S, ease: ARENA_INTRO_EXIT_EASE },

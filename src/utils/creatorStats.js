@@ -59,3 +59,9 @@ export function isRisingContender(pool, arena, item) {
   const ceiling = Math.max(2, Math.min(n - 1, Math.ceil(n * 0.35)));
   return item.rank >= 2 && item.rank <= ceiling;
 }
+
+/** Rank snapshot is leaderboard-order: 1 = throne */
+export function isTopNRanked(item, n = 10) {
+  if (!item || item.rank == null) return false;
+  return item.rank >= 1 && item.rank <= n;
+}

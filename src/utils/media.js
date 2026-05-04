@@ -38,6 +38,7 @@ export function normalizeUpload(data, id) {
     confidence: 0.55,
     wins: 0,
     losses: 0,
+    arenaWinStreak: 0,
     uploaded: true,
     fit: "cover",
     position: "center center",
@@ -52,8 +53,9 @@ export function normalizeUpload(data, id) {
   };
 }
 
-export function safeDuration(item) {
-  if (!item) return 2200;
-  if (item.type !== "video") return 2600;
-  return Math.max(1200, ((item.trimEnd || 7) - (item.trimStart || 0)) * 1000);
+export function safeDuration(item, pacingMultiplier = 1) {
+  const mul = typeof pacingMultiplier === "number" && pacingMultiplier > 0 ? pacingMultiplier : 1;
+  if (!item) return Math.round(2200 * mul);
+  if (item.type !== "video") return Math.round(2600 * mul);
+  return Math.max(1200, Math.round(((item.trimEnd || 7) - (item.trimStart || 0)) * 1000 * mul));
 }

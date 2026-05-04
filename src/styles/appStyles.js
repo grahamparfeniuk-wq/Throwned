@@ -1103,9 +1103,9 @@ export const styles = {
     position: "absolute",
     inset: 0,
     background:
-      "radial-gradient(ellipse 86% 62% at 50% 50%, rgba(6,10,16,.24), rgba(2,4,10,.48)), rgba(1,2,6,.5)",
-    backdropFilter: "blur(3px)",
-    WebkitBackdropFilter: "blur(3px)",
+      "radial-gradient(ellipse 88% 64% at 50% 48%, rgba(5,8,14,.18), rgba(2,3,8,.42)), rgba(1,2,6,.44)",
+    backdropFilter: "blur(2px)",
+    WebkitBackdropFilter: "blur(2px)",
   },
   onboardingCard: {
     position: "relative",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useIsPortrait } from "../../hooks/useIsPortrait";
 import { ARENAS } from "../../data/arenas";
+import { getArenaBattleProfile } from "../../constants/arenaBattleProfile";
 import {
   arenaItems,
   clamp,
@@ -64,6 +65,7 @@ export function Battle({
   renderLeaderboard,
 }) {
   const portrait = useIsPortrait();
+  const battleProfile = useMemo(() => getArenaBattleProfile(arena), [arena.id]);
   const items = useMemo(() => sortRank(arenaItems(pool, arena)), [pool, arena]);
   const poolRef = useRef(pool);
   const labelTimer = useRef(null);
@@ -120,10 +122,10 @@ export function Battle({
       setVsBattleReady(false);
       return;
     }
-    const revealVsMs = 680;
+    const revealVsMs = Math.round(680 * battleProfile.pacingMultiplier);
     const id = setTimeout(() => setVsBattleReady(true), revealVsMs);
     return () => clearTimeout(id);
-  }, [labelVisible]);
+  }, [labelVisible, battleProfile.pacingMultiplier]);
 
   useEffect(() => {
     return attachBattleMediaPreloads(items, pair);
@@ -132,7 +134,8 @@ export function Battle({
   function showLabel() {
     setLabelVisible(true);
     clearTimeout(labelTimer.current);
-    labelTimer.current = setTimeout(() => setLabelVisible(false), LABEL_MS);
+    const labelHold = Math.round(LABEL_MS * battleProfile.pacingMultiplier);
+    labelTimer.current = setTimeout(() => setLabelVisible(false), labelHold);
   }
 
   useEffect(() => {
@@ -158,9 +161,9 @@ export function Battle({
     setPair(next);
     setActiveSide(arena.type === "image" ? "both" : next?.second ? "second" : "first");
     setTransitioning(true);
-    const t = setTimeout(() => setTransitioning(false), 210);
+    const t = setTimeout(() => setTransitioning(false), battleProfile.transitionMs);
     return () => clearTimeout(t);
-  }, [arena.id, items.length]);
+  }, [arena.id, items.length, battleProfile.transitionMs]);
 
   useEffect(() => {
     return () => {
@@ -176,10 +179,21 @@ export function Battle({
     const active = activeSide === "first" ? pair.first : pair.second;
     const t = setTimeout(() => {
       setActiveSide((s) => (s === "first" ? "second" : "first"));
-    }, safeDuration(active));
+    }, safeDuration(active, battleProfile.pacingMultiplier));
 
     return () => clearTimeout(t);
-  }, [arena.type, pair, activeSide, paused, activeDetailsClipId, locked, streakHoldActive, transitioning, interactionLocked]);
+  }, [
+    arena.type,
+    pair,
+    activeSide,
+    paused,
+    activeDetailsClipId,
+    locked,
+    streakHoldActive,
+    transitioning,
+    interactionLocked,
+    battleProfile.pacingMultiplier,
+  ]);
 
   useEffect(() => {
     if (!activeDetailsClipId || !pair?.first || !pair?.second) return;
@@ -300,11 +314,21 @@ export function Battle({
     const upset = winner.rating < loser.rating;
     const upsetIntensity = upset ? clamp((loser.rating - winner.rating) / 420, 0.12, 1) : 0;
     const survivorSide = side === "first" ? "second" : "first";
-    setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide });
-    setTimeout(() => setThrowVerdict(null), 620);
+    let hierarchyTier = 0;
+    if (upset && loser.rank != null) {
+      if (loser.rank <= 3) hierarchyTier = 2;
+      else if (loser.rank <= 10) hierarchyTier = 1;
+    }
+    setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier });
+    const verdictClearMs = 620 + (hierarchyTier === 2 ? 200 : hierarchyTier === 1 ? 110 : 0);
+    setTimeout(() => setThrowVerdict(null), verdictClearMs);
 
-    const impactOutMs = upset ? BEAT_IMPACT_MS + Math.round(48 + 40 * upsetIntensity) : BEAT_IMPACT_MS;
-    const pulseOutMs = upset ? BEAT_IMPACT_MS + 115 + Math.round(35 * upsetIntensity) : BEAT_IMPACT_MS + 22;
+    const impactOutMs =
+      BEAT_IMPACT_MS +
+      (upset ? Math.round(48 + 40 * upsetIntensity) + (hierarchyTier === 2 ? 44 : hierarchyTier === 1 ? 24 : 0) : 0);
+    const pulseOutMs = upset
+      ? BEAT_IMPACT_MS + 115 + Math.round(35 * upsetIntensity) + (hierarchyTier === 2 ? 42 : hierarchyTier === 1 ? 22 : 0)
+      : BEAT_IMPACT_MS + 22;
 
     setImpactPhase(true);
     setPulse(true);
@@ -322,11 +346,15 @@ export function Battle({
     const weight = voteTrust(ms) * nextTrust;
     const { winnerDelta, loserDelta } = scoreDelta(winner, loser, weight);
 
+    const nextStreak = winnerId === winner.id ? streak + 1 : 1;
+    const nextArenaWinStreak = winnerId === winner.id ? (winner.arenaWinStreak ?? 0) + 1 : 1;
+
     const updatedWinner = {
       ...winner,
       rating: winner.rating + winnerDelta,
       confidence: updateConfidence(winner.confidence, weight > 0.7),
       wins: (winner.wins || 0) + 1,
+      arenaWinStreak: nextArenaWinStreak,
     };
 
     const updatedLoser = {
@@ -334,6 +362,7 @@ export function Battle({
       rating: Math.max(1000, loser.rating - loserDelta),
       confidence: updateConfidence(loser.confidence, weight > 0.7),
       losses: (loser.losses || 0) + 1,
+      arenaWinStreak: 0,
     };
 
     setPool((prev) =>
@@ -346,13 +375,15 @@ export function Battle({
       )
     );
 
-    const nextStreak = winnerId === updatedWinner.id ? streak + 1 : 1;
     setWinnerId(updatedWinner.id);
     setStreak(nextStreak);
     history.current.push(updatedWinner.id, updatedLoser.id);
 
     const victoryPauseMs =
-      BEAT_VICTORY_PAUSE_MS + (upset ? BEAT_UPSET_EXTRA_MS + Math.round(42 * upsetIntensity) : 0);
+      BEAT_VICTORY_PAUSE_MS +
+      battleProfile.victoryPauseDeltaMs +
+      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(42 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
+      (hierarchyTier === 2 ? 52 : hierarchyTier === 1 ? 30 : 0);
     const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
 
     setTimeout(() => {
@@ -394,7 +425,7 @@ export function Battle({
           setLocked(false);
           setPaused(false);
           setUnlockedAt(Date.now());
-        }, 1050);
+        }, Math.round((1050 + battleProfile.victoryPauseDeltaMs) * Math.max(0.94, battleProfile.pacingMultiplier)));
 
         return;
       }
@@ -422,7 +453,7 @@ export function Battle({
       setTimeout(() => {
         setEnterState(null);
         setLocked(false);
-      }, THROW_UNLOCK_MS);
+      }, Math.round(THROW_UNLOCK_MS * battleProfile.pacingMultiplier));
     }, swapDelayMs);
   }
 
@@ -461,7 +492,7 @@ export function Battle({
     >
       <motion.div
         aria-hidden
-        animate={{ opacity: impactPhase ? 0.34 : 0 }}
+        animate={{ opacity: impactPhase ? battleProfile.impactFlashOpacity : 0 }}
         transition={{ duration: 0.11 }}
         style={{
           pointerEvents: "none",
@@ -527,7 +558,7 @@ export function Battle({
           zIndex: contenderAttachmentOpen ? 11 : 2,
         }}
         animate={{ opacity: transitioning ? 0.86 : 1, scale: transitioning ? 0.985 : 1 }}
-        transition={{ duration: 0.16 }}
+        transition={{ duration: Math.min(0.2, 0.12 + 0.05 * battleProfile.pacingMultiplier) }}
       >
         {contenderAttachmentOpen ? <div style={styles.attachmentDim} aria-hidden /> : null}
 
@@ -589,13 +620,20 @@ export function Battle({
             portrait={portrait}
             styles={styles}
             onClose={() => setActiveDetailsClipId(null)}
+            opponent={pair.first.id === activeDetailsClipId ? pair.second : pair.first}
           />
         )}
       </motion.div>
 
       <AnimatePresence>
         {labelVisible ? (
-          <ArenaIntroSeamGlow key="arena-intro-seam-glow" portrait={portrait} accent={arena.accent} styles={styles} />
+          <ArenaIntroSeamGlow
+            key="arena-intro-seam-glow"
+            portrait={portrait}
+            accent={arena.accent}
+            styles={styles}
+            glowStrength={battleProfile.introGlowMul}
+          />
         ) : null}
       </AnimatePresence>
 
@@ -608,6 +646,7 @@ export function Battle({
         dragging={dragging}
         verdict={throwVerdict}
         introSuppressed={!vsBattleReady}
+        arenaEnergyMul={battleProfile.seamEnergyMul}
         styles={styles}
       />
       {vsBattleReady ? <VSBadge accent={arena.accent} styles={styles} impactHit={impactPhase} /> : null}
