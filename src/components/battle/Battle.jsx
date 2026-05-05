@@ -155,11 +155,11 @@ export function Battle({
   const hierarchyEntranceLive = !!enterState && vsBattleReady;
   const seamEntranceMul = hierarchyEntranceLive ? entrantSig.seamMul : 1;
   const auraEntranceCombined = Math.min(
-    1.78,
+    1.95,
     auraMul * (hierarchyEntranceLive ? entrantSig.auraMul : 1)
   );
   const vsEntranceCombined = Math.min(
-    1.75,
+    1.92,
     vsAuraMul * (hierarchyEntranceLive ? entrantSig.vsMul : 1)
   );
 
@@ -167,11 +167,15 @@ export function Battle({
     if (!import.meta.env.DEV || !enterState || !enteringEntrant) return;
     console.info("[Throned entrance]", {
       tier: entrantSig.tier,
-      score: entrantSig.score,
-      seamResponseMul: entrantSig.seamMul,
-      auraResponseMul: entrantSig.auraMul,
-      vsResponseMul: entrantSig.vsMul,
-      arrivalIntensity: entrantSig.entrance,
+      entranceIntensity: entrantSig.tier / 4,
+      seamResponseMul: seamEntranceMul,
+      auraMultiplier: auraEntranceCombined,
+      vsMultiplier: vsEntranceCombined,
+      seamIntrinsicMul: entrantSig.seamMul,
+      auraIntrinsicMul: entrantSig.auraMul,
+      vsIntrinsicMul: entrantSig.vsMul,
+      settleMsApprox: entrantSig.settleMsApprox,
+      arrivalSpring: entrantSig.entrance,
     });
   }, [enterState?.id, enterState?.side, enteringEntrant?.id, entrantSig.tier, entrantSig.score]);
 

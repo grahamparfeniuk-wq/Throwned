@@ -12,7 +12,8 @@ export function computeEntrantSignificance({ entrant, pool, arena }) {
     seamMul: 1,
     auraMul: 1,
     vsMul: 1,
-    entrance: { mass: 0.74, stiffness: 208, damping: 31 },
+    entrance: { mass: 0.74, stiffness: 208, damping: 31, opacityDuration: 0.27 },
+    settleMsApprox: 380,
   };
 
   if (!entrant || !pool || !arena) return fallback;
@@ -21,15 +22,15 @@ export function computeEntrantSignificance({ entrant, pool, arena }) {
   let score = 0;
 
   if (entrant.rank != null) {
-    if (entrant.rank <= 3) score += 3;
-    else if (entrant.rank <= 10) score += 2;
-    else if (entrant.rank <= 18) score += 0.6;
+    if (entrant.rank <= 3) score += 3.6;
+    else if (entrant.rank <= 10) score += 2.5;
+    else if (entrant.rank <= 18) score += 0.65;
   }
 
   const aws = Math.max(0, Math.floor(entrant.arenaWinStreak ?? 0));
-  if (aws >= 5) score += 2.4;
-  else if (aws >= 3) score += 1.4;
-  else if (aws >= 2) score += 0.75;
+  if (aws >= 5) score += 2.8;
+  else if (aws >= 3) score += 1.55;
+  else if (aws >= 2) score += 0.8;
 
   const w = entrant.wins ?? 0;
   const l = entrant.losses ?? 0;
@@ -44,16 +45,20 @@ export function computeEntrantSignificance({ entrant, pool, arena }) {
   if (isRisingContender(ranked, arena, entrant)) score += 0.85;
   if (isArenaDefender(pool, arena, entrant)) score += 1.1;
 
-  const tier = score >= 5.8 ? 4 : score >= 4.2 ? 3 : score >= 2.6 ? 2 : score >= 1.2 ? 1 : 0;
+  const tier = score >= 5.5 ? 4 : score >= 3.9 ? 3 : score >= 2.4 ? 2 : score >= 1.1 ? 1 : 0;
   const tNorm = Math.min(1, tier / 4);
 
-  const seamMul = 0.94 + tNorm * 0.15;
-  const auraMul = 0.96 + tNorm * 0.12;
-  const vsMul = 0.985 + tNorm * 0.065;
+  /* Wider spread: low tier pulls atmosphere down; high tier loads seam / VS / arrival (still restrained). */
+  const seamMul = 0.86 + tNorm * 0.3;
+  const auraMul = 0.9 + tNorm * 0.26;
+  const vsMul = 0.965 + tNorm * 0.14;
 
-  const mass = 0.74 + tNorm * 0.24;
-  const stiffness = Math.round(208 - tNorm * 26);
-  const damping = Math.round(31 + tNorm * 6);
+  const mass = 0.62 + tNorm * 0.48;
+  const stiffness = Math.round(218 - tNorm * 48);
+  const damping = Math.round(27 + tNorm * 18);
+  const opacityDuration = Math.round((0.26 + tNorm * 0.16) * 1000) / 1000;
+
+  const settleMsApprox = clampSettleMs(mass, stiffness, damping);
 
   return {
     tier,
@@ -61,6 +66,13 @@ export function computeEntrantSignificance({ entrant, pool, arena }) {
     seamMul,
     auraMul,
     vsMul,
-    entrance: { mass, stiffness, damping },
+    entrance: { mass, stiffness, damping, opacityDuration },
+    settleMsApprox,
   };
+}
+
+/** Dev-oriented heuristic: heavier / softer springs settle slower (ms). */
+function clampSettleMs(mass, stiffness, damping) {
+  const raw = Math.round(260 + mass * 110 + damping * 5.2 - stiffness * 0.42);
+  return Math.max(300, Math.min(780, raw));
 }

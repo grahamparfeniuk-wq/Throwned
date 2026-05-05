@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
  * z-index sits above the seam line, below the VS diamond.
  */
 export function BattleSeamAura({ portrait, accent, auraMul = 1, styles }) {
-  const m = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.78, auraMul) : 1;
+  const m = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.95, auraMul) : 1;
 
   const outer = portrait
     ? `radial-gradient(ellipse 108% 44% at 50% 50%, ${accent}28 0%, ${accent}0e 36%, transparent 72%)`
@@ -18,8 +18,8 @@ export function BattleSeamAura({ portrait, accent, auraMul = 1, styles }) {
     <motion.div
       aria-hidden
       initial={{ opacity: 0 }}
-      animate={{ opacity: [0.1 * m, 0.182 * m, 0.1 * m] }}
-      transition={{ duration: 7.2, repeat: Infinity, ease: "easeInOut" }}
+      animate={{ opacity: [0.108 * m, 0.202 * m, 0.108 * m] }}
+      transition={{ duration: 6.8, repeat: Infinity, ease: "easeInOut" }}
       style={{
         ...styles.battleSeamAura,
         ...(portrait ? styles.battleSeamAuraPortrait : styles.battleSeamAuraLandscape),

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 /** VS diamond — parent mounts this only after arena intro title has fully exited */
 export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
   const hit = !!impactHit;
-  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.75, auraMul) : 1;
+  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.92, auraMul) : 1;
 
   const borderStrong = `${accent}98`;
   const borderIdle = a >= 1.2 ? `${accent}96` : a >= 1.08 ? `${accent}86` : `${accent}76`;
@@ -21,12 +21,18 @@ export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
         animate={
           hit
             ? { scale: 1.03 }
-            : { scale: [1, 1.014 * Math.min(1.045, 0.965 + a * 0.038), 1] }
+            : {
+                scale: [
+                  1,
+                  1.008 + Math.min(0.022, 0.004 + (a - 0.96) * 0.032),
+                  1,
+                ],
+              }
         }
         transition={
           hit
             ? { duration: 0.095, ease: "easeOut" }
-            : { duration: 6.5, repeat: Infinity, ease: "easeInOut" }
+            : { duration: 6.8, repeat: Infinity, ease: "easeInOut" }
         }
         style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
       >

@@ -82,7 +82,10 @@ export function BattleSlot({
           stiffness: entranceSpring.stiffness,
           damping: entranceSpring.damping,
           mass: entranceSpring.mass,
-          opacity: ENTER_TRANSITION.opacity,
+          opacity: {
+            duration: entranceSpring.opacityDuration ?? ENTER_TRANSITION.opacity.duration,
+            ease: [0.22, 1, 0.36, 1],
+          },
         }
       : ENTER_TRANSITION;
 

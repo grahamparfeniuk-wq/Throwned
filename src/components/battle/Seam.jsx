@@ -49,7 +49,7 @@ export function Seam({
     : pulse
       ? 1.042
       : entrance
-        ? 1.018 + Math.min(0.038, (he - 0.92) * 0.28)
+        ? 1.008 + Math.min(0.078, Math.max(0, he - 0.86) * 0.5)
         : dragging
           ? 1.014
           : 1;
@@ -57,7 +57,7 @@ export function Seam({
   const yNudge = hit && survivor && portrait ? (survivor === "first" ? -2.2 : 2.2) : 0;
   const xNudge = hit && survivor && !portrait ? (survivor === "first" ? -2 : 2) : 0;
 
-  const idleLineBoost = !upset && !hit ? 11 : 0;
+  const idleLineBoost = !upset && !hit ? 15 : 0;
   const glowCore = Math.round(
     (upset ? 36 + Math.round(26 * vi) + tier * 6 + (streakBreak ? 10 : 0) : 30 + idleLineBoost) * energy
   );
@@ -71,21 +71,22 @@ export function Seam({
   let opacityAnim = 0;
   if (hideCenterLine) opacityAnim = 0;
   else if (hit || pulse) opacityAnim = 1;
-  else if (entrance) opacityAnim = 0.76;
+  else if (entrance)
+    opacityAnim = Math.min(0.94, 0.7 + Math.min(0.24, Math.max(0, he - 0.86) * 0.55));
   else if (dragging) opacityAnim = 0.88;
-  else if (breathingIdle) opacityAnim = [0.72, 0.9, 0.72];
+  else if (breathingIdle) opacityAnim = [0.74, 0.93, 0.74];
   else opacityAnim = 0.68;
 
   const opacityTransition = breathingIdle
-    ? { opacity: { duration: 6.2, repeat: Infinity, ease: "easeInOut" } }
+    ? { opacity: { duration: 6.5, repeat: Infinity, ease: "easeInOut" } }
     : {
         opacity: {
-          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.2,
+          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? Math.min(0.52, 0.28 + Math.max(0, he - 0.86) * 0.35) : 0.2,
           ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
         },
       };
 
-  const accentGlow = `${accent}52`;
+  const accentGlow = `${accent}56`;
 
   return (
     <motion.div
@@ -98,7 +99,7 @@ export function Seam({
       transition={{
         ...opacityTransition,
         scale: {
-          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? 0.3 : 0.17,
+          duration: hideCenterLine ? 0.28 : hit ? (upset ? 0.13 : 0.1) : entrance ? Math.min(0.52, 0.28 + Math.max(0, he - 0.86) * 0.35) : 0.17,
           ease: hideCenterLine ? [0.25, 0.1, 0.25, 1] : hit ? [0.22, 1, 0.36, 1] : [0.33, 1, 0.36, 1],
         },
         x: { duration: 0.12, ease: [0.22, 1, 0.36, 1] },
