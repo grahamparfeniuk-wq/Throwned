@@ -76,3 +76,15 @@ function clampSettleMs(mass, stiffness, damping) {
   const raw = Math.round(260 + mass * 110 + damping * 5.2 - stiffness * 0.42);
   return Math.max(300, Math.min(780, raw));
 }
+
+/**
+ * Approximate instant when entrant motion crosses the seam plane (opacity lands + spring midpoint).
+ * Used for DEV timing comparison with {@link BattleSlot} seam-impact callback.
+ */
+export function estimateSeamImpactMs(entrance) {
+  if (!entrance || typeof entrance !== "object") return 420;
+  const { mass = 0.74, stiffness = 208, damping = 31, opacityDuration = 0.27 } = entrance;
+  const settle = clampSettleMs(mass, stiffness, damping);
+  const opMs = opacityDuration * 1000;
+  return Math.round(opMs + settle * 0.38);
+}

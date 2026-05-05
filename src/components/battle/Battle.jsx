@@ -15,14 +15,15 @@ import {
 } from "../../utils/ranking";
 import { safeDuration, throwVector } from "../../utils/media";
 import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
-import { vibrateEntranceArrival, vibrateThrow } from "../../utils/haptics";
+import { getEntranceVibrationPattern, vibrateEntranceArrival, vibrateThrow } from "../../utils/haptics";
 import { selectNarrativeLines } from "../../utils/contenderNarratives";
 import {
   BATTLE_ROTATION_STREAK,
+  pickChallengerHotPulse,
   pickRotationRitual,
   pickThrowPunctuation,
 } from "../../utils/battleEmotionalPunctuation";
-import { computeEntrantSignificance } from "../../utils/entrantSignificance";
+import { computeEntrantSignificance, estimateSeamImpactMs } from "../../utils/entrantSignificance";
 import { VSBadge } from "./VSBadge";
 import { BattleAftermathCenterLine } from "./BattleAftermathLine";
 import { BattleSeamAura } from "./BattleSeamAura";
@@ -124,6 +125,8 @@ export function Battle({
   });
   const punctuationClearRef = useRef(null);
   const [battlePunctuation, setBattlePunctuation] = useState(null);
+  const entranceStartedAtRef = useRef(null);
+  const entranceHapticFiredRef = useRef(null);
   const debugRecentResults = useMemo(() => {
     const ids = history.current.slice(-6);
     return ids.map((id) => pool.find((x) => x.id === id)?.creator || String(id));
@@ -164,27 +167,38 @@ export function Battle({
   );
 
   useEffect(() => {
-    if (!import.meta.env.DEV || !enterState || !enteringEntrant) return;
-    console.info("[Throned entrance]", {
-      tier: entrantSig.tier,
-      entranceIntensity: entrantSig.tier / 4,
-      seamResponseMul: seamEntranceMul,
-      auraMultiplier: auraEntranceCombined,
-      vsMultiplier: vsEntranceCombined,
-      seamIntrinsicMul: entrantSig.seamMul,
-      auraIntrinsicMul: entrantSig.auraMul,
-      vsIntrinsicMul: entrantSig.vsMul,
-      settleMsApprox: entrantSig.settleMsApprox,
-      arrivalSpring: entrantSig.entrance,
-    });
-  }, [enterState?.id, enterState?.side, enteringEntrant?.id, entrantSig.tier, entrantSig.score]);
+    if (enterState?.id != null && enterState?.side) {
+      entranceStartedAtRef.current = performance.now();
+      entranceHapticFiredRef.current = null;
+    }
+  }, [enterState?.id, enterState?.side]);
 
-  useEffect(() => {
-    if (!enterState || !vsBattleReady) return;
-    const delay = Math.min(520, Math.max(170, Math.round(120 + entrantSig.settleMsApprox * 0.42)));
-    const id = setTimeout(() => vibrateEntranceArrival(entrantSig.tier), delay);
-    return () => clearTimeout(id);
-  }, [enterState?.id, enterState?.side, vsBattleReady, entrantSig.tier, entrantSig.settleMsApprox]);
+  function handleEntranceSeamImpact() {
+    if (!vsBattleReady || !enterState) return;
+    const key = `${enterState.id}:${enterState.side}`;
+    if (entranceHapticFiredRef.current === key) return;
+    entranceHapticFiredRef.current = key;
+
+    const tier = entrantSig.tier;
+    vibrateEntranceArrival(tier);
+
+    if (import.meta.env.DEV) {
+      const pattern = getEntranceVibrationPattern(tier);
+      const estimatedMs = estimateSeamImpactMs(entrantSig.entrance);
+      const elapsedMs =
+        entranceStartedAtRef.current != null
+          ? Math.round(performance.now() - entranceStartedAtRef.current)
+          : null;
+      console.info("[Throned seam impact]", {
+        entrantTier: tier,
+        tactileIntensity: tier / 4,
+        collisionElapsedMs: elapsedMs,
+        estimatedSeamImpactMs: estimatedMs,
+        seamCollisionTrigger: "springComplete",
+        vibrationPattern: pattern,
+      });
+    }
+  }
 
   function pushDebugEvent(eventName, payload = null) {
     if (!DEV_EMOTIONAL_DEBUG) return;
@@ -650,9 +664,6 @@ export function Battle({
           setLocked(false);
           setPaused(false);
           setUnlockedAt(Date.now());
-          const sigA = computeEntrantSignificance({ entrant: next.first, pool: fresh, arena });
-          const sigB = computeEntrantSignificance({ entrant: next.second, pool: fresh, arena });
-          setTimeout(() => vibrateEntranceArrival(Math.max(sigA.tier, sigB.tier)), 440);
         }, Math.round((1050 + battleProfile.victoryPauseDeltaMs) * Math.max(0.94, battleProfile.pacingMultiplier)));
 
         return;
@@ -686,7 +697,7 @@ export function Battle({
           const deferMs = Math.max(380, 2680 - swapDelayMs);
           setTimeout(
             () =>
-              flashBattlePunctuation("NEW CHALLENGER — ENTERING HOT", {
+              flashBattlePunctuation(pickChallengerHotPulse(), {
                 anchorSide: side,
                 durationMs: 1680,
               }),
@@ -852,6 +863,7 @@ export function Battle({
               : null
           }
           aftermathSeamSide={portrait ? "towardSeamBottom" : "towardSeamRight"}
+          onEntranceSeamImpact={handleEntranceSeamImpact}
           styles={styles}
         />
 
@@ -885,6 +897,7 @@ export function Battle({
               : null
           }
           aftermathSeamSide={portrait ? "towardSeamTop" : "towardSeamLeft"}
+          onEntranceSeamImpact={handleEntranceSeamImpact}
           styles={styles}
         />
 

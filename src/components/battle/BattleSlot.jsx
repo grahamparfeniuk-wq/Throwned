@@ -64,6 +64,8 @@ export function BattleSlot({
   aftermath,
   /** Where the horizontal / vertical seam sits relative to this slot */
   aftermathSeamSide,
+  /** Seam / settle collision — parent fires hierarchy entrance haptics (entering slot only). */
+  onEntranceSeamImpact,
   styles,
 }) {
   const peer = !!incumbentDuringEntry;
@@ -108,6 +110,9 @@ export function BattleSlot({
       initial={entering ? enterVector(side, portrait) : false}
       animate={animateState}
       transition={transition}
+      onAnimationComplete={() => {
+        if (entering && typeof onEntranceSeamImpact === "function") onEntranceSeamImpact();
+      }}
       style={{ ...styles.slot, ...(portrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
       {aftermath?.text ? (
