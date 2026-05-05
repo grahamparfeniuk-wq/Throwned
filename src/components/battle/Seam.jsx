@@ -14,6 +14,8 @@ export function Seam({
   verdict,
   introSuppressed,
   arenaEnergyMul = 1,
+  /** Tied to entrant hierarchy — only applied during challenger entrance (subconscious weight). */
+  hierarchyEntranceMul = 1,
   styles,
 }) {
   const hit = !!impactHit;
@@ -25,11 +27,16 @@ export function Seam({
   const tier = verdict?.hierarchyTier ?? 0;
   const streakBreak = !!verdict?.streakBreak;
   const majorStreakBreak = !!verdict?.majorStreakBreak;
-  const energy =
+  const baseEnergy =
     (typeof arenaEnergyMul === "number" && arenaEnergyMul > 0 ? arenaEnergyMul : 1) *
     (1 + tier * 0.122) *
     (streakBreak ? 1.1 : 1) *
     (majorStreakBreak ? 1.062 : 1);
+  const he =
+    entrance && typeof hierarchyEntranceMul === "number" && hierarchyEntranceMul > 0
+      ? hierarchyEntranceMul
+      : 1;
+  const energy = entrance ? baseEnergy * he : baseEnergy;
 
   const midHex = upset ? `${accent}f0` : `${accent}e0`;
   const edgeHex = upset ? `${accent}72` : `${accent}66`;
@@ -42,7 +49,7 @@ export function Seam({
     : pulse
       ? 1.042
       : entrance
-        ? 1.026
+        ? 1.018 + Math.min(0.038, (he - 0.92) * 0.28)
         : dragging
           ? 1.014
           : 1;

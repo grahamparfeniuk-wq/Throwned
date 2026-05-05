@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 /** VS diamond — parent mounts this only after arena intro title has fully exited */
 export function VSBadge({ accent, styles, impactHit, auraMul = 1 }) {
   const hit = !!impactHit;
-  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.68, auraMul) : 1;
+  const a = typeof auraMul === "number" && auraMul > 0 ? Math.min(1.75, auraMul) : 1;
 
   const borderStrong = `${accent}98`;
   const borderIdle = a >= 1.2 ? `${accent}96` : a >= 1.08 ? `${accent}86` : `${accent}76`;

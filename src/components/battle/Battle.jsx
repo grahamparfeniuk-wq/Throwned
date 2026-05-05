@@ -16,7 +16,15 @@ import {
 import { safeDuration, throwVector } from "../../utils/media";
 import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
 import { vibrateThrow } from "../../utils/haptics";
+import { selectNarrativeLines } from "../../utils/contenderNarratives";
+import {
+  BATTLE_ROTATION_STREAK,
+  pickRotationRitual,
+  pickThrowPunctuation,
+} from "../../utils/battleEmotionalPunctuation";
+import { computeEntrantSignificance } from "../../utils/entrantSignificance";
 import { VSBadge } from "./VSBadge";
+import { BattleAtmospherePunctuation } from "./BattleAtmospherePunctuation";
 import { BattleSeamAura } from "./BattleSeamAura";
 import { ArenaIntroSeamGlow } from "./ArenaIntroSeamGlow";
 import { Seam } from "./Seam";
@@ -47,6 +55,8 @@ const BEAT_VICTORY_PAUSE_MS = 236;
 /** Extra pause when lower-rated side wins (upset — restrained, no carnival) */
 const BEAT_UPSET_EXTRA_MS = 96;
 const THROW_UNLOCK_MS = 276;
+/** Set `true` only for emotional-systems diagnostics — keep `false` for ship builds. */
+const DEV_EMOTIONAL_DEBUG = false;
 
 function throwBlendPasses(distMag, velMag) {
   const d = Math.min(Math.abs(distMag) / THROW_DISTANCE_SOFT, 1.35);
@@ -99,10 +109,87 @@ export function Battle({
   const [throwVerdict, setThrowVerdict] = useState(null);
   const [unlockedAt, setUnlockedAt] = useState(Date.now());
   const [userTrust, setUserTrust] = useState(1);
+  const [debugEvents, setDebugEvents] = useState([]);
+  /** Bumps when `history` ref gains winners so debug overlay can refresh without subscription hacks */
+  const [debugResultTick, setDebugResultTick] = useState(0);
   const [drag, setDrag] = useState({
     first: { x: 0, y: 0, rotate: 0 },
     second: { x: 0, y: 0, rotate: 0 },
   });
+  const debugPrev = useRef({
+    arenaId: null,
+    profileKey: "",
+    seamKey: "",
+    streakById: {},
+  });
+  const punctuationClearRef = useRef(null);
+  const [battlePunctuation, setBattlePunctuation] = useState(null);
+  const debugRecentResults = useMemo(() => {
+    const ids = history.current.slice(-6);
+    return ids.map((id) => pool.find((x) => x.id === id)?.creator || String(id));
+  }, [pool, winnerId, pair.first?.id, pair.second?.id, debugResultTick]);
+  const debugFirstNarratives = useMemo(
+    () => selectNarrativeLines({ item: pair?.first, pool, arena, opponent: pair?.second }),
+    [pair?.first, pair?.second, pool, arena]
+  );
+  const debugSecondNarratives = useMemo(
+    () => selectNarrativeLines({ item: pair?.second, pool, arena, opponent: pair?.first }),
+    [pair?.first, pair?.second, pool, arena]
+  );
+  const auraMul = Math.min(
+    1.68,
+    battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.9 * 1.08
+  );
+  const vsAuraMul = Math.min(1.62, ((battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2) * 1.1);
+
+  const enteringEntrant = useMemo(() => {
+    if (!enterState || !pair?.first || !pair?.second) return null;
+    return enterState.side === "first" ? pair.first : pair.second;
+  }, [enterState, pair?.first, pair?.second]);
+
+  const entrantSig = useMemo(
+    () => computeEntrantSignificance({ entrant: enteringEntrant, pool, arena }),
+    [enteringEntrant, pool, arena]
+  );
+
+  const hierarchyEntranceLive = !!enterState && vsBattleReady;
+  const seamEntranceMul = hierarchyEntranceLive ? entrantSig.seamMul : 1;
+  const auraEntranceCombined = Math.min(
+    1.78,
+    auraMul * (hierarchyEntranceLive ? entrantSig.auraMul : 1)
+  );
+  const vsEntranceCombined = Math.min(
+    1.75,
+    vsAuraMul * (hierarchyEntranceLive ? entrantSig.vsMul : 1)
+  );
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !enterState || !enteringEntrant) return;
+    console.info("[Throned entrance]", {
+      tier: entrantSig.tier,
+      score: entrantSig.score,
+      seamResponseMul: entrantSig.seamMul,
+      auraResponseMul: entrantSig.auraMul,
+      vsResponseMul: entrantSig.vsMul,
+      arrivalIntensity: entrantSig.entrance,
+    });
+  }, [enterState?.id, enterState?.side, enteringEntrant?.id, entrantSig.tier, entrantSig.score]);
+
+  function pushDebugEvent(eventName, payload = null) {
+    if (!DEV_EMOTIONAL_DEBUG) return;
+    const stamp = new Date().toLocaleTimeString();
+    if (payload) console.info(`[EMO DEBUG] ${eventName}`, payload);
+    else console.info(`[EMO DEBUG] ${eventName}`);
+    setDebugEvents((prev) => [`${stamp} ${eventName}`, ...prev].slice(0, 12));
+  }
+
+  function flashBattlePunctuation(text) {
+    if (!text?.trim()) return;
+    const token = Date.now();
+    setBattlePunctuation({ text: text.trim(), token });
+    clearTimeout(punctuationClearRef.current);
+    punctuationClearRef.current = setTimeout(() => setBattlePunctuation(null), 2600);
+  }
 
   const activeDetailsItem = useMemo(
     () => (activeDetailsClipId ? items.find((x) => x.id === activeDetailsClipId) : null),
@@ -132,6 +219,68 @@ export function Battle({
   useEffect(() => {
     return attachBattleMediaPreloads(items, pair);
   }, [items, pair.first?.id, pair.second?.id]);
+
+  useEffect(() => {
+    if (!DEV_EMOTIONAL_DEBUG) return;
+    const profileKey = JSON.stringify(battleProfile);
+    const arenaChanged = debugPrev.current.arenaId !== arena.id;
+    if (arenaChanged) {
+      pushDebugEvent("arena profile changes", { from: debugPrev.current.arenaId, to: arena.id, battleProfile });
+      debugPrev.current.arenaId = arena.id;
+      debugPrev.current.profileKey = profileKey;
+    } else if (debugPrev.current.profileKey !== profileKey) {
+      pushDebugEvent("arena profile changes", { arenaId: arena.id, battleProfile });
+      debugPrev.current.profileKey = profileKey;
+    }
+  }, [arena.id, battleProfile]);
+
+  useEffect(() => {
+    if (!DEV_EMOTIONAL_DEBUG) return;
+    const seamKey = `${battleProfile.seamEnergyMul}:${battleProfile.persistentAuraMul}:${auraMul}:${vsAuraMul}`;
+    if (debugPrev.current.seamKey !== seamKey) {
+      pushDebugEvent("aura/seam multiplier changes", {
+        seamEnergyMul: battleProfile.seamEnergyMul,
+        persistentAuraMul: battleProfile.persistentAuraMul,
+        auraMul,
+        vsAuraMul,
+      });
+      debugPrev.current.seamKey = seamKey;
+    }
+  }, [battleProfile.seamEnergyMul, battleProfile.persistentAuraMul, auraMul, vsAuraMul]);
+
+  useEffect(() => {
+    if (!DEV_EMOTIONAL_DEBUG || !pair?.first || !pair?.second) return;
+    pushDebugEvent("narrative generated", {
+      first: { id: pair.first.id, lines: debugFirstNarratives },
+      second: { id: pair.second.id, lines: debugSecondNarratives },
+    });
+    // Intentionally pair ids only — lines refresh in overlay via useMemo when pool changes.
+  }, [pair?.first?.id, pair?.second?.id]);
+
+  useEffect(() => {
+    if (!DEV_EMOTIONAL_DEBUG || !activeDetailsItem) return;
+    const selected =
+      pair?.first?.id === activeDetailsClipId ? debugFirstNarratives?.[0] || null : debugSecondNarratives?.[0] || null;
+    pushDebugEvent("narrative displayed", {
+      clipId: activeDetailsClipId,
+      selected,
+    });
+  }, [activeDetailsClipId, activeDetailsItem, debugFirstNarratives, debugSecondNarratives, pair?.first?.id]);
+
+  useEffect(() => {
+    if (!DEV_EMOTIONAL_DEBUG) return;
+    const nextMap = {};
+    for (const x of pool) {
+      nextMap[x.id] = x.arenaWinStreak ?? 0;
+      const prev = debugPrev.current.streakById[x.id] ?? 0;
+      if (nextMap[x.id] > prev) {
+        pushDebugEvent("streak increases", { id: x.id, from: prev, to: nextMap[x.id] });
+      } else if (prev >= 2 && nextMap[x.id] === 0) {
+        pushDebugEvent("streak breaks", { id: x.id, from: prev, to: 0 });
+      }
+    }
+    debugPrev.current.streakById = nextMap;
+  }, [pool]);
 
   function showLabel() {
     setLabelVisible(true);
@@ -171,6 +320,7 @@ export function Battle({
     return () => {
       clearTimeout(labelTimer.current);
       clearTimeout(holdTimer.current);
+      clearTimeout(punctuationClearRef.current);
     };
   }, []);
 
@@ -325,6 +475,17 @@ export function Battle({
     const streakBreak = loserStreak >= 2;
     const majorStreakBreak = loserStreak >= 5;
 
+    if (DEV_EMOTIONAL_DEBUG && upset) {
+      pushDebugEvent("upset detected", {
+        winner: winner.id,
+        loser: loser.id,
+        winnerRating: winner.rating,
+        loserRating: loser.rating,
+      });
+      if (hierarchyTier === 1) pushDebugEvent("Top 10 upset detected", { loserRank: loser.rank });
+      if (hierarchyTier === 2) pushDebugEvent("Top 3 upset detected", { loserRank: loser.rank });
+    }
+
     setThrowVerdict({ upset, intensity: upsetIntensity, survivorSide, hierarchyTier, streakBreak, majorStreakBreak });
     const verdictClearMs =
       688 +
@@ -395,6 +556,25 @@ export function Battle({
     setWinnerId(updatedWinner.id);
     setStreak(nextStreak);
     history.current.push(updatedWinner.id, updatedLoser.id);
+    if (DEV_EMOTIONAL_DEBUG) setDebugResultTick((t) => t + 1);
+
+    const punctLine =
+      nextStreak >= BATTLE_ROTATION_STREAK
+        ? pickRotationRitual(arena)
+        : pickThrowPunctuation({
+            pool: poolRef.current,
+            arena,
+            upset,
+            upsetIntensity,
+            hierarchyTier,
+            streakBreak,
+            majorStreakBreak,
+            updatedWinner,
+            updatedLoser,
+            pairFirstConfidence: pair.first.confidence,
+            pairSecondConfidence: pair.second.confidence,
+          });
+    if (punctLine) flashBattlePunctuation(punctLine);
 
     const victoryPauseMs =
       BEAT_VICTORY_PAUSE_MS +
@@ -426,8 +606,15 @@ export function Battle({
         newWinnerRank,
       });
 
-      if (nextStreak >= 3) {
+      if (nextStreak >= BATTLE_ROTATION_STREAK) {
         setStreakHoldActive(true);
+        if (DEV_EMOTIONAL_DEBUG) {
+          pushDebugEvent("forced rotation triggers", {
+            winner: updatedWinner.id,
+            nextStreak,
+            streakHoldActive: true,
+          });
+        }
         setPulse(true);
         setTimeout(() => setPulse(false), 280);
 
@@ -469,6 +656,16 @@ export function Battle({
       setPaused(false);
       setUnlockedAt(Date.now());
 
+      if (!punctLine) {
+        const totalGames = (challenger.wins ?? 0) + (challenger.losses ?? 0);
+        const enteringHot =
+          challenger.uploaded && totalGames <= 2 && (challenger.wins ?? 0) >= 1;
+        if (enteringHot) {
+          const deferMs = Math.max(380, 2680 - swapDelayMs);
+          setTimeout(() => flashBattlePunctuation("New challenger — entering hot"), deferMs);
+        }
+      }
+
       setTimeout(() => {
         setEnterState(null);
         setLocked(false);
@@ -504,6 +701,14 @@ export function Battle({
 
   const isImageArena = arena.type === "image";
   const contenderAttachmentOpen = !!activeDetailsClipId;
+  const firstTop10 = typeof pair.first.rank === "number" && pair.first.rank <= 10;
+  const firstTop3 = typeof pair.first.rank === "number" && pair.first.rank <= 3;
+  const secondTop10 = typeof pair.second.rank === "number" && pair.second.rank <= 10;
+  const secondTop3 = typeof pair.second.rank === "number" && pair.second.rank <= 3;
+  const upsetOpportunity =
+    typeof pair.first.rating === "number" &&
+    typeof pair.second.rating === "number" &&
+    Math.abs(pair.first.rating - pair.second.rating) >= 35;
 
   return (
     <div
@@ -609,6 +814,9 @@ export function Battle({
           onHoldPointerMove={holdPointerMove}
           onHoldPointerUp={holdPointerUp}
           freezeBattleGestures={contenderAttachmentOpen}
+          entranceSpring={
+            enterState?.side === "first" && enterState?.id === pair.first.id ? entrantSig.entrance : undefined
+          }
           styles={styles}
         />
 
@@ -633,6 +841,9 @@ export function Battle({
           onHoldPointerMove={holdPointerMove}
           onHoldPointerUp={holdPointerUp}
           freezeBattleGestures={contenderAttachmentOpen}
+          entranceSpring={
+            enterState?.side === "second" && enterState?.id === pair.second.id ? entrantSig.entrance : undefined
+          }
           styles={styles}
         />
 
@@ -673,16 +884,14 @@ export function Battle({
         verdict={throwVerdict}
         introSuppressed={!vsBattleReady}
         arenaEnergyMul={battleProfile.seamEnergyMul}
+        hierarchyEntranceMul={seamEntranceMul}
         styles={styles}
       />
       {vsBattleReady ? (
         <BattleSeamAura
           portrait={portrait}
           accent={arena.accent}
-          auraMul={Math.min(
-            1.68,
-            battleProfile.persistentAuraMul * battleProfile.seamEnergyMul ** 0.9 * 1.08
-          )}
+          auraMul={auraEntranceCombined}
           styles={styles}
         />
       ) : null}
@@ -691,8 +900,61 @@ export function Battle({
           accent={arena.accent}
           styles={styles}
           impactHit={impactPhase}
-          auraMul={Math.min(1.62, ((battleProfile.persistentAuraMul + battleProfile.seamEnergyMul) / 2) * 1.1)}
+          auraMul={vsEntranceCombined}
         />
+      ) : null}
+      {vsBattleReady ? (
+        <BattleAtmospherePunctuation
+          text={battlePunctuation?.text}
+          token={battlePunctuation?.token}
+          accent={arena.accent}
+          styles={styles}
+        />
+      ) : null}
+      {DEV_EMOTIONAL_DEBUG ? (
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            width: "min(460px, 86vw)",
+            maxHeight: "52vh",
+            overflow: "auto",
+            zIndex: 60,
+            pointerEvents: "none",
+            background: "rgba(0,0,0,0.72)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 10,
+            padding: 10,
+            color: "#d9f0ff",
+            fontSize: 11,
+            lineHeight: 1.35,
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>EMOTIONAL DEBUG MODE</div>
+          <div>arena: {arena.id} ({arena.label})</div>
+          <div>pair: {pair.first.id} / {pair.second.id}</div>
+          <div>names: {pair.first.creator} vs {pair.second.creator}</div>
+          <div>ranks: #{pair.first.rank ?? "-"} vs #{pair.second.rank ?? "-"}</div>
+          <div>records: {pair.first.wins ?? 0}-{pair.first.losses ?? 0} vs {pair.second.wins ?? 0}-{pair.second.losses ?? 0}</div>
+          <div>streaks(arena): {pair.first.arenaWinStreak ?? 0} vs {pair.second.arenaWinStreak ?? 0}</div>
+          <div>local streak state: streak={streak}, holdActive={String(streakHoldActive)}</div>
+          <div>recent results: {debugRecentResults.join(" -> ") || "none"}</div>
+          <div>top10/top3: {String(firstTop10)}/{String(firstTop3)} vs {String(secondTop10)}/{String(secondTop3)}</div>
+          <div>upset opportunity: {String(upsetOpportunity)}</div>
+          <div>hierarchyTier: {throwVerdict?.hierarchyTier ?? 0}</div>
+          <div>verdict flags: upset={String(!!throwVerdict?.upset)} streakBreak={String(!!throwVerdict?.streakBreak)}</div>
+          <div>battleProfile: {JSON.stringify(battleProfile)}</div>
+          <div>seam/aura active: seam={String(battleProfile.seamEnergyMul !== 1)} aura={String(battleProfile.persistentAuraMul !== 1)}</div>
+          <div>seam/aura mul: seam={battleProfile.seamEnergyMul} aura={battleProfile.persistentAuraMul} seamAura={auraMul.toFixed(3)} vsAura={vsAuraMul.toFixed(3)}</div>
+          <div>narrative first selected: {debugFirstNarratives?.[0] || "(none)"}</div>
+          <div>narrative second selected: {debugSecondNarratives?.[0] || "(none)"}</div>
+          <div>narrative first all: {debugFirstNarratives?.join(" | ") || "(none)"}</div>
+          <div>narrative second all: {debugSecondNarratives?.join(" | ") || "(none)"}</div>
+          <div style={{ marginTop: 6, fontWeight: 700 }}>emotional event hooks fired</div>
+          <div>{debugEvents.join(" || ") || "none yet"}</div>
+        </div>
       ) : null}
 
       {/* Always-on bottom capture strip: portrait + landscape; must stay above closed leaderboard layers */}

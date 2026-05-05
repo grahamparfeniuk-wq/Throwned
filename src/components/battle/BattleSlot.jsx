@@ -57,6 +57,8 @@ export function BattleSlot({
   onHoldPointerMove,
   onHoldPointerUp,
   freezeBattleGestures,
+  /** Optional hierarchy-weighted spring overrides while `entering` (heavier = higher significance). */
+  entranceSpring,
   styles,
 }) {
   const peer = !!incumbentDuringEntry;
@@ -73,10 +75,21 @@ export function BattleSlot({
           scale: peer ? 0.987 : 1,
         });
 
+  const enterTransition =
+    entering && entranceSpring
+      ? {
+          type: "spring",
+          stiffness: entranceSpring.stiffness,
+          damping: entranceSpring.damping,
+          mass: entranceSpring.mass,
+          opacity: ENTER_TRANSITION.opacity,
+        }
+      : ENTER_TRANSITION;
+
   const transition = thrown
     ? THROW_TRANSITION
     : entering
-      ? ENTER_TRANSITION
+      ? enterTransition
       : peer
         ? SURVIVOR_SETTLE_TRANSITION
         : DRAG_TRANSITION;
