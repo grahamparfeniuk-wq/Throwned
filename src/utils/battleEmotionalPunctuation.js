@@ -41,24 +41,24 @@ export function pickThrowPunctuation({
   const rankedPool = postThrowPool(pool, updatedWinner, updatedLoser, arena);
   const nextArenaWinStreak = updatedWinner.arenaWinStreak ?? 0;
 
-  if (hierarchyTier === 2) return "Top-three upset — the sheet moves";
-  if (hierarchyTier === 1) return "Ranked upset — hierarchy turns";
-  if (majorStreakBreak) return "Long defense broken";
-  if (upset && upsetIntensity >= 0.68) return "Major upset — standings ripple";
-  if (streakBreak) return "Defending run snapped";
-  if (nextArenaWinStreak >= 6) return `${nextArenaWinStreak} straight — rare air`;
-  if (nextArenaWinStreak === 5) return "Five straight — championship pace";
-  if (nextArenaWinStreak === 4) return "Four straight — tightening grip";
+  if (hierarchyTier === 2) return "UPSET SHAKES THE ARENA";
+  if (hierarchyTier === 1) return "POWER SHIFT — RANKED SHEET";
+  if (majorStreakBreak) return "STREAK BROKEN — LONG DEFENSE ENDS";
+  if (upset && upsetIntensity >= 0.68) return "MAJOR UPSET — STANDINGS RIPPLE";
+  if (streakBreak) return "STREAK BROKEN";
+  if (nextArenaWinStreak >= 6) return `${nextArenaWinStreak} STRAIGHT — RARE AIR`;
+  if (nextArenaWinStreak === 5) return "FIVE STRAIGHT — CHAMPIONSHIP PACE";
+  if (nextArenaWinStreak === 4) return "DEFENDING STREAK — FOUR DEEP";
 
   const throneHeld = upset && isArenaDefender(rankedPool, arena, updatedWinner);
-  if (throneHeld) return "Throne defended under pressure";
+  if (throneHeld) return "DEFENDER STUMBLES — THRONE HELD";
 
   if (crowdSplit(pairFirstConfidence ?? 0.55, pairSecondConfidence ?? 0.55)) {
-    return "Split crowd — no easy read";
+    return "FANS SPLIT — NO EASY READ";
   }
 
   if (arena?.id === "sports" && isRisingContender(rankedPool, arena, updatedWinner)) {
-    return "Rising in Sports — momentum building";
+    return "RISING IN SPORTS — MOMENTUM BUILDING";
   }
 
   return null;
@@ -67,8 +67,8 @@ export function pickThrowPunctuation({
 /** When session streak forces rotation — single consequential line (not a notification). */
 export function pickRotationRitual(arena) {
   const id = arena?.id;
-  if (id === "comedy") return "Stretch complete — next comic in";
-  if (id === "sports") return "Defense cleared — champion rotates";
-  if (id === "songs") return "Run fulfilled — stage clears";
-  return "Defending stretch complete — fresh hunt";
+  if (id === "comedy") return "DEFENDING STRETCH COMPLETE — NEXT COMIC";
+  if (id === "sports") return "CHAMPION ROTATES — FRESH HUNT";
+  if (id === "songs") return "RUN FULFILLED — STAGE CLEARS";
+  return "DEFENDING STRETCH COMPLETE — FRESH HUNT";
 }

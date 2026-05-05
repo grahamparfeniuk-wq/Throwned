@@ -15,7 +15,7 @@ import {
 } from "../../utils/ranking";
 import { safeDuration, throwVector } from "../../utils/media";
 import { attachBattleMediaPreloads } from "../../utils/mediaPreload";
-import { vibrateThrow } from "../../utils/haptics";
+import { vibrateEntranceArrival, vibrateThrow } from "../../utils/haptics";
 import { selectNarrativeLines } from "../../utils/contenderNarratives";
 import {
   BATTLE_ROTATION_STREAK,
@@ -24,7 +24,7 @@ import {
 } from "../../utils/battleEmotionalPunctuation";
 import { computeEntrantSignificance } from "../../utils/entrantSignificance";
 import { VSBadge } from "./VSBadge";
-import { BattleAtmospherePunctuation } from "./BattleAtmospherePunctuation";
+import { BattleAftermathCenterLine } from "./BattleAftermathLine";
 import { BattleSeamAura } from "./BattleSeamAura";
 import { ArenaIntroSeamGlow } from "./ArenaIntroSeamGlow";
 import { Seam } from "./Seam";
@@ -179,6 +179,13 @@ export function Battle({
     });
   }, [enterState?.id, enterState?.side, enteringEntrant?.id, entrantSig.tier, entrantSig.score]);
 
+  useEffect(() => {
+    if (!enterState || !vsBattleReady) return;
+    const delay = Math.min(520, Math.max(170, Math.round(120 + entrantSig.settleMsApprox * 0.42)));
+    const id = setTimeout(() => vibrateEntranceArrival(entrantSig.tier), delay);
+    return () => clearTimeout(id);
+  }, [enterState?.id, enterState?.side, vsBattleReady, entrantSig.tier, entrantSig.settleMsApprox]);
+
   function pushDebugEvent(eventName, payload = null) {
     if (!DEV_EMOTIONAL_DEBUG) return;
     const stamp = new Date().toLocaleTimeString();
@@ -187,12 +194,15 @@ export function Battle({
     setDebugEvents((prev) => [`${stamp} ${eventName}`, ...prev].slice(0, 12));
   }
 
-  function flashBattlePunctuation(text) {
+  function flashBattlePunctuation(text, options = {}) {
     if (!text?.trim()) return;
     const token = Date.now();
-    setBattlePunctuation({ text: text.trim(), token });
+    const anchorSide = options.anchorSide ?? "center";
+    const durationMs =
+      typeof options.durationMs === "number" && options.durationMs > 0 ? options.durationMs : 2200;
+    setBattlePunctuation({ text: text.trim(), token, anchorSide });
     clearTimeout(punctuationClearRef.current);
-    punctuationClearRef.current = setTimeout(() => setBattlePunctuation(null), 2600);
+    punctuationClearRef.current = setTimeout(() => setBattlePunctuation(null), durationMs);
   }
 
   const activeDetailsItem = useMemo(
@@ -562,6 +572,15 @@ export function Battle({
     history.current.push(updatedWinner.id, updatedLoser.id);
     if (DEV_EMOTIONAL_DEBUG) setDebugResultTick((t) => t + 1);
 
+    const victoryPauseMs =
+      BEAT_VICTORY_PAUSE_MS +
+      battleProfile.victoryPauseDeltaMs +
+      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(68 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
+      (hierarchyTier === 2 ? 148 : hierarchyTier === 1 ? 88 : 0) +
+      (majorStreakBreak ? 108 : streakBreak ? 68 : 0) +
+      (upset && upsetIntensity > 0.55 ? Math.round(44 * (upsetIntensity - 0.55)) : 0);
+    const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
+
     const punctLine =
       nextStreak >= BATTLE_ROTATION_STREAK
         ? pickRotationRitual(arena)
@@ -578,16 +597,12 @@ export function Battle({
             pairFirstConfidence: pair.first.confidence,
             pairSecondConfidence: pair.second.confidence,
           });
-    if (punctLine) flashBattlePunctuation(punctLine);
-
-    const victoryPauseMs =
-      BEAT_VICTORY_PAUSE_MS +
-      battleProfile.victoryPauseDeltaMs +
-      (upset ? BEAT_UPSET_EXTRA_MS + Math.round(68 * upsetIntensity) + battleProfile.upsetExtraDeltaMs : 0) +
-      (hierarchyTier === 2 ? 148 : hierarchyTier === 1 ? 88 : 0) +
-      (majorStreakBreak ? 108 : streakBreak ? 68 : 0) +
-      (upset && upsetIntensity > 0.55 ? Math.round(44 * (upsetIntensity - 0.55)) : 0);
-    const swapDelayMs = BEAT_IMPACT_MS + victoryPauseMs;
+    if (punctLine) {
+      const isRotation = nextStreak >= BATTLE_ROTATION_STREAK;
+      const anchorSide = isRotation ? "center" : side;
+      const durationMs = Math.min(2300, Math.max(1280, swapDelayMs + 300));
+      flashBattlePunctuation(punctLine, { anchorSide, durationMs });
+    }
 
     setTimeout(() => {
       const fresh = sortRank(
@@ -635,6 +650,9 @@ export function Battle({
           setLocked(false);
           setPaused(false);
           setUnlockedAt(Date.now());
+          const sigA = computeEntrantSignificance({ entrant: next.first, pool: fresh, arena });
+          const sigB = computeEntrantSignificance({ entrant: next.second, pool: fresh, arena });
+          setTimeout(() => vibrateEntranceArrival(Math.max(sigA.tier, sigB.tier)), 440);
         }, Math.round((1050 + battleProfile.victoryPauseDeltaMs) * Math.max(0.94, battleProfile.pacingMultiplier)));
 
         return;
@@ -666,7 +684,14 @@ export function Battle({
           challenger.uploaded && totalGames <= 2 && (challenger.wins ?? 0) >= 1;
         if (enteringHot) {
           const deferMs = Math.max(380, 2680 - swapDelayMs);
-          setTimeout(() => flashBattlePunctuation("New challenger — entering hot"), deferMs);
+          setTimeout(
+            () =>
+              flashBattlePunctuation("NEW CHALLENGER — ENTERING HOT", {
+                anchorSide: side,
+                durationMs: 1680,
+              }),
+            deferMs
+          );
         }
       }
 
@@ -821,6 +846,12 @@ export function Battle({
           entranceSpring={
             enterState?.side === "first" && enterState?.id === pair.first.id ? entrantSig.entrance : undefined
           }
+          aftermath={
+            battlePunctuation?.anchorSide === "first"
+              ? { text: battlePunctuation.text, token: battlePunctuation.token }
+              : null
+          }
+          aftermathSeamSide={portrait ? "towardSeamBottom" : "towardSeamRight"}
           styles={styles}
         />
 
@@ -848,6 +879,12 @@ export function Battle({
           entranceSpring={
             enterState?.side === "second" && enterState?.id === pair.second.id ? entrantSig.entrance : undefined
           }
+          aftermath={
+            battlePunctuation?.anchorSide === "second"
+              ? { text: battlePunctuation.text, token: battlePunctuation.token }
+              : null
+          }
+          aftermathSeamSide={portrait ? "towardSeamTop" : "towardSeamLeft"}
           styles={styles}
         />
 
@@ -865,6 +902,16 @@ export function Battle({
           />
         )}
       </motion.div>
+
+      {vsBattleReady && battlePunctuation?.anchorSide === "center" ? (
+        <BattleAftermathCenterLine
+          text={battlePunctuation.text}
+          token={battlePunctuation.token}
+          accent={arena.accent}
+          portrait={portrait}
+          styles={styles}
+        />
+      ) : null}
 
       <AnimatePresence>
         {labelVisible ? (
@@ -905,14 +952,6 @@ export function Battle({
           styles={styles}
           impactHit={impactPhase}
           auraMul={vsEntranceCombined}
-        />
-      ) : null}
-      {vsBattleReady ? (
-        <BattleAtmospherePunctuation
-          text={battlePunctuation?.text}
-          token={battlePunctuation?.token}
-          accent={arena.accent}
-          styles={styles}
         />
       ) : null}
       {DEV_EMOTIONAL_DEBUG ? (

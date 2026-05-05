@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { enterVector } from "../../utils/media";
+import { BattleAftermathLine } from "./BattleAftermathLine";
 import { GestureLayer } from "./GestureLayer";
 import { MediaSurface } from "./MediaSurface";
 
@@ -59,6 +60,10 @@ export function BattleSlot({
   freezeBattleGestures,
   /** Optional hierarchy-weighted spring overrides while `entering` (heavier = higher significance). */
   entranceSpring,
+  /** Seam-adjacent aftermath copy (elimination wake); z-behind media */
+  aftermath,
+  /** Where the horizontal / vertical seam sits relative to this slot */
+  aftermathSeamSide,
   styles,
 }) {
   const peer = !!incumbentDuringEntry;
@@ -105,6 +110,16 @@ export function BattleSlot({
       transition={transition}
       style={{ ...styles.slot, ...(portrait ? styles.slotPortrait : styles.slotLandscape) }}
     >
+      {aftermath?.text ? (
+        <BattleAftermathLine
+          text={aftermath.text}
+          token={aftermath.token}
+          accent={accent}
+          portrait={portrait}
+          seamSide={aftermathSeamSide}
+          styles={styles}
+        />
+      ) : null}
       <MediaSurface
         item={item}
         active={active}
